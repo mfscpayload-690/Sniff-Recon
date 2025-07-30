@@ -1,117 +1,121 @@
-# 📘 Sniff-Recon Documentation
+# 🕵️‍♂️ Sniff Recon - Network Log Analyzer
 
-## 🧠 Overview
-
-**Sniff-Recon** is an AI-powered network log analyzer that processes and summarizes `.pcap`, `.pcapng`, and other network capture logs. Built for cybersecurity enthusiasts, it leverages Google’s Pegasus model (via Hugging Face) to identify anomalies, summarize packet activity, and assist in network forensics.
+Sniff Recon is a powerful Python-based tool designed to analyze network packet capture (PCAP/PCAPNG) files, CSV exports, and text-based logs. It offers both a user-friendly GUI (via Streamlit) and a CLI interface, making it versatile for both beginners and experienced cybersecurity professionals. Built for log management, packet inspection, intrusion detection, and natural language queries, Sniff Recon helps you gain actionable insights from raw packet data.
 
 ---
 
-## 🎯 Objectives
+## 🚀 Features
 
-* Analyze `.pcap`/`.pcapng` files with AI support
-* Summarize traffic using natural language
-* Extract top IPs, ports, and protocols
-* Provide a chat interface to ask traffic-related questions
-* Offer a GUI for easier interaction
+### ✅ Core Capabilities
 
----
+- 📂 Upload and analyze `.pcap`, `.pcapng`, `.csv`, or `.txt` network logs
+- 📊 Real-time summary report including:
+  - Total packets
+  - Unique source & destination IPs
+  - Top talkers (IP frequency)
+  - Protocol distribution (TCP/UDP/etc)
 
-## 🧰 Technology Stack
+### 🔍 Lightweight AI-powered Natural Language Querying
 
-| Component     | Tool/Library                               |
-| ------------- | ------------------------------------------ |
-| Language      | Python 3.x                                 |
-| AI Model      | Pegasus via Hugging Face                   |
-| Packet Parser | PyShark (based on tshark)                  |
-| GUI           | Streamlit                                  |
-| Visualization | Matplotlib / Plotly                        |
-| Env Variables | Python-dotenv                              |
-| File Support  | `.pcap`, `.pcapng`, `.log`, `.txt`, `.csv` |
+Ask questions like:
 
----
+- "What are the top 5 source IPs?"
+- "Count HTTPS GET requests"
+- "List suspected intrusions"
 
-## 🛠️ Features
+### 🧠 AI Summary Engine
 
-### 🔍 PCAP Log Parsing
+- Summarizes packet data into a human-readable format
+- Highlights anomalies, suspicious patterns, and traffic spikes
 
-* Parse `.pcap`/`.pcapng` with PyShark
-* Extract key insights: protocols, flows, IPs
+### 🌐 Full HTML Report
 
-### 🧠 AI Summarization
+Generates and opens a styled browser-based report summarizing:
 
-* Uses Pegasus (CNN/DailyMail) to summarize human-readable traffic logs
-* Detects possible threats or abnormal patterns
+- Timeline
+- Protocols used
+- IP frequency heatmap
+- Intrusion markers
 
-### 💬 Chat-Like Queries
+### 🧑‍💻 Dual Mode Interface
 
-* Ask questions like:
-
-  * "Show top IPs in this capture"
-  * "What kind of DNS activity is present?"
-
-### 📈 Visual Analysis
-
-* Graphs and charts for:
-
-  * Top source/destination IPs
-  * Protocol usage
-  * Traffic timelines
+- CLI for minimalists and scripting
+- GUI for streamlined exploration (built with Streamlit)
 
 ---
 
-## 📂 Project Structure
+## 📁 Project Structure
 
 ```
-sniff-recon/
-├── src/
-│   ├── parsers/         # PCAP parsing & traffic extraction
-│   ├── ai/              # AI summarization using Pegasus
-│   ├── ui/              # Streamlit-based frontend
-├── config/              # Config & keys
-├── .env                 # Hugging Face API Token
-├── requirements.txt     # Python dependencies
-└── main.py              # App entry point
+Sniff-Recon/
+├── assets/                # Images, icons, and UI assets
+├── core/
+│   ├── parser.py          # Parses PCAP, CSV, TXT into DataFrames
+│   ├── analyzer.py        # Generates summaries and protocol stats
+│   └── ai_module.py       # Handles natural language queries
+├── cli.py                 # Command-line interface script
+├── app.py                 # Streamlit GUI app
+├── utils.py               # Helper functions
+├── requirements.txt       # Dependencies
+├── report_template.html   # HTML template for log report
+└── README.md
 ```
 
 ---
 
-## 🔐 Setup Instructions
+## 🛠️ Installation & Usage
 
-1. Clone the repo:
+### 🔹 1. Clone the Repo
 
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/Sniff-Recon.git
-   cd Sniff-Recon
-   ```
+```bash
+git clone https://github.com/mfscpayload-690/Sniff-Recon.git
+cd Sniff-Recon
+```
 
-2. Install dependencies:
+### 🔹 2. Setup Virtual Environment
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
-3. Add Hugging Face API token to `.env`:
+### 🔹 3. Run GUI (Streamlit)
 
-   ```env
-   HF_TOKEN=hf_xxxxxxxxxxxxxxxxxxxxxx
-   ```
+```bash
+streamlit run app.py
+```
 
-4. Run the app:
+### 🔹 4. Run CLI Tool
 
-   ```bash
-   streamlit run main.py
-   ```
+```bash
+python cli.py <path-to-pcap-or-csv-file>
+```
 
 ---
 
-## 📜 License
+## 🧠 Example AI Query Outputs
 
-Licensed under the **MIT License**.
-Free for personal and academic use. Attribution required.
+> **What are the top 5 destination IPs?**  
+> `{'10.48.167.21': 93, '23.212.254.65': 40, ...}`
+
+> **Count HTTPS GET requests**  
+> Output: 62 GET requests using TCP Port 443
+
+> **Detect intrusions**  
+> Output: No obvious port scan or SYN flood patterns detected.
+
+---
+
+## 🪪 License
+
+This project is licensed under the MIT License. Feel free to use, modify, and distribute!
 
 ---
 
 ## 👨‍💻 Author
 
-Made with ❤️ by **Aravind Lal**
-Cybersecurity + Python + AI = 💥
+Aravind Lal  
+💻 [GitHub](https://github.com/mfscpayload-690) | 📫 [LinkedIn](https://www.linkedin.com/in/aravind-lal)
+
+> "Logs don't lie—if you know how to read them."
