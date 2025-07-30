@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import json
 import tempfile
+import pandas as pd
 
 from parsers.pcap_parser import parse_pcap
 from parsers.csv_parser import parse_csv
@@ -10,9 +11,16 @@ from parsers.txt_parser import parse_txt
 # Ensure output directory exists
 os.makedirs("output", exist_ok=True)
 
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        # Handle EDecimal serialization by converting to float
+        if o.__class__.__name__ == "EDecimal":
+            return float(o)
+        return super().default(o)
+
 def save_summary(summary):
     with open("output/summary.json", "w") as f:
-        json.dump(summary, f, indent=4)
+        json.dump(summary, f, indent=4, cls=CustomJSONEncoder)
 
 def main():
     st.title("Sniff Recon - Basic GUI")
@@ -62,33 +70,20 @@ def main():
         # Remove temp file
         os.remove(tmp_file_path)
 
-        if not summary:
-            st.warning("No data parsed from the file.")
+        # Convert list of dicts to Pandas DataFrame
+        summary = pd.DataFrame(summary)
+
+        # Safe check for empty or None DataFrame
+        if summary is None or summary.empty:
+            st.warning("Summary is empty or could not be generated.")
             return
 
-        # Display summary table
+        # Display summary table using st.dataframe
         st.subheader("Parsed Summary")
-        # Convert list of dicts to list of rows with consistent keys
-        table_data = []
-        for item in summary:
-            table_data.append([
-                item.get("src_ip", ""),
-                item.get("dst_ip", ""),
-                item.get("protocol", ""),
-                item.get("packet_size", ""),
-            ])
-
-        st.table(
-            {
-                "Source IP": [row[0] for row in table_data],
-                "Destination IP": [row[1] for row in table_data],
-                "Protocol": [row[2] for row in table_data],
-                "Packet Size": [row[3] for row in table_data],
-            }
-        )
+        st.dataframe(summary)
 
         # Save summary to JSON file
-        save_summary(summary)
+        save_summary(summary.to_dict(orient="records"))
         st.success("Summary saved to output/summary.json")
 
         # Button to download JSON
