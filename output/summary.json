@@ -1,0 +1,1106 @@
+[
+    {
+        "src_ip": "142.251.43.234",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 124
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.251.43.234",
+        "protocol": "UDP",
+        "packet_size": 75
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.251.43.234",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "142.251.43.234",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.251.43.234",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "142.251.43.234",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.251.43.234",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "142.251.43.234",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.251.43.234",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "142.250.183.170",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 124
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.183.170",
+        "protocol": "UDP",
+        "packet_size": 75
+    },
+    {
+        "src_ip": "142.251.43.234",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.183.170",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "142.250.183.170",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.251.43.234",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.183.170",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "142.251.43.234",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "142.250.183.170",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.251.43.234",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "142.251.43.234",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.183.170",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "142.250.183.170",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.183.170",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "142.250.183.170",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.251.43.234",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "142.251.43.234",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.183.170",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "142.250.183.170",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.183.170",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "142.250.183.170",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.251.43.234",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.183.170",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "142.251.43.234",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "142.250.183.170",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.183.170",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "142.250.183.170",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "104.18.32.47",
+        "protocol": "TCP",
+        "packet_size": 55
+    },
+    {
+        "src_ip": "104.18.32.47",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 70
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.251.43.234",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "142.251.43.234",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "57.144.213.33",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 242
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "57.144.213.33",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "57.144.213.33",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 242
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "57.144.213.33",
+        "protocol": "TCP",
+        "packet_size": 66
+    },
+    {
+        "src_ip": "142.250.183.170",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 124
+    },
+    {
+        "src_ip": "142.250.183.170",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 92
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.183.170",
+        "protocol": "UDP",
+        "packet_size": 75
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.183.170",
+        "protocol": "UDP",
+        "packet_size": 592
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.183.170",
+        "protocol": "UDP",
+        "packet_size": 83
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.183.170",
+        "protocol": "UDP",
+        "packet_size": 411
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 66
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 66
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "57.144.213.33",
+        "protocol": "TCP",
+        "packet_size": 115
+    },
+    {
+        "src_ip": "142.250.183.170",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 81
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "57.144.213.33",
+        "protocol": "TCP",
+        "packet_size": 202
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.183.170",
+        "protocol": "UDP",
+        "packet_size": 75
+    },
+    {
+        "src_ip": "142.250.183.170",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 75
+    },
+    {
+        "src_ip": "57.144.213.33",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 58
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 70
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 70
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.183.170",
+        "protocol": "UDP",
+        "packet_size": 75
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 251
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 251
+    },
+    {
+        "src_ip": "57.144.213.33",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 58
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 1398
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 1398
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 1294
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 1398
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 1398
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 1292
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 180
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 141
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 1394
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 1341
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 180
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 66
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 66
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 66
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 66
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 66
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 66
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 58
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 316
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 58
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 126
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 96
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "142.250.183.170",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 151
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.183.170",
+        "protocol": "UDP",
+        "packet_size": 94
+    },
+    {
+        "src_ip": "142.250.183.170",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 68
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 70
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 70
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 70
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "142.250.183.170",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 1128
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.183.170",
+        "protocol": "UDP",
+        "packet_size": 78
+    },
+    {
+        "src_ip": "142.250.183.170",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 69
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 70
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 70
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 70
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.77.138",
+        "protocol": "UDP",
+        "packet_size": 1292
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.77.138",
+        "protocol": "UDP",
+        "packet_size": 1292
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.77.138",
+        "protocol": "UDP",
+        "packet_size": 124
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.183.170",
+        "protocol": "UDP",
+        "packet_size": 75
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.77.138",
+        "protocol": "UDP",
+        "packet_size": 563
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 58
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 58
+    },
+    {
+        "src_ip": "142.250.183.170",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 76
+    },
+    {
+        "src_ip": "57.144.213.33",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 199
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.183.170",
+        "protocol": "UDP",
+        "packet_size": 75
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 316
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "142.250.183.170",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "142.250.77.138",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 86
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "57.144.213.33",
+        "protocol": "TCP",
+        "packet_size": 111
+    },
+    {
+        "src_ip": "142.250.77.138",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 1296
+    },
+    {
+        "src_ip": "142.250.77.138",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 1296
+    },
+    {
+        "src_ip": "142.250.77.138",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 345
+    },
+    {
+        "src_ip": "142.250.77.138",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 997
+    },
+    {
+        "src_ip": "142.250.77.138",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 94
+    },
+    {
+        "src_ip": "142.250.77.138",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 70
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.77.138",
+        "protocol": "UDP",
+        "packet_size": 120
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.77.138",
+        "protocol": "UDP",
+        "packet_size": 73
+    },
+    {
+        "src_ip": "57.144.213.33",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 58
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.77.138",
+        "protocol": "UDP",
+        "packet_size": 74
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 804
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 1398
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 1398
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 1398
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 1398
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 1398
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 1398
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 1398
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 1398
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 1398
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 1398
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 1398
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 1398
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 1398
+    },
+    {
+        "src_ip": "142.250.77.138",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 166
+    },
+    {
+        "src_ip": "142.250.77.138",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 68
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 1398
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.77.138",
+        "protocol": "UDP",
+        "packet_size": 73
+    },
+    {
+        "src_ip": "23.212.254.65",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 627
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "23.212.254.65",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.183.170",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "142.250.77.138",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 263
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.183.170",
+        "protocol": "UDP",
+        "packet_size": 877
+    },
+    {
+        "src_ip": "142.250.77.138",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 67
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.77.138",
+        "protocol": "UDP",
+        "packet_size": 77
+    },
+    {
+        "src_ip": "142.250.183.170",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.251.43.142",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "57.144.213.33",
+        "dst_ip": "10.48.167.21",
+        "protocol": "TCP",
+        "packet_size": 159
+    },
+    {
+        "src_ip": "142.250.77.138",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 71
+    },
+    {
+        "src_ip": "142.250.183.170",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 75
+    },
+    {
+        "src_ip": "142.251.43.142",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 72
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "57.144.213.33",
+        "protocol": "TCP",
+        "packet_size": 54
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.183.170",
+        "protocol": "UDP",
+        "packet_size": 75
+    },
+    {
+        "src_ip": "142.250.183.170",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 221
+    },
+    {
+        "src_ip": "142.250.183.170",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 69
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.77.138",
+        "protocol": "UDP",
+        "packet_size": 315
+    },
+    {
+        "src_ip": "10.48.167.21",
+        "dst_ip": "142.250.183.170",
+        "protocol": "UDP",
+        "packet_size": 81
+    },
+    {
+        "src_ip": "142.250.183.170",
+        "dst_ip": "10.48.167.21",
+        "protocol": "UDP",
+        "packet_size": 71
+    }
+]
