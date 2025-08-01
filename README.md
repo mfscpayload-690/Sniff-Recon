@@ -1,124 +1,143 @@
-# 🕵️‍♂️ Sniff Recon - Network Log Analyzer
+# 🔍 Sniff Recon - Advanced Network Packet Analyzer
 
-Sniff Recon is a powerful Python-based tool designed to analyze network packet capture (PCAP/PCAPNG) files, CSV exports, and text-based logs. It offers both a user-friendly GUI (via Streamlit) and a CLI interface, making it versatile for both beginners and experienced cybersecurity professionals. Built for log management, packet inspection, intrusion detection, and natural language queries, Sniff Recon helps you gain actionable insights from raw packet data.
+A modern, browser-based network packet analyzer with beautiful UI design, similar to Wireshark but with enhanced visual appeal and user experience.
 
----
+## ✨ Features
 
-<img width="1003" height="1052" alt="image" src="https://github.com/user-attachments/assets/f3bd1893-900a-42aa-8b3b-61b1e439149c" />
+### 🎨 Modern UI Design
+- **Beautiful Gradient Backgrounds**: Dark theme with cyan accents
+- **Animated Protocol Cards**: Each protocol layer displayed in individual bordered cards
+- **Hover Effects**: Interactive elements with smooth animations
+- **Responsive Layout**: Works perfectly on all screen sizes
+- **Custom Scrollbars**: Styled scrollbars matching the theme
 
+### 📊 Packet Analysis
+- **Interactive Packet Table**: Sortable, filterable packet summary
+- **Protocol Layer Dissection**: Detailed breakdown of Ethernet, IP, TCP/UDP, and Application layers
+- **Hex Dump Viewer**: Raw packet data in readable hex format
+- **Real-time Analysis**: Instant packet inspection on selection
 
-## 🚀 Features
+### 📁 File Support
+- **PCAP/PCAPNG**: Full packet capture file support
+- **CSV**: Network log data in CSV format
+- **TXT**: Plain text network logs
+- **Large File Support**: Up to 200MB file size limit
 
-### ✅ Core Capabilities
+### 🔧 Technical Features
+- **Streamlit-based**: Modern web framework for rapid development
+- **Scapy Integration**: Professional-grade packet parsing
+- **AgGrid Tables**: Enterprise-level data grid with advanced features
+- **JSON Export**: Download analysis results in JSON format
 
-- 📂 Upload and analyze `.pcap`, `.pcapng`, `.csv`, or `.txt` network logs
-- 📊 Real-time summary report including:
-  - Total packets
-  - Unique source & destination IPs
-  - Top talkers (IP frequency)
-  - Protocol distribution (TCP/UDP/etc)
+## 🚀 Quick Start
 
-### 🔍 Lightweight AI-powered Natural Language Querying
+### Installation
 
-Ask questions like:
+1. **Clone the repository**:
+   ```bash
+   git clone <repository-url>
+   cd Sniff-Recon
+   ```
 
-- "What are the top 5 source IPs?"
-- "Count HTTPS GET requests"
-- "List suspected intrusions"
+2. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### 🧠 AI Summary Engine
+3. **Run the application**:
+   ```bash
+   streamlit run sniff_recon_gui.py
+   ```
 
-- Summarizes packet data into a human-readable format
-- Highlights anomalies, suspicious patterns, and traffic spikes
+### Usage
 
-### 🌐 Full HTML Report
+1. **Upload a file**: Drag and drop or browse for a packet capture file
+2. **View packet table**: Interactive table showing all packets
+3. **Select a packet**: Click on any row to analyze that packet
+4. **Explore layers**: Each protocol layer is displayed in beautiful cards
+5. **Download results**: Export analysis as JSON
 
-Generates and opens a styled browser-based report summarizing:
+## 🎯 UI Improvements Made
 
-- Timeline
-- Protocols used
-- IP frequency heatmap
-- Intrusion markers
+### Visual Enhancements
+- **Modern CSS Framework**: Custom styling with Inter font family
+- **Gradient Backgrounds**: Beautiful dark theme with cyan accents
+- **Card-based Layout**: Each protocol section in individual bordered cards
+- **Hover Animations**: Smooth transitions and hover effects
+- **Responsive Design**: Mobile-friendly layout
 
-### 🧑‍💻 Dual Mode Interface
+### User Experience
+- **Intuitive Navigation**: Clear visual hierarchy
+- **Interactive Elements**: Hover effects and animations
+- **Error Handling**: Beautiful error and success messages
+- **Loading States**: Smooth transitions between states
 
-- CLI for minimalists and scripting
-- GUI for streamlined exploration (built with Streamlit)
-
----
+### Technical Improvements
+- **Modular Code**: Clean separation of concerns
+- **Performance**: Optimized rendering and animations
+- **Accessibility**: Proper contrast and readable fonts
+- **Cross-browser**: Compatible with modern browsers
 
 ## 📁 Project Structure
 
 ```
 Sniff-Recon/
-├── assets/                # Images, icons, and UI assets
-├── core/
-│   ├── parser.py          # Parses PCAP, CSV, TXT into DataFrames
-│   ├── analyzer.py        # Generates summaries and protocol stats
-│   └── ai_module.py       # Handles natural language queries
-├── cli.py                 # Command-line interface script
-├── app.py                 # Streamlit GUI app
-├── utils.py               # Helper functions
-├── requirements.txt       # Dependencies
-├── report_template.html   # HTML template for log report
-└── README.md
+├── sniff_recon_gui.py      # Main application entry point
+├── display_packet_table.py # Modern packet table display
+├── ui_packet_viewer.py     # Enhanced packet viewer
+├── parsers/                # File parsing modules
+│   ├── pcap_parser.py     # PCAP file parser
+│   ├── csv_parser.py      # CSV file parser
+│   └── txt_parser.py      # TXT file parser
+├── utils/                  # Utility functions
+├── output/                 # Generated output files
+└── requirements.txt        # Python dependencies
 ```
 
+## 🎨 Design System
+
+### Color Palette
+- **Primary**: `#00ffff` (Cyan)
+- **Secondary**: `#00b3b3` (Dark Cyan)
+- **Background**: `#0f0f23` to `#16213e` (Gradient)
+- **Text**: `#e0e0e0` (Light Gray)
+- **Cards**: `rgba(30, 30, 30, 0.9)` (Semi-transparent Dark)
+
+### Typography
+- **Font Family**: Inter (Google Fonts)
+- **Weights**: 300, 400, 500, 600, 700
+- **Monospace**: Courier New for technical data
+
+### Animations
+- **Fade In**: Cards appear with staggered animation
+- **Hover Effects**: Cards lift and glow on hover
+- **Smooth Transitions**: 0.3s cubic-bezier transitions
+
+## 🔮 Future Enhancements
+
+### Planned Features
+- **AI Integration**: Natural language packet analysis
+- **Advanced Filtering**: Complex packet filtering
+- **Export Options**: PDF, HTML, and CSV reports
+- **Plugin System**: Extensible architecture
+
+### UI Improvements
+- **Dark/Light Theme**: User-selectable themes
+- **Customizable Layout**: Drag-and-drop interface
+- **Advanced Visualizations**: Packet flow diagrams
+- **Keyboard Shortcuts**: Power user features
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
 ---
 
-## 🛠️ Installation & Usage
-
-### 🔹 1. Clone the Repo
-
-```bash
-git clone https://github.com/mfscpayload-690/Sniff-Recon.git
-cd Sniff-Recon
-```
-
-### 🔹 2. Setup Virtual Environment
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-### 🔹 3. Run GUI (Streamlit)
-
-```bash
-streamlit run app.py
-```
-
-### 🔹 4. Run CLI Tool
-
-```bash
-python cli.py <path-to-pcap-or-csv-file>
-```
-
----
-
-## 🧠 Example AI Query Outputs
-
-> **What are the top 5 destination IPs?**  
-> `{'10.48.167.21': 93, '23.212.254.65': 40, ...}`
-
-> **Count HTTPS GET requests**  
-> Output: 62 GET requests using TCP Port 443
-
-> **Detect intrusions**  
-> Output: No obvious port scan or SYN flood patterns detected.
-
----
-
-## 🪪 License
-
-This project is licensed under the MIT License. Feel free to use, modify, and distribute!
-
----
-
-## 👨‍💻 Author
-
-Aravind Lal  
-💻 [GitHub](https://github.com/mfscpayload-690) | 📫 [LinkedIn](https://www.linkedin.com/in/aravind-lal)
-
-> "Logs don't lie—if you know how to read them."
+**Made with ❤️ for network analysis enthusiasts**
