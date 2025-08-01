@@ -156,6 +156,27 @@ def inject_modern_css():
             color: #ffff66;
         }
         
+        /* Tab styling */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 8px;
+            background: rgba(30, 30, 30, 0.8);
+            border-radius: 12px;
+            padding: 8px;
+        }
+        
+        .stTabs [data-baseweb="tab"] {
+            background: rgba(15, 15, 15, 0.5);
+            border-radius: 8px;
+            color: #e0e0e0;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+        
+        .stTabs [aria-selected="true"] {
+            background: linear-gradient(45deg, #00ffff, #00b3b3);
+            color: #121212;
+            font-weight: 600;
+        }
+        
         /* Responsive design */
         @media (max-width: 768px) {
             .main {
@@ -211,7 +232,7 @@ def main():
     )
     
     st.markdown(
-        '<p class="subtitle fade-in-up">Advanced Network Packet Analyzer & Protocol Dissector</p>',
+        '<p class="subtitle fade-in-up">Advanced Network Packet Analyzer & AI-Powered Protocol Dissector</p>',
         unsafe_allow_html=True
     )
 
@@ -294,53 +315,80 @@ def main():
                 )
                 return
 
-            # Display packet analysis
-            st.markdown("## 📊 Packet Analysis Results")
+            # Create tabs for different analysis views
+            tab1, tab2, tab3 = st.tabs(["📊 Packet Analysis", "🤖 AI Analysis", "💾 Export Results"])
             
-            # Import and display packet table
-            from display_packet_table import display_packet_table
-            import scapy.all as scapy
+            with tab1:
+                # Display packet analysis
+                st.markdown("## 📊 Packet Analysis Results")
+                
+                # Import and display packet table
+                from display_packet_table import display_packet_table
+                import scapy.all as scapy
 
-            try:
-                packets = scapy.rdpcap(tmp_file_path)
-                packets_list = list(packets)
-                display_packet_table(packets_list)
-            except Exception as e:
+                try:
+                    packets = scapy.rdpcap(tmp_file_path)
+                    packets_list = list(packets)
+                    display_packet_table(packets_list)
+                except Exception as e:
+                    st.markdown(
+                        f'<div class="error-message">❌ Error reading packet file: {str(e)}</div>',
+                        unsafe_allow_html=True
+                    )
+            
+            with tab2:
+                # AI Analysis tab
+                try:
+                    from ai_query_interface import render_ai_query_interface, render_ai_quick_analysis
+                    import scapy.all as scapy
+                    
+                    packets = scapy.rdpcap(tmp_file_path)
+                    packets_list = list(packets)
+                    
+                    # Quick AI analysis
+                    render_ai_quick_analysis(packets_list)
+                    
+                    # AI Query interface
+                    render_ai_query_interface(packets_list)
+                    
+                except Exception as e:
+                    st.markdown(
+                        f'<div class="error-message">❌ Error initializing AI analysis: {str(e)}</div>',
+                        unsafe_allow_html=True
+                    )
+            
+            with tab3:
+                # Export Results tab
+                st.markdown("## 💾 Export Analysis Results")
+                
+                # Save summary to JSON
+                save_summary(summary.to_dict(orient="records"))
+                
                 st.markdown(
-                    f'<div class="error-message">❌ Error reading packet file: {str(e)}</div>',
+                    '<div class="success-message">✅ Analysis complete! Summary saved to output/summary.json</div>',
                     unsafe_allow_html=True
                 )
 
-            # Save summary to JSON
-            save_summary(summary.to_dict(orient="records"))
-            
-            st.markdown(
-                '<div class="success-message">✅ Analysis complete! Summary saved to output/summary.json</div>',
-                unsafe_allow_html=True
-            )
+                # Download section
+                col1, col2 = st.columns(2)
+                
+                # Button to download JSON
+                with open("output/summary.json", "r") as f:
+                    json_data = f.read()
 
-            # Download section
-            st.markdown("## 💾 Download Results")
-            
-            # Button to download JSON
-            with open("output/summary.json", "r") as f:
-                json_data = f.read()
+                with col1:
+                    st.download_button(
+                        label="📥 Download Summary JSON",
+                        data=json_data,
+                        file_name="sniff_recon_summary.json",
+                        mime="application/json",
+                        key="downloadJson",
+                        help="Download the complete analysis summary"
+                    )
 
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.download_button(
-                    label="📥 Download Summary JSON",
-                    data=json_data,
-                    file_name="sniff_recon_summary.json",
-                    mime="application/json",
-                    key="downloadJson",
-                    help="Download the complete analysis summary"
-                )
-
-            with col2:
-                if st.button("👁️ View Raw JSON"):
-                    st.json(json.loads(json_data))
+                with col2:
+                    if st.button("👁️ View Raw JSON"):
+                        st.json(json.loads(json_data))
 
         except Exception as e:
             st.markdown(

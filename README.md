@@ -1,6 +1,6 @@
 # 🔍 Sniff Recon - Advanced Network Packet Analyzer
 
-A modern, browser-based network packet analyzer with beautiful UI design, similar to Wireshark but with enhanced visual appeal and user experience.
+A modern, browser-based network packet analyzer with beautiful UI design and **AI-powered natural language querying**, similar to Wireshark but with enhanced visual appeal and intelligent analysis capabilities.
 
 ## ✨ Features
 
@@ -10,6 +10,13 @@ A modern, browser-based network packet analyzer with beautiful UI design, simila
 - **Hover Effects**: Interactive elements with smooth animations
 - **Responsive Layout**: Works perfectly on all screen sizes
 - **Custom Scrollbars**: Styled scrollbars matching the theme
+
+### 🤖 AI-Powered Analysis
+- **Natural Language Queries**: Ask questions in plain English about your network traffic
+- **Intelligent Insights**: AI analyzes packet data and provides security-focused insights
+- **Suspicious Pattern Detection**: Automatic identification of potential threats
+- **Interactive AI Interface**: Both GUI and CLI options for AI queries
+- **Batch Analysis**: Process multiple queries at once
 
 ### 📊 Packet Analysis
 - **Interactive Packet Table**: Sortable, filterable packet summary
@@ -28,6 +35,7 @@ A modern, browser-based network packet analyzer with beautiful UI design, simila
 - **Scapy Integration**: Professional-grade packet parsing
 - **AgGrid Tables**: Enterprise-level data grid with advanced features
 - **JSON Export**: Download analysis results in JSON format
+- **Hugging Face AI**: Powered by Mistral-7B-Instruct-v0.2 model
 
 ## 🚀 Quick Start
 
@@ -44,7 +52,15 @@ A modern, browser-based network packet analyzer with beautiful UI design, simila
    pip install -r requirements.txt
    ```
 
-3. **Run the application**:
+3. **Set up AI features** (optional but recommended):
+   ```bash
+   # Create .env file
+   echo "HUGGINGFACE_API_KEY=your_api_key_here" > .env
+   ```
+   
+   Get your free API key from: [Hugging Face](https://huggingface.co/settings/tokens)
+
+4. **Run the application**:
    ```bash
    streamlit run sniff_recon_gui.py
    ```
@@ -55,7 +71,35 @@ A modern, browser-based network packet analyzer with beautiful UI design, simila
 2. **View packet table**: Interactive table showing all packets
 3. **Select a packet**: Click on any row to analyze that packet
 4. **Explore layers**: Each protocol layer is displayed in beautiful cards
-5. **Download results**: Export analysis as JSON
+5. **Ask AI questions**: Use the AI tab to ask natural language questions
+6. **Download results**: Export analysis as JSON
+
+## 🤖 AI Features
+
+### Natural Language Queries
+Ask questions like:
+- "What are the top 5 source IP addresses?"
+- "Are there any suspicious patterns in this traffic?"
+- "What protocols are being used most frequently?"
+- "Show me the most common destination ports"
+- "Is there any evidence of port scanning?"
+- "Summarize the overall network activity"
+- "Are there any potential security threats?"
+
+### CLI AI Interface
+```bash
+# Interactive mode
+python cli_ai.py -f capture.pcap -i
+
+# Batch mode with specific queries
+python cli_ai.py -f capture.pcap -q "What are the top 5 IPs?" "Are there suspicious patterns?"
+
+# Save results to file
+python cli_ai.py -f capture.pcap -q "Analyze traffic" -o results.json
+
+# Show packet summary only
+python cli_ai.py -f capture.pcap --summary
+```
 
 ## 🎯 UI Improvements Made
 
@@ -67,16 +111,18 @@ A modern, browser-based network packet analyzer with beautiful UI design, simila
 - **Responsive Design**: Mobile-friendly layout
 
 ### User Experience
-- **Intuitive Navigation**: Clear visual hierarchy
+- **Intuitive Navigation**: Clear visual hierarchy with tabs
 - **Interactive Elements**: Hover effects and animations
 - **Error Handling**: Beautiful error and success messages
 - **Loading States**: Smooth transitions between states
+- **AI Integration**: Seamless natural language querying
 
 ### Technical Improvements
 - **Modular Code**: Clean separation of concerns
 - **Performance**: Optimized rendering and animations
 - **Accessibility**: Proper contrast and readable fonts
 - **Cross-browser**: Compatible with modern browsers
+- **Security**: Secure API key handling
 
 ## 📁 Project Structure
 
@@ -85,13 +131,18 @@ Sniff-Recon/
 ├── sniff_recon_gui.py      # Main application entry point
 ├── display_packet_table.py # Modern packet table display
 ├── ui_packet_viewer.py     # Enhanced packet viewer
-├── parsers/                # File parsing modules
+├── ai_module.py           # AI query engine
+├── ai_query_interface.py  # Streamlit AI interface
+├── cli_ai.py             # CLI AI interface
+├── parsers/               # File parsing modules
 │   ├── pcap_parser.py     # PCAP file parser
 │   ├── csv_parser.py      # CSV file parser
 │   └── txt_parser.py      # TXT file parser
 ├── utils/                  # Utility functions
 ├── output/                 # Generated output files
-└── requirements.txt        # Python dependencies
+├── requirements.txt        # Python dependencies
+├── SETUP.md               # AI setup guide
+└── README.md              # This file
 ```
 
 ## 🎨 Design System
@@ -116,16 +167,24 @@ Sniff-Recon/
 ## 🔮 Future Enhancements
 
 ### Planned Features
-- **AI Integration**: Natural language packet analysis
-- **Advanced Filtering**: Complex packet filtering
-- **Export Options**: PDF, HTML, and CSV reports
-- **Plugin System**: Extensible architecture
+- **Advanced AI Models**: Support for multiple AI models
+- **Real-time Capture**: Live packet monitoring with AI analysis
+- **Advanced Filtering**: Complex packet filtering with AI assistance
+- **Export Options**: PDF, HTML, and CSV reports with AI insights
+- **Plugin System**: Extensible architecture for custom analyzers
 
 ### UI Improvements
 - **Dark/Light Theme**: User-selectable themes
 - **Customizable Layout**: Drag-and-drop interface
-- **Advanced Visualizations**: Packet flow diagrams
+- **Advanced Visualizations**: Packet flow diagrams with AI annotations
 - **Keyboard Shortcuts**: Power user features
+
+## 🔐 Security & Privacy
+
+- **API Key Security**: Keys stored in environment variables, never hardcoded
+- **Local Processing**: Packet analysis happens locally
+- **Secure Communication**: HTTPS for AI API calls
+- **No Data Storage**: AI queries are not stored permanently
 
 ## 🤝 Contributing
 
@@ -138,6 +197,15 @@ Sniff-Recon/
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- **Streamlit**: For the amazing web framework
+- **Scapy**: For professional packet manipulation
+- **AgGrid**: For the powerful data grid component
+- **Hugging Face**: For the AI inference API
+- **Inter Font**: For the beautiful typography
+
 ---
 
 **Made with ❤️ for network analysis enthusiasts**
