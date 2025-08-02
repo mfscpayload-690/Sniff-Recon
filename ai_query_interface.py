@@ -194,6 +194,15 @@ def render_ai_query_interface(packets: List[Packet]):
     st.markdown('<div class="ai-query-container">', unsafe_allow_html=True)
     st.markdown('<div class="ai-query-header">AI-Powered Packet Analysis</div>', unsafe_allow_html=True)
     
+    # Check API key status and show notification
+    if not ai_engine.api_key_valid:
+        st.warning(
+            "⚠️ **API Key Issue Detected**: Your Hugging Face API key is invalid or missing. "
+            "The app will provide local analysis instead. To enable AI-powered analysis, "
+            "please update your `HUGGINGFACE_API_KEY` in the `.env` file. "
+            "Get a free API key from [Hugging Face](https://huggingface.co/settings/tokens)."
+        )
+    
     st.markdown(
         "Ask questions about your network traffic in natural language. The AI will analyze the packet data and provide insights."
     )
@@ -271,10 +280,18 @@ def render_ai_query_interface(packets: List[Packet]):
             
             if result.get("success"):
                 # Success response
+                header_text = "AI Analysis"
+                header_icon = "🤖"
+                
+                # Check if this is a fallback response
+                if result.get("fallback"):
+                    header_text = "Local Analysis (AI Unavailable)"
+                    header_icon = "📊"
+                
                 st.markdown(
                     f"""
                     <div class="ai-response-container">
-                        <div class="ai-response-header">AI Analysis</div>
+                        <div class="ai-response-header">{header_icon} {header_text}</div>
                         <div style="margin-bottom: 1rem; color: #00b3b3; font-weight: 500;">
                             <strong>Question:</strong> {query}
                         </div>

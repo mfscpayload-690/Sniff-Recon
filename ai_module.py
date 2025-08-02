@@ -44,17 +44,28 @@ class AIQueryEngine:
     """
     
     def __init__(self):
-        self.api_url = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
+        # Try multiple model endpoints in case one is unavailable
+        self.api_urls = [
+            "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
+            "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1",
+            "https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium",
+            "https://api-inference.huggingface.co/models/gpt2"
+        ]
+        self.api_url = self.api_urls[0]  # Default to first URL
+        
         self.api_key = os.getenv("HUGGINGFACE_API_KEY")
         
-        if not self.api_key:
-            logger.warning("HUGGINGFACE_API_KEY not found in environment variables")
-            self.api_key = "YOUR_HF_API_KEY"  # Placeholder for development
+        if not self.api_key or self.api_key == "YOUR_HF_API_KEY":
+            logger.warning("HUGGINGFACE_API_KEY not found or invalid in environment variables")
+            self.api_key = None
         
         self.headers = {
-            "Authorization": f"Bearer {self.api_key}",
+            "Authorization": f"Bearer {self.api_key}" if self.api_key else "",
             "Content-Type": "application/json"
         }
+        
+        # Test API key validity
+        self.api_key_valid = self._test_api_key()
         
         # Common query templates for better AI responses
         self.query_templates = {
@@ -65,6 +76,39 @@ class AIQueryEngine:
             "traffic_summary": "Provide a comprehensive summary of this network traffic analysis.",
             "intrusion_detection": "Look for signs of potential intrusion attempts or malicious activity."
         }
+    
+    def _test_api_key(self) -> bool:
+        """Test if the API key is valid"""
+        if not self.api_key:
+            return False
+        
+        try:
+            response = requests.get(
+                "https://huggingface.co/api/whoami",
+                headers={"Authorization": f"Bearer {self.api_key}"},
+                timeout=10
+            )
+            return response.status_code == 200
+        except Exception as e:
+            logger.error(f"Error testing API key: {e}")
+            return False
+    
+    def _find_working_model(self) -> Optional[str]:
+        """Find a working model endpoint"""
+        if not self.api_key_valid:
+            return None
+        
+        for url in self.api_urls:
+            try:
+                response = requests.get(url, headers=self.headers, timeout=10)
+                if response.status_code == 200:
+                    logger.info(f"Found working model: {url}")
+                    return url
+            except Exception as e:
+                logger.warning(f"Model {url} not available: {e}")
+                continue
+        
+        return None
     
     def extract_packet_statistics(self, packets: List[Packet]) -> PacketSummary:
         """
@@ -216,6 +260,15 @@ Suspicious Patterns Detected:
         """
         Send query to Hugging Face API and get response
         """
+        # Check if API key is valid
+        if not self.api_key_valid:
+            return self._provide_fallback_analysis(user_query, packet_summary)
+        
+        # Find a working model
+        working_url = self._find_working_model()
+        if not working_url:
+            return self._provide_fallback_analysis(user_query, packet_summary)
+        
         try:
             # Format the data for AI
             data_context = self.format_data_for_ai(packet_summary)
@@ -243,7 +296,7 @@ Please provide a clear, concise, and professional analysis. Focus on security im
             
             # Make the API request
             response = requests.post(
-                self.api_url,
+                working_url,
                 headers=self.headers,
                 json=payload,
                 timeout=30
@@ -270,33 +323,114 @@ Please provide a clear, concise, and professional analysis. Focus on security im
             
             else:
                 logger.error(f"API request failed with status {response.status_code}: {response.text}")
-                return {
-                    "success": False,
-                    "error": f"API request failed: {response.status_code}",
-                    "query": user_query
-                }
+                return self._provide_fallback_analysis(user_query, packet_summary)
                 
         except requests.exceptions.Timeout:
             logger.error("API request timed out")
-            return {
-                "success": False,
-                "error": "Request timed out. Please try again.",
-                "query": user_query
-            }
+            return self._provide_fallback_analysis(user_query, packet_summary)
         except requests.exceptions.RequestException as e:
             logger.error(f"Request error: {e}")
-            return {
-                "success": False,
-                "error": f"Network error: {str(e)}",
-                "query": user_query
-            }
+            return self._provide_fallback_analysis(user_query, packet_summary)
         except Exception as e:
             logger.error(f"Unexpected error: {e}")
-            return {
-                "success": False,
-                "error": f"Unexpected error: {str(e)}",
-                "query": user_query
-            }
+            return self._provide_fallback_analysis(user_query, packet_summary)
+    
+    def _provide_fallback_analysis(self, user_query: str, packet_summary: PacketSummary) -> Dict[str, Any]:
+        """
+        Provide fallback analysis when AI API is unavailable
+        """
+        query_lower = user_query.lower()
+        
+        if "top" in query_lower and ("ip" in query_lower or "address" in query_lower):
+            # Top IP analysis
+            top_src = list(packet_summary.top_src_ips.items())[:5]
+            top_dst = list(packet_summary.top_dst_ips.items())[:5]
+            
+            response = f"""**Top IP Addresses Analysis:**
+
+**Top 5 Source IPs:**
+{chr(10).join([f"- {ip}: {count} packets" for ip, count in top_src])}
+
+**Top 5 Destination IPs:**
+{chr(10).join([f"- {ip}: {count} packets" for ip, count in top_dst])}
+
+*Note: This is a local analysis as the AI service is currently unavailable.*"""
+            
+        elif "suspicious" in query_lower or "unusual" in query_lower or "anomaly" in query_lower:
+            # Suspicious activity analysis
+            suspicious_count = len(packet_summary.suspicious_patterns)
+            protocols = packet_summary.protocol_distribution
+            
+            response = f"""**Suspicious Activity Analysis:**
+
+**Suspicious Patterns Detected:** {suspicious_count}
+**Protocol Distribution:** {protocols}
+
+**Security Insights:**
+- Monitor traffic from unusual ports
+- Check for port scanning patterns
+- Review ICMP traffic for ping sweeps
+- Investigate connections to suspicious IPs
+
+*Note: This is a local analysis as the AI service is currently unavailable.*"""
+            
+        elif "protocol" in query_lower:
+            # Protocol analysis
+            protocols = packet_summary.protocol_distribution
+            response = f"""**Protocol Analysis:**
+
+**Protocol Distribution:**
+{chr(10).join([f"- {proto}: {count} packets" for proto, count in protocols.items()])}
+
+**Analysis:**
+- Most common protocol: {max(protocols.items(), key=lambda x: x[1])[0] if protocols else 'N/A'}
+- Total unique protocols: {len(protocols)}
+
+*Note: This is a local analysis as the AI service is currently unavailable.*"""
+            
+        elif "port" in query_lower:
+            # Port analysis
+            tcp_ports = set(packet_summary.port_analysis.get('tcp', []))
+            udp_ports = set(packet_summary.port_analysis.get('udp', []))
+            
+            response = f"""**Port Analysis:**
+
+**TCP Ports:** {sorted(list(tcp_ports))[:10]}
+**UDP Ports:** {sorted(list(udp_ports))[:10]}
+
+**Common Ports Analysis:**
+- HTTP/HTTPS (80/443): {'Present' if 80 in tcp_ports or 443 in tcp_ports else 'Not detected'}
+- SSH (22): {'Present' if 22 in tcp_ports else 'Not detected'}
+- DNS (53): {'Present' if 53 in udp_ports else 'Not detected'}
+
+*Note: This is a local analysis as the AI service is currently unavailable.*"""
+            
+        else:
+            # General summary
+            response = f"""**Network Traffic Summary:**
+
+**Basic Statistics:**
+- Total Packets: {packet_summary.total_packets}
+- Unique Source IPs: {len(packet_summary.unique_src_ips)}
+- Unique Destination IPs: {len(packet_summary.unique_dst_ips)}
+- Protocols: {list(packet_summary.protocol_distribution.keys())}
+- Suspicious Patterns: {len(packet_summary.suspicious_patterns)}
+
+**Recommendations:**
+- Review traffic patterns for anomalies
+- Monitor suspicious IP addresses
+- Check for unusual port usage
+- Investigate ICMP traffic
+
+*Note: This is a local analysis as the AI service is currently unavailable. To enable AI-powered analysis, please update your HUGGINGFACE_API_KEY in the .env file.*"""
+        
+        return {
+            "success": True,
+            "response": response,
+            "query": user_query,
+            "confidence": 0.7,
+            "fallback": True
+        }
     
     def get_suggested_queries(self) -> List[str]:
         """

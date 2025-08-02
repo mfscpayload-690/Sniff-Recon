@@ -222,6 +222,14 @@ def inject_modern_css():
     )
 
 def main():
+    # Set page config to prevent JavaScript errors
+    st.set_page_config(
+        page_title="Sniff Recon - Network Packet Analyzer",
+        page_icon="🔍",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
+    
     # Inject modern CSS
     inject_modern_css()
 
