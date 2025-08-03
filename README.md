@@ -128,20 +128,28 @@ python cli_ai.py -f capture.pcap --summary
 
 ```
 Sniff-Recon/
-├── sniff_recon_gui.py      # Main application entry point
+├── main.py                 # Main application entry point
+├── sniff_recon_gui.py      # Streamlit GUI application
 ├── display_packet_table.py # Modern packet table display
 ├── ui_packet_viewer.py     # Enhanced packet viewer
 ├── ai_module.py           # AI query engine
 ├── ai_query_interface.py  # Streamlit AI interface
 ├── cli_ai.py             # CLI AI interface
+├── setup_api_key.py       # API key setup utility
+├── test_hf_api.py         # Hugging Face API testing utility
 ├── parsers/               # File parsing modules
 │   ├── pcap_parser.py     # PCAP file parser
 │   ├── csv_parser.py      # CSV file parser
 │   └── txt_parser.py      # TXT file parser
 ├── utils/                  # Utility functions
+│   └── helpers.py          # Helper functions
 ├── output/                 # Generated output files
+│   └── summary.json        # Analysis summary file
 ├── requirements.txt        # Python dependencies
 ├── SETUP.md               # AI setup guide
+├── TROUBLESHOOTING.md     # Troubleshooting guide
+├── LICENSE                # License file
+├── .gitignore             # Git ignore file
 └── README.md              # This file
 ```
 
