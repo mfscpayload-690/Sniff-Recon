@@ -330,13 +330,30 @@ def main():
                 # Display packet analysis
                 st.markdown("## 📊 Packet Analysis Results")
                 
-                # Import and display packet table
+# Import and display packet table
                 from display_packet_table import display_packet_table
                 import scapy.all as scapy
 
                 try:
-                    packets = scapy.rdpcap(tmp_file_path)
-                    packets_list = list(packets)
+                    packets = scapy.PcapReader(tmp_file_path)
+                    packets_list = []
+                    total_bytes = os.path.getsize(tmp_file_path)
+                    bytes_read = 0
+                    progress_text = "Loading and parsing packets..."
+                    progress_bar = st.progress(0, text=progress_text)
+                    last_update_fraction = 0
+
+                    for pkt in packets:
+                        packets_list.append(pkt)
+                        pos = packets._current_packet if hasattr(packets, '_current_packet') else len(packets_list)
+                        # Estimate progress (fallback to number of packets)
+                        fraction = min(1.0, (packets._file.tell() / total_bytes)) if hasattr(packets, '_file') else min(1.0, pos/10000)
+                        # Avoid excessive redraws
+                        if fraction - last_update_fraction > 0.01 or fraction == 1.0:
+                            progress_bar.progress(fraction, text=progress_text)
+                            last_update_fraction = fraction
+                    progress_bar.empty()
+                    packets.close()
                     display_packet_table(packets_list)
                 except Exception as e:
                     st.markdown(
