@@ -29,9 +29,13 @@ def main():
     load_dotenv()
     current_key = os.getenv("HUGGINGFACE_API_KEY")
     
-    if current_key and test_api_key(current_key):
-        print("✅ Your current API key is valid!")
-        return
+    if current_key:
+        print(f"🔍 Found existing API key: {current_key[:10]}...")
+        if test_api_key(current_key):
+            print("✅ Your current API key is valid!")
+            return
+        else:
+            print("❌ Your current API key is invalid.")
     
     print("\n📋 To use AI-powered analysis, you need a Hugging Face API key.")
     print("\n🔗 Get your free API key:")

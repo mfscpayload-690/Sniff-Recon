@@ -58,6 +58,8 @@ class AIQueryEngine:
         if not self.api_key or self.api_key == "YOUR_HF_API_KEY":
             logger.warning("HUGGINGFACE_API_KEY not found or invalid in environment variables")
             self.api_key = None
+        elif self.api_key:
+            logger.info(f"API key loaded: {self.api_key[:10]}...")
         
         self.headers = {
             "Authorization": f"Bearer {self.api_key}" if self.api_key else "",
