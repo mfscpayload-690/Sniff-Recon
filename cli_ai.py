@@ -28,7 +28,7 @@ def print_banner():
     """
     print(banner)
 
-def print_colored(text: str, color: str = "cyan"):
+def print_colored(text: str, color: str = "cyan", end="\n"):
     """Print colored text to terminal"""
     colors = {
         "cyan": "\033[96m",
@@ -39,7 +39,7 @@ def print_colored(text: str, color: str = "cyan"):
         "bold": "\033[1m",
         "reset": "\033[0m"
     }
-    print(f"{colors.get(color, '')}{text}{colors['reset']}")
+    print(f"{colors.get(color, '')}{text}{colors['reset']}", end=end)
 
 def load_packets(file_path: str) -> List[Packet]:
     """Load packets from file"""

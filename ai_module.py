@@ -2,7 +2,7 @@
 AI Module for Sniff Recon - Network Log Analyzer
 
 This module provides natural language querying capabilities for packet analysis
-using the Hugging Face Inference API with Mistral-7B-Instruct-v0.2 model.
+using the Groq API.
 """
 
 import os
@@ -44,23 +44,16 @@ class AIQueryEngine:
     """
     
     def __init__(self):
-        # Try multiple model endpoints in case one is unavailable
-        self.api_urls = [
-            "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
-            "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1",
-            "https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium",
-            "https://api-inference.huggingface.co/models/gpt2"
-        ]
-        self.api_url = self.api_urls[0]  # Default to first URL
-        
-        self.api_key = os.getenv("HUGGINGFACE_API_KEY")
-        
-        if not self.api_key or self.api_key == "YOUR_HF_API_KEY":
-            logger.warning("HUGGINGFACE_API_KEY not found or invalid in environment variables")
+        self.api_url = "https://api.groq.com/openai/v1/chat/completions"
+        self.api_key = os.getenv("GROQ_API_KEY")
+        self.model_name = os.getenv("MODEL_NAME", "llama3-8b-8192")
+
+        if not self.api_key or self.api_key == "your_groq_api_key_here":
+            logger.warning("GROQ_API_KEY not found or invalid in environment variables")
             self.api_key = None
         elif self.api_key:
-            logger.info(f"API key loaded: {self.api_key[:10]}...")
-        
+            logger.info(f"Groq API key loaded.")
+
         self.headers = {
             "Authorization": f"Bearer {self.api_key}" if self.api_key else "",
             "Content-Type": "application/json"
@@ -85,32 +78,17 @@ class AIQueryEngine:
             return False
         
         try:
+            # Groq uses the OpenAI-compatible models endpoint for key validation
             response = requests.get(
-                "https://huggingface.co/api/whoami",
-                headers={"Authorization": f"Bearer {self.api_key}"},
+                "https://api.groq.com/openai/v1/models",
+                headers=self.headers,
                 timeout=10
             )
             return response.status_code == 200
         except Exception as e:
-            logger.error(f"Error testing API key: {e}")
+            logger.error(f"Error testing Groq API key: {e}")
             return False
     
-    def _find_working_model(self) -> Optional[str]:
-        """Find a working model endpoint"""
-        if not self.api_key_valid:
-            return None
-        
-        for url in self.api_urls:
-            try:
-                response = requests.get(url, headers=self.headers, timeout=10)
-                if response.status_code == 200:
-                    logger.info(f"Found working model: {url}")
-                    return url
-            except Exception as e:
-                logger.warning(f"Model {url} not available: {e}")
-                continue
-        
-        return None
     
     def extract_packet_statistics(self, packets: List[Packet]) -> PacketSummary:
         """
@@ -260,61 +238,42 @@ Suspicious Patterns Detected:
     
     def query_ai(self, user_query: str, packet_summary: PacketSummary) -> Dict[str, Any]:
         """
-        Send query to Hugging Face API and get response
+        Send query to OpenAI API and get response
         """
-        # Check if API key is valid
         if not self.api_key_valid:
             return self._provide_fallback_analysis(user_query, packet_summary)
-        
-        # Find a working model
-        working_url = self._find_working_model()
-        if not working_url:
-            return self._provide_fallback_analysis(user_query, packet_summary)
-        
+
         try:
-            # Format the data for AI
             data_context = self.format_data_for_ai(packet_summary)
             
-            # Create the prompt
-            prompt = f"""You are a network security analyst. Analyze the following network traffic data and answer the user's question.
-
-Network Data:
+            system_prompt = "You are a network security analyst. Analyze the following network traffic data and answer the user's question."
+            user_prompt = f"""Network Data:
 {data_context}
 
 User Question: {user_query}
 
 Please provide a clear, concise, and professional analysis. Focus on security implications and actionable insights."""
 
-            # Prepare the request payload
             payload = {
-                "inputs": prompt,
-                "parameters": {
-                    "max_new_tokens": 500,
-                    "temperature": 0.7,
-                    "top_p": 0.9,
-                    "do_sample": True
-                }
+                "model": self.model_name,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                "max_tokens": 500,
+                "temperature": 0.7,
             }
-            
-            # Make the API request
+
             response = requests.post(
-                working_url,
+                self.api_url,
                 headers=self.headers,
                 json=payload,
                 timeout=30
             )
-            
+
             if response.status_code == 200:
                 result = response.json()
-                
-                # Extract the generated text
-                if isinstance(result, list) and len(result) > 0:
-                    ai_response = result[0].get('generated_text', '')
-                    # Remove the prompt from the response
-                    if prompt in ai_response:
-                        ai_response = ai_response.replace(prompt, '').strip()
-                else:
-                    ai_response = str(result)
+                ai_response = result['choices'][0]['message']['content'].strip()
                 
                 return {
                     "success": True,
@@ -326,12 +285,15 @@ Please provide a clear, concise, and professional analysis. Focus on security im
             else:
                 logger.error(f"API request failed with status {response.status_code}: {response.text}")
                 return self._provide_fallback_analysis(user_query, packet_summary)
-                
+
         except requests.exceptions.Timeout:
             logger.error("API request timed out")
             return self._provide_fallback_analysis(user_query, packet_summary)
         except requests.exceptions.RequestException as e:
             logger.error(f"Request error: {e}")
+            return self._provide_fallback_analysis(user_query, packet_summary)
+        except (KeyError, IndexError) as e:
+            logger.error(f"Failed to parse Groq response: {e}")
             return self._provide_fallback_analysis(user_query, packet_summary)
         except Exception as e:
             logger.error(f"Unexpected error: {e}")
@@ -424,7 +386,7 @@ Please provide a clear, concise, and professional analysis. Focus on security im
 - Check for unusual port usage
 - Investigate ICMP traffic
 
-*Note: This is a local analysis as the AI service is currently unavailable. To enable AI-powered analysis, please update your HUGGINGFACE_API_KEY in the .env file.*"""
+*Note: This is a local analysis as the AI service is currently unavailable. To enable AI-powered analysis, please set up your GROQ_API_KEY in the .env file.*"""
         
         return {
             "success": True,
