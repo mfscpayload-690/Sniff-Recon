@@ -2,29 +2,24 @@
 
 This guide will help you set up the AI-powered packet analysis features in Sniff Recon.
 
-## 🔑 Getting Your Hugging Face API Key
+## 🔑 Getting Your Groq API Key
 
-1. **Visit Hugging Face**: Go to [https://huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
-
-2. **Create Account**: Sign up for a free account if you don't have one
-
-3. **Generate API Key**: 
-   - Click "New token"
+1. **Visit Groq**: Go to [https://console.groq.com/keys](https://console.groq.com/keys)
+2. **Create Account**: Sign up for a free account if you don't have one.
+3. **Generate API Key**:
+   - Click "Create API Key"
    - Give it a name (e.g., "Sniff Recon AI")
-   - Select "Read" permissions
-   - Copy the generated token
+   - Copy the generated key.
 
 ## 📁 Environment Setup
 
-1. **Create .env file**: In your project root, create a file named `.env`
-
-2. **Add your API key**:
+1. **Run the Setup Script**:
    ```bash
-   # .env file
-   HUGGINGFACE_API_KEY=your_actual_api_key_here
+   python setup_api_key.py
    ```
+   The script will prompt you for your API key and save it to a `.env` file.
 
-3. **Install dependencies**:
+2. **Install Dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
@@ -61,13 +56,12 @@ python cli_ai.py --suggested
 ## 🔧 Troubleshooting
 
 ### API Key Issues
-- Make sure your `.env` file is in the project root
-- Verify the API key is correct and has proper permissions
-- Check that `python-dotenv` is installed
+- Run `python setup_api_key.py` to ensure your key is correctly configured.
+- Verify your API key is correct and starts with `gsk_`.
 
 ### Network Issues
-- Ensure you have internet connectivity
-- The AI model requires an active connection to Hugging Face servers
+- Ensure you have internet connectivity.
+- The AI model requires an active connection to Groq's servers.
 
 ### File Format Issues
 - Currently supports `.pcap` and `.pcapng` files
@@ -97,7 +91,5 @@ python cli_ai.py --suggested
 ## 📞 Support
 
 If you encounter issues:
-1. Check the troubleshooting section above
-2. Verify your API key and permissions
-3. Ensure all dependencies are installed
-4. Test with a simple packet capture first 
+1. Check the troubleshooting section above.
+2. Run `python setup_api_key.py` again to validate your key.
