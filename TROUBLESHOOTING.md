@@ -1,3 +1,85 @@
+# 🛠️ Troubleshooting Guide
+
+This guide helps resolve common issues with Sniff Recon.
+
+## 🔑 API Key and Configuration Issues
+
+**1. "GROQ_API_KEY not found in environment variables"**
+
+- **Cause**: The application cannot find your Groq API key.
+- **Solution**:
+  1. Run the setup script: `python setup_api_key.py`
+  2. Enter your API key when prompted.
+  3. This will create a `.env` file in the project root with your key.
+
+**2. "Invalid API key"**
+
+- **Cause**: The API key is incorrect or has been revoked.
+- **Solution**:
+  1. Get a new key from [https://console.groq.com/keys](https://console.groq.com/keys).
+  2. Run `python setup_api_key.py` to update your key.
+  3. Make sure the key starts with `gsk_`.
+
+**3. "Failed to parse .env file"**
+
+- **Cause**: The `.env` file is formatted incorrectly.
+- **Solution**:
+  - Make sure the file contains `GROQ_API_KEY=your_key_here` on a single line.
+  - You can delete the `.env` file and run `python setup_api_key.py` again to create a fresh one.
+
+## 🌐 Network and API Connectivity Issues
+
+**1. "API request failed with status 401: Unauthorized"**
+
+- **Cause**: Your API key is invalid.
+- **Solution**: Follow the steps for an "Invalid API key" above.
+
+**2. "API request failed with status 429: Rate Limit Exceeded"**
+
+- **Cause**: You have exceeded the free rate limits for the Groq API.
+- **Solution**:
+  - Wait a few minutes and try again.
+  - Check বড়ো's documentation for information on rate limits.
+
+**3. "Request error: Connection timed out"**
+
+- **Cause**: The application cannot connect to the Groq API servers.
+- **Solution**:
+  - Check your internet connection.
+  - Ensure your firewall or proxy is not blocking access to `https://api.groq.com`.
+
+## 📦 Dependency and Module Issues
+
+**1. "ModuleNotFoundError: No module named 'scapy'" (or other modules)**
+
+- **Cause**: Required Python packages are not installed.
+- **Solution**:
+  1. Make sure you have activated your virtual environment.
+  2. Install all dependencies:
+     ```bash
+     pip install -r requirements.txt
+     ```
+
+## 📂 PCAP File Issues
+
+**1. "Error loading packets"**
+
+- **Cause**: The PCAP file is corrupted or in an unsupported format.
+- **Solution**:
+  - Ensure your file is a valid `.pcap` or `.pcapng` file.
+  - Try opening the file in Wireshark to verify its integrity.
+
+## 🤖 AI Analysis Issues
+
+**1. "AI response is empty or nonsensical"**
+
+- **Cause**: The AI model may not have understood the query or the provided data.
+- **Solution**:
+  - Try rephrasing your question to be more specific.
+  - Check the packet summary to ensure the data being sent to the AI is correct.
+
+If you continue to experience issues, please consider opening an issue on the project's GitHub page.
+
 # 🔧 Sniff Recon Troubleshooting Guide
 
 ## Common Issues and Solutions
