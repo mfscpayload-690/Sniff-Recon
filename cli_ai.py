@@ -87,39 +87,73 @@ def display_packet_summary(packet_summary: PacketSummary):
         print_colored("\n✅ No suspicious patterns detected", "green")
 
 def interactive_ai_mode(packets: List[Packet]):
-    """Interactive AI query mode"""
+    """Interactive AI query mode with Layered Filtering"""
     print_colored("\n🤖 AI Analysis Mode", "bold")
     print("=" * 50)
     print_colored("Ask questions about your network traffic. Type 'quit' to exit.", "cyan")
     print_colored("Type 'help' for suggested questions.", "cyan")
+
+    # Layered filtering
+    print_colored("\nFiltering suspicious packets for smart AI triage...", "yellow")
+    suspicious = ai_engine.filter_suspicious_packets(packets)
+    clusters = ai_engine.cluster_packets_by_ip(suspicious)
+    triaged_summaries = ai_engine.summarize_clusters(clusters)
     
-    # Get packet summary
-    packet_summary = ai_engine.extract_packet_statistics(packets)
-    
+    if not triaged_summaries:
+        print_colored("No suspicious packets found after triage. Falling back to classic summary.", "yellow")
+        packet_summary = ai_engine.extract_packet_statistics(packets)
+    else:
+        print_colored(f"{len(triaged_summaries)} suspicious flows detected.", "yellow")
+        # Flatten as text for LLM
+def format_triaged_for_llm():
+    out = []
+    for group in triaged_summaries:
+        out.append(f"Src: {group['src_ip']} → Dst: {group['dst_ip']} | Cnt: {group['packet_count']} | Ports: {group['ports']} | Proto: {group['protocols']}")
+        for pat in group['suspicious_patterns']:
+            out.append(f"  Pattern: {pat}")
+    return '\n'.join(out)
+
     while True:
         try:
             print_colored("\n🤖 Question: ", "cyan", end="")
             user_query = input().strip()
-            
+
             if user_query.lower() in ['quit', 'exit', 'q']:
                 print_colored("👋 Goodbye!", "green")
                 break
-            
+
             if user_query.lower() == 'help':
                 print_colored("\n💡 Suggested Questions:", "yellow")
                 suggested = ai_engine.get_suggested_queries()
                 for i, query in enumerate(suggested, 1):
                     print(f"  {i}. {query}")
                 continue
-            
+
             if not user_query:
                 continue
-            
-            print_colored("🤖 Analyzing...", "cyan")
-            
+
+            print_colored("🤖 Analyzing (triaged input)...", "cyan")
+            llm_context = format_triaged_for_llm() if triaged_summaries else None
+
+            if triaged_summaries:
+                summary_obj = PacketSummary(
+                    total_packets=sum(x['packet_count'] for x in triaged_summaries),
+                    unique_src_ips=[x['src_ip'] for x in triaged_summaries],
+                    unique_dst_ips=[x['dst_ip'] for x in triaged_summaries],
+                    protocol_distribution={}, # skip for brevity
+                    top_src_ips={},
+                    top_dst_ips={},
+                    port_analysis={},
+                    packet_sizes=[],
+                    time_range=(0, 0),
+                    suspicious_patterns=[pat for x in triaged_summaries for pat in x['suspicious_patterns']],
+                )
+            else:
+                summary_obj = packet_summary
+
             # Query AI
-            result = ai_engine.query_ai(user_query, packet_summary)
-            
+            result = ai_engine.query_ai(user_query, summary_obj)
+
             if result.get("success"):
                 print_colored("\n💡 AI Response:", "green")
                 print("-" * 30)
@@ -127,7 +161,7 @@ def interactive_ai_mode(packets: List[Packet]):
                 print("-" * 30)
             else:
                 print_colored(f"\n❌ Error: {result.get('error', 'Unknown error')}", "red")
-                
+
         except KeyboardInterrupt:
             print_colored("\n👋 Goodbye!", "green")
             break
@@ -135,21 +169,40 @@ def interactive_ai_mode(packets: List[Packet]):
             print_colored(f"\n❌ Unexpected error: {e}", "red")
 
 def batch_ai_mode(packets: List[Packet], queries: List[str]):
-    """Batch AI query mode"""
-    print_colored("\n🤖 Batch AI Analysis Mode", "bold")
+    """Batch AI query mode with Layered Filtering"""
+    print_colored("\n🤖 Batch AI Analysis Mode (with triaged input)", "bold")
     print("=" * 50)
     
-    # Get packet summary
-    packet_summary = ai_engine.extract_packet_statistics(packets)
-    
+    # Layered filtering
+    print_colored("Filtering suspicious packets for smart AI triage...", "yellow")
+    suspicious = ai_engine.filter_suspicious_packets(packets)
+    clusters = ai_engine.cluster_packets_by_ip(suspicious)
+    triaged_summaries = ai_engine.summarize_clusters(clusters)
+
+    if not triaged_summaries:
+        print_colored("No suspicious packets found after triage. Using full summary for all queries.", "yellow")
+        summary_obj = ai_engine.extract_packet_statistics(packets)
+    else:
+        print_colored(f"{len(triaged_summaries)} suspicious flows detected.", "yellow")
+        summary_obj = PacketSummary(
+            total_packets=sum(x['packet_count'] for x in triaged_summaries),
+            unique_src_ips=[x['src_ip'] for x in triaged_summaries],
+            unique_dst_ips=[x['dst_ip'] for x in triaged_summaries],
+            protocol_distribution={},
+            top_src_ips={},
+            top_dst_ips={},
+            port_analysis={},
+            packet_sizes=[],
+            time_range=(0, 0),
+            suspicious_patterns=[pat for x in triaged_summaries for pat in x['suspicious_patterns']],
+        )
+
     results = []
-    
+
     for i, query in enumerate(queries, 1):
         print_colored(f"\n🔍 Processing query {i}/{len(queries)}: {query}", "cyan")
-        
         # Query AI
-        result = ai_engine.query_ai(query, packet_summary)
-        
+        result = ai_engine.query_ai(query, summary_obj)
         if result.get("success"):
             print_colored("✅ Success", "green")
             results.append({
@@ -164,7 +217,6 @@ def batch_ai_mode(packets: List[Packet], queries: List[str]):
                 "response": result.get("error"),
                 "success": False
             })
-    
     return results
 
 def save_results(results: List[dict], output_file: str):

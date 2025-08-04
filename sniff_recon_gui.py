@@ -316,7 +316,7 @@ def main():
             summary = pd.DataFrame(summary)
 
             # Check for empty DataFrame
-            if summary is None or summary.empty:
+            if summary is None or len(summary) == 0:
                 st.markdown(
                     '<div class="warning-message">⚠️ Summary is empty or could not be generated.</div>',
                     unsafe_allow_html=True

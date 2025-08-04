@@ -1,16 +1,19 @@
 # Sniff Recon 🔍
 
-**AI-Powered PCAP Analysis Tool**
+**Multi-Agent AI-Powered PCAP Analysis Tool**
 
-Sniff Recon is a Python CLI/GUI application that analyzes PCAP (Packet Capture) logs using the Groq API for intelligent, real-time network traffic analysis and security insights.
+Sniff Recon is a Python CLI/GUI application that analyzes PCAP (Packet Capture) logs using multiple AI providers for intelligent, scalable network traffic analysis and security insights.
 
 ## Features ✨
 
-- 🤖 **Groq API Integration**: Blazing-fast natural language queries for PCAP analysis.
+- 🤖 **Multi-Agent AI System**: Support for Groq, OpenAI, Anthropic Claude, and more
+- ⚖️ **Load Balancing**: Automatic distribution across multiple AI providers
+- 📊 **Large File Support**: Intelligent chunking for files >50MB with 70k+ packets
 - 🔐 **Secure Configuration**: Environment-based API key management
-- 🛡️ **Error Handling**: Comprehensive error handling for API issues
+- 🛡️ **Advanced Error Handling**: Comprehensive error handling with fallback analysis
+- ⚡ **Async Processing**: Concurrent analysis for faster results
+- 🎯 **Smart Triage**: Pre-filtering suspicious packets for focused AI analysis
 - 🔄 **Retry Logic**: Automatic retry with exponential backoff
-- 📊 **Future-Ready**: Framework for advanced PCAP analysis features
 
 ## Quick Start 🚀
 
@@ -25,19 +28,45 @@ cd Sniff-Recon
 pip install -r requirements.txt
 ```
 
-### 2. Configuration
+### 2. Multi-Agent AI Setup (Recommended)
 
-The app uses the Groq API for its AI analysis. Follow the `SETUP.md` guide to get your free API key and configure the application.
-
-```env
-# Sniff Recon - Groq API Configuration
-GROQ_API_KEY=gsk_your_actual_api_key_here
-MODEL_NAME=llama3-8b-8192
-```
-
-### 3. Run the App
+For enhanced performance and reliability, set up multiple AI providers:
 
 ```bash
+# Run the interactive setup script
+python setup_multi_agent.py
+```
+
+This will guide you through configuring:
+- **Groq** (Fast, free tier available)
+- **OpenAI** (High quality, paid)
+- **Anthropic Claude** (Excellent for analysis)
+
+Or manually create a `.env` file:
+
+```env
+# Multiple AI Providers
+GROQ_API_KEY=gsk_your_groq_key_here
+GROQ_MODEL=llama3-8b-8192
+
+OPENAI_API_KEY=sk_your_openai_key_here
+OPENAI_MODEL=gpt-3.5-turbo
+
+ANTHROPIC_API_KEY=sk-ant_your_anthropic_key_here
+ANTHROPIC_MODEL=claude-3-sonnet-20240229
+
+# System Configuration
+CHUNK_SIZE_MB=5
+MAX_PACKETS_PER_CHUNK=5000
+```
+
+### 3. Run the Enhanced App
+
+```bash
+# Enhanced CLI with multi-agent support
+python enhanced_cli_ai.py -f <your-pcap-file.pcap> -i
+
+# Original CLI (single provider)
 python cli_ai.py -f <your-pcap-file.pcapng> -i
 ```
 
@@ -45,17 +74,52 @@ python cli_ai.py -f <your-pcap-file.pcapng> -i
 
 ### Basic Usage
 
-1. **Start the app**: Run `python cli_ai.py -f <your-pcap-file.pcapng> -i`
-2. **Ask questions**: Enter natural language queries about your network traffic.
+1. **Interactive Mode**: 
+   ```bash
+   python enhanced_cli_ai.py -f capture.pcap -i
+   ```
+
+2. **Single Query**: 
+   ```bash
+   python enhanced_cli_ai.py -f capture.pcap -q "Show me security threats"
+   ```
+
+3. **Batch Analysis**: 
+   ```bash
+   python enhanced_cli_ai.py -f capture.pcap -b queries.txt
+   ```
+
+### Large File Handling 📊
+
+The system automatically handles large files (>50MB, >70k packets) by:
+
+- **Smart Chunking**: Splits data into 5MB/5000 packet chunks
+- **Concurrent Processing**: Analyzes chunks in parallel
+- **Intelligent Triage**: Pre-filters suspicious packets for focused analysis
+- **Memory Optimization**: Streams packets to avoid memory issues
+
+```bash
+# Configure chunking parameters
+python enhanced_cli_ai.py -f large_capture.pcap -i --chunk-size 10 --max-packets 10000
+```
 
 ### Example Queries
 
 ```
-> "Hello! How can you help me analyze network traffic?"
-> "What should I look for when analyzing suspicious network activity?"
-> "Explain the difference between TCP and UDP protocols"
-> "How can I identify potential security threats in a PCAP file?"
+> "Analyze this network traffic for security threats and anomalies"
+> "What are the most active IP addresses and what might they be doing?"
+> "Identify any suspicious port usage or protocol patterns"
+> "Look for signs of network scanning or reconnaissance"
+> "Analyze the traffic for potential data exfiltration attempts"
+> "What protocols are being used and are they appropriate?"
 ```
+
+### Advanced Features
+
+- **Multi-Provider Fallback**: If one AI provider fails, others continue
+- **Response Combining**: Merges analysis from multiple chunks
+- **Performance Metrics**: Shows processing time and token usage
+- **Progress Tracking**: Real-time progress bars for large files
 
 ## Error Handling 🛠️
 

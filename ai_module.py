@@ -16,6 +16,7 @@ from scapy.layers.inet import IP, TCP, UDP, ICMP
 from scapy.layers.l2 import Ether
 import logging
 from dotenv import load_dotenv
+import asyncio
 
 # Load environment variables
 load_dotenv()
@@ -23,6 +24,15 @@ load_dotenv()
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Import multi-agent system
+try:
+    from multi_agent_ai import multi_agent, query_ai_async, get_active_providers, get_suggested_queries
+    USE_MULTI_AGENT = True
+    logger.info("Multi-agent AI system loaded successfully")
+except ImportError as e:
+    logger.warning(f"Multi-agent system not available: {e}")
+    USE_MULTI_AGENT = False
 
 @dataclass
 class PacketSummary:
@@ -42,7 +52,79 @@ class AIQueryEngine:
     """
     AI-powered query engine for natural language packet analysis
     """
-    
+
+    def filter_suspicious_packets(self, packets: List[Packet]) -> List[Packet]:
+        """
+        First pass: Return only the packets considered suspicious (layer 1 triage)
+        Safer: Only applies rules to packets WITH an IP layer (others are just ignored or marked explicitly).
+        """
+        suspicious = []
+        syn_counts = {}
+        for pkt in packets:
+            is_suspicious = False
+            # Skip packets with no IP layer (broadcasts, ARP, etc.) - but optionally you could flag them.
+            if IP not in pkt:
+                continue
+            # Malformed packet (catch scapy error or missing layers)
+            try:
+                if pkt is None or pkt.__class__.__name__ == 'NoPayload':
+                    is_suspicious = True
+            except Exception:
+                is_suspicious = True
+            # SYN rate (potential scan)
+            if TCP in pkt:
+                if pkt[TCP].flags & 0x02:  # SYN flag
+                    syn_counts[pkt[IP].src] = syn_counts.get(pkt[IP].src, 0) + 1
+                    if syn_counts[pkt[IP].src] > 10:
+                        is_suspicious = True
+            # Bad/odd port usage
+            bad_ports = {0, 65535, 31337, 6667}
+            if TCP in pkt and pkt[TCP].dport in bad_ports:
+                is_suspicious = True
+            if UDP in pkt and pkt[UDP].dport in bad_ports:
+                is_suspicious = True
+            # Weird protocols - could add more rules here
+            # (e.g., very rare protocols)
+            if is_suspicious:
+                suspicious.append(pkt)
+        return suspicious
+
+    def cluster_packets_by_ip(self, suspicious_packets: List[Packet]) -> dict:
+        """
+        Second pass: Cluster suspicious packets by (src,dst) tuple.
+        Ignores packets without an IP layer (should already be filtered out, but double check for safety).
+        Returns dict of {(src,dst): [packets]}
+        """
+        clusters = {}
+        for pkt in suspicious_packets:
+            if IP not in pkt:
+                continue    # Defensive, should not happen
+            src = pkt[IP].src
+            dst = pkt[IP].dst
+            key = (src, dst)
+            if key not in clusters:
+                clusters[key] = []
+            clusters[key].append(pkt)
+        return clusters
+
+    def summarize_clusters(self, clusters: dict) -> list:
+        """
+        Third pass: Summarize each group for LLM input
+        Returns a list of dicts with group stats
+        """
+        summaries = []
+        for (src, dst), pkts in clusters.items():
+            summary = {
+                'src_ip': src,
+                'dst_ip': dst,
+                'packet_count': len(pkts),
+                'protocols': list(set([pkt[IP].proto for pkt in pkts if IP in pkt])),
+                'ports': list(set([pkt[TCP].dport for pkt in pkts if TCP in pkt] + [pkt[UDP].dport for pkt in pkts if UDP in pkt])),
+                'suspicious_patterns': [str(pkt.summary()) for pkt in pkts[:5]],
+            }
+            summaries.append(summary)
+        return summaries
+
     def __init__(self):
         self.api_url = "https://api.groq.com/openai/v1/chat/completions"
         self.api_key = os.getenv("GROQ_API_KEY")
@@ -238,8 +320,33 @@ Suspicious Patterns Detected:
     
     def query_ai(self, user_query: str, packet_summary: PacketSummary) -> Dict[str, Any]:
         """
-        Send query to OpenAI API and get response
+        Send query to AI system (multi-agent or fallback to Groq)
         """
+        # Try multi-agent system first if available
+        if USE_MULTI_AGENT and hasattr(multi_agent, 'active_providers') and multi_agent.active_providers:
+            try:
+                # Convert PacketSummary to packets list (dummy for multi-agent compatibility)
+                # In a real scenario, you'd pass the actual packets
+                dummy_packets = []
+                
+                # Use async query with run_until_complete for sync compatibility
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    result = loop.run_until_complete(query_ai_async(user_query, dummy_packets))
+                    if result.get('success'):
+                        return result
+                    else:
+                        logger.warning(f"Multi-agent query failed: {result.get('error')}")
+                except Exception as e:
+                    logger.error(f"Multi-agent async query error: {e}")
+                finally:
+                    loop.close()
+                    
+            except Exception as e:
+                logger.error(f"Multi-agent system error: {e}")
+        
+        # Fallback to original Groq implementation
         if not self.api_key_valid:
             return self._provide_fallback_analysis(user_query, packet_summary)
 
