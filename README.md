@@ -1,19 +1,19 @@
 # Sniff Recon 🔍
 
-**Multi-Agent AI-Powered PCAP Analysis Tool**
+**AI-Powered Network Packet Analyzer - GUI Edition**
 
-Sniff Recon is a Python CLI/GUI application that analyzes PCAP (Packet Capture) logs using multiple AI providers for intelligent, scalable network traffic analysis and security insights.
+Sniff Recon is a user-friendly GUI application built with Streamlit that analyzes network packet capture files (PCAP, CSV, TXT) with AI-powered insights for network traffic analysis and security monitoring.
 
 ## Features ✨
 
-- 🤖 **Multi-Agent AI System**: Support for Groq, OpenAI, Anthropic Claude, and more
-- ⚖️ **Load Balancing**: Automatic distribution across multiple AI providers
-- 📊 **Large File Support**: Intelligent chunking for files >50MB with 70k+ packets
-- 🔐 **Secure Configuration**: Environment-based API key management
-- 🛡️ **Advanced Error Handling**: Comprehensive error handling with fallback analysis
-- ⚡ **Async Processing**: Concurrent analysis for faster results
-- 🎯 **Smart Triage**: Pre-filtering suspicious packets for focused AI analysis
-- 🔄 **Retry Logic**: Automatic retry with exponential backoff
+- 🖥️ **Modern Web-Based GUI**: Beautiful, responsive interface built with Streamlit
+- 📁 **Multiple File Formats**: Support for .pcap, .pcapng, .csv, and .txt files
+- 🤖 **AI-Powered Analysis**: Intelligent packet analysis and threat detection
+- 📊 **Interactive Visualizations**: Real-time packet tables and statistics
+- 💾 **Export Capabilities**: Download analysis results as JSON
+- 🎨 **Beautiful Dark Theme**: Modern cyberpunk-inspired design
+- ⚡ **Real-Time Processing**: Live progress tracking for large files
+- 🔍 **Detailed Packet Inspection**: Comprehensive packet metadata display
 
 ## Quick Start 🚀
 
@@ -28,98 +28,54 @@ cd Sniff-Recon
 pip install -r requirements.txt
 ```
 
-### 2. Multi-Agent AI Setup (Recommended)
+### 2. AI Setup (Optional)
 
-For enhanced performance and reliability, set up multiple AI providers:
-
-```bash
-# Run the interactive setup script
-python setup_multi_agent.py
-```
-
-This will guide you through configuring:
-- **Groq** (Fast, free tier available)
-- **OpenAI** (High quality, paid)
-- **Anthropic Claude** (Excellent for analysis)
-
-Or manually create a `.env` file:
+For AI-powered analysis features, create a `.env` file with your API keys:
 
 ```env
-# Multiple AI Providers
-GROQ_API_KEY=gsk_your_groq_key_here
-GROQ_MODEL=llama3-8b-8192
-
-OPENAI_API_KEY=sk_your_openai_key_here
-OPENAI_MODEL=gpt-3.5-turbo
-
-ANTHROPIC_API_KEY=sk-ant_your_anthropic_key_here
-ANTHROPIC_MODEL=claude-3-sonnet-20240229
-
-# System Configuration
-CHUNK_SIZE_MB=5
-MAX_PACKETS_PER_CHUNK=5000
+# AI Providers (Optional - for enhanced analysis)
+GROQ_API_KEY=your_groq_key_here
+OPENAI_API_KEY=your_openai_key_here
+# Add other provider keys as needed
 ```
 
-### 3. Run the Enhanced App
+### 3. Launch the GUI
 
 ```bash
-# Enhanced CLI with multi-agent support
-python enhanced_cli_ai.py -f <your-pcap-file.pcap> -i
+# Option 1: Use the startup script (recommended)
+python start_gui.py
 
-# Original CLI (single provider)
-python cli_ai.py -f <your-pcap-file.pcapng> -i
+# Option 2: Start directly with Streamlit
+streamlit run sniff_recon_gui.py
 ```
+
+The application will open in your default web browser at `http://localhost:8501`
 
 ## Usage 💡
 
-### Basic Usage
+### File Upload
+1. **Drag & Drop**: Simply drag your packet capture file into the upload area
+2. **Browse**: Click the upload button to browse for files
+3. **Supported Formats**: .pcap, .pcapng, .csv, .txt (up to 200MB)
 
-1. **Interactive Mode**: 
-   ```bash
-   python enhanced_cli_ai.py -f capture.pcap -i
-   ```
+### Analysis Tabs
 
-2. **Single Query**: 
-   ```bash
-   python enhanced_cli_ai.py -f capture.pcap -q "Show me security threats"
-   ```
+#### 📊 Packet Analysis
+- View comprehensive packet statistics
+- Interactive packet table with filtering
+- Protocol distribution charts
+- Source/destination IP analysis
 
-3. **Batch Analysis**: 
-   ```bash
-   python enhanced_cli_ai.py -f capture.pcap -b queries.txt
-   ```
+#### 🤖 AI Analysis (If configured)
+- Quick AI-powered threat assessment
+- Natural language query interface
+- Ask questions about your network traffic
+- Get intelligent insights and recommendations
 
-### Large File Handling 📊
-
-The system automatically handles large files (>50MB, >70k packets) by:
-
-- **Smart Chunking**: Splits data into 5MB/5000 packet chunks
-- **Concurrent Processing**: Analyzes chunks in parallel
-- **Intelligent Triage**: Pre-filters suspicious packets for focused analysis
-- **Memory Optimization**: Streams packets to avoid memory issues
-
-```bash
-# Configure chunking parameters
-python enhanced_cli_ai.py -f large_capture.pcap -i --chunk-size 10 --max-packets 10000
-```
-
-### Example Queries
-
-```
-> "Analyze this network traffic for security threats and anomalies"
-> "What are the most active IP addresses and what might they be doing?"
-> "Identify any suspicious port usage or protocol patterns"
-> "Look for signs of network scanning or reconnaissance"
-> "Analyze the traffic for potential data exfiltration attempts"
-> "What protocols are being used and are they appropriate?"
-```
-
-### Advanced Features
-
-- **Multi-Provider Fallback**: If one AI provider fails, others continue
-- **Response Combining**: Merges analysis from multiple chunks
-- **Performance Metrics**: Shows processing time and token usage
-- **Progress Tracking**: Real-time progress bars for large files
+#### 💾 Export Results
+- Download analysis results as JSON
+- View raw data in formatted display
+- Save reports for further analysis
 
 ## Error Handling 🛠️
 
@@ -163,24 +119,33 @@ The app handles various error scenarios:
 
 ### Common Issues
 
-1. **"GROQ_API_KEY not found"**
-   - Run `python setup_api_key.py` to configure your key.
-   - Check that your `.env` file exists and contains the API key.
+1. **"Module not found" errors**
+   - Make sure all dependencies are installed: `pip install -r requirements.txt`
+   - Check that you're in the correct directory
 
-2. **"Invalid API key"**
-   - Verify your API key is correct and starts with `gsk_`.
+2. **File upload failures**
+   - Ensure your file is under 200MB
+   - Check file format is supported (.pcap, .pcapng, .csv, .txt)
+   - Verify file permissions
 
-3. **"Network connection error"**
-   - Check your internet connection.
-   - Verify firewall settings aren't blocking requests to the Groq API.
+3. **GUI not loading**
+   - Make sure Streamlit is installed: `pip install streamlit`
+   - Try running: `streamlit run sniff_recon_gui.py --server.port 8501`
+   - Check if port 8501 is available
+
+4. **AI Analysis not working**
+   - Verify your `.env` file contains valid API keys
+   - Check your internet connection
+   - Ensure API keys are properly formatted
 
 ### Getting Help
 
 If you encounter issues:
 
-1. Run `python setup_api_key.py` to set up your key.
-2. Verify your `.env` configuration.
-3. Test your internet connection.
+1. Check that all dependencies are installed correctly
+2. Verify your `.env` file configuration (if using AI features)
+3. Ensure your network connection is stable
+4. Try with a smaller test file first
 
 ## Security 🔒
 

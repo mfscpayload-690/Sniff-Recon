@@ -1,9 +1,10 @@
-# 🤖 AI Setup Guide for Sniff Recon
+# 🤖 AI Setup Guide for Sniff Recon GUI
 
-This guide will help you set up the AI-powered packet analysis features in Sniff Recon.
+This guide will help you set up the AI-powered packet analysis features in Sniff Recon's GUI interface.
 
-## 🔑 Getting Your Groq API Key
+## 🔑 Getting AI API Keys (Optional)
 
+### Groq API (Free Tier Available)
 1. **Visit Groq**: Go to [https://console.groq.com/keys](https://console.groq.com/keys)
 2. **Create Account**: Sign up for a free account if you don't have one.
 3. **Generate API Key**:
@@ -11,37 +12,33 @@ This guide will help you set up the AI-powered packet analysis features in Sniff
    - Give it a name (e.g., "Sniff Recon AI")
    - Copy the generated key.
 
+### OpenAI API (Paid)
+1. **Visit OpenAI**: Go to [https://platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+2. **Create Account**: Sign up and add payment method
+3. **Generate API Key**: Create a new secret key
+
 ## 📁 Environment Setup
 
-1. **Run the Setup Script**:
-   ```bash
-   python setup_api_key.py
-   ```
-   The script will prompt you for your API key and save it to a `.env` file.
-
-2. **Install Dependencies**:
+1. **Install Dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
 
+2. **Create .env File** (for AI features):
+   ```env
+   # Optional AI Providers
+   GROQ_API_KEY=your_groq_key_here
+   OPENAI_API_KEY=your_openai_key_here
+   ```
+
 ## 🚀 Usage
 
-### Streamlit GUI
+### Launch the GUI
 ```bash
 streamlit run sniff_recon_gui.py
 ```
 
-### CLI Interface
-```bash
-# Interactive mode
-python cli_ai.py -f capture.pcap -i
-
-# Batch mode
-python cli_ai.py -f capture.pcap -q "What are the top 5 IPs?" "Are there suspicious patterns?"
-
-# Show suggested queries
-python cli_ai.py --suggested
-```
+The application will open at `http://localhost:8501` in your web browser.
 
 ## 💡 Example AI Queries
 
@@ -55,41 +52,47 @@ python cli_ai.py --suggested
 
 ## 🔧 Troubleshooting
 
-### API Key Issues
-- Run `python setup_api_key.py` to ensure your key is correctly configured.
-- Verify your API key is correct and starts with `gsk_`.
+### GUI Loading Issues
+- Ensure Streamlit is installed: `pip install streamlit`
+- Check if port 8501 is available
+- Try running with a specific port: `streamlit run sniff_recon_gui.py --server.port 8502`
 
-### Network Issues
-- Ensure you have internet connectivity.
-- The AI model requires an active connection to Groq's servers.
-
-### File Format Issues
-- Currently supports `.pcap` and `.pcapng` files
+### File Upload Issues
+- Supports `.pcap`, `.pcapng`, `.csv`, and `.txt` files
+- File size limit is 200MB
 - Make sure your packet capture files are valid
+
+### AI Analysis Issues
+- Verify your `.env` file contains valid API keys
+- Check your internet connection
+- AI features are optional - the app works without them
 
 ## 📊 Features
 
 ### AI Analysis Capabilities
-- **Natural Language Queries**: Ask questions in plain English
+- **Natural Language Queries**: Ask questions in plain English through the GUI
 - **Protocol Analysis**: Automatic detection of TCP, UDP, ICMP, etc.
 - **Suspicious Pattern Detection**: Identifies potential security threats
 - **Statistical Analysis**: Provides comprehensive packet statistics
-- **Interactive Interface**: Both GUI and CLI options
+- **Web-Based Interface**: Modern, responsive GUI built with Streamlit
+- **Interactive Visualizations**: Real-time charts and tables
 
 ### Security Features
 - **Environment Variable Storage**: API keys stored securely
 - **No Hardcoded Credentials**: Follows security best practices
 - **Error Handling**: Graceful handling of API failures
+- **File Validation**: Secure file upload and processing
 
 ## 🎯 Next Steps
 
-1. **Test with Sample Data**: Try the AI features with a small packet capture
-2. **Explore Queries**: Experiment with different types of questions
-3. **Customize Analysis**: Modify the AI prompts for specific use cases
-4. **Integrate with Workflows**: Use the CLI for automated analysis
+1. **Test with Sample Data**: Upload a small packet capture file to test
+2. **Explore the GUI**: Navigate through different analysis tabs
+3. **Try AI Features**: Ask questions about your network traffic (if API keys configured)
+4. **Export Results**: Download analysis results as JSON files
 
 ## 📞 Support
 
 If you encounter issues:
-1. Check the troubleshooting section above.
-2. Run `python setup_api_key.py` again to validate your key.
+1. Check the troubleshooting section in README.md
+2. Ensure all dependencies are installed correctly
+3. Verify your .env file configuration (if using AI features)

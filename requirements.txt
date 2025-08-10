@@ -15,13 +15,8 @@ matplotlib>=3.7.0
 pandas>=2.0.0
 numpy>=1.24.0
 
-# AI and async dependencies
+# AI and async dependencies (optional)
 aiohttp>=3.9.1
 openai>=1.12.0
 anthropic>=0.18.1
 groq>=0.4.1
-
-# Additional utilities
-rich>=13.4.2
-colorama>=0.4.6
-tqdm>=4.65.0
