@@ -1,6 +1,6 @@
 # Sniff Recon 🔍
 
-**AI-Powered Network Packet Analyzer - GUI Edition**
+**AI-Powered Network Packet Analyzer - Docker Edition**
 
 Sniff Recon is a user-friendly GUI application built with Streamlit that analyzes network packet capture files (PCAP, CSV, TXT) with AI-powered insights for network traffic analysis and security monitoring.
 
@@ -174,12 +174,6 @@ If you encounter issues:
 ## License 📄
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments 🙏
-
-- Groq for providing the free, high-speed API
-- The Python community for excellent libraries
-- Network security researchers for inspiration
 
 ---
 
