@@ -175,12 +175,6 @@ If you encounter issues:
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Acknowledgments 🙏
-
-- Groq for providing the free, high-speed API
-- The Python community for excellent libraries
-- Network security researchers for inspiration
-
 ---
 
 **Happy Network Analysis! 🔍📊**
