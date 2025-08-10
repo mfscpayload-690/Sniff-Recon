@@ -24,6 +24,10 @@ Sniff Recon is a user-friendly GUI application built with Streamlit that analyze
 git clone <your-repo-url>
 cd Sniff-Recon
 
+# Create and activate virtual environment (recommended)
+python3 -m venv venv_gui
+source venv_gui/bin/activate  # On Windows: venv_gui\Scripts\activate
+
 # Install dependencies
 pip install -r requirements.txt
 ```
@@ -42,12 +46,17 @@ OPENAI_API_KEY=your_openai_key_here
 ### 3. Launch the GUI
 
 ```bash
-# Option 1: Use the startup script (recommended)
+# Option 1: Use the shell script (if in venv)
+./run_gui.sh
+
+# Option 2: Use the Python startup script
 python start_gui.py
 
-# Option 2: Start directly with Streamlit
+# Option 3: Start directly with Streamlit
 streamlit run sniff_recon_gui.py
 ```
+
+**Note**: If you're using the virtual environment, the shell script `./run_gui.sh` will automatically activate it for you.
 
 The application will open in your default web browser at `http://localhost:8501`
 
