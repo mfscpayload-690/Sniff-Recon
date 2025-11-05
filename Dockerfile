@@ -5,9 +5,12 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Install system dependencies for Scapy and network tools
+# Apply security updates to fix vulnerabilities
 RUN apt-get update && apt-get install -y \
     tcpdump \
     libpcap-dev \
+    && apt-get upgrade -y \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements file

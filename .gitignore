@@ -133,3 +133,4 @@ id_rsa*
 
 # Project specific
 summary.json
+output/summary.json
