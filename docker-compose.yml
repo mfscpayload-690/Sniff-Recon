@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  sniff-recon:
+    build: .
+    container_name: sniff-recon-app
+    ports:
+      - "8501:8501"
+    volumes:
+      # Mount the output directory to persist analysis results
+      - ./output:/app/output
+      # Mount .env file for API keys
+      - ./.env:/app/.env:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - sniff-recon-network
+
+networks:
+  sniff-recon-network:
+    driver: bridge

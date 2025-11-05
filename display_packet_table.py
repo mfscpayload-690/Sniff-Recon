@@ -7,8 +7,6 @@ import pandas as pd
 import binascii
 import datetime
 
-from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode, DataReturnMode
-
 def inject_modern_css():
     """Inject modern CSS for beautiful packet analyzer UI"""
     st.markdown(
@@ -509,52 +507,30 @@ def display_packet_table(packets: List[Packet]):
     
     df = extract_packet_summary(packets)
     
-    # Configure AgGrid with modern styling
-    gb = GridOptionsBuilder.from_dataframe(df)
-    gb.configure_selection(selection_mode="single", use_checkbox=False)
-    gb.configure_grid_options(domLayout='normal')
-    gb.configure_default_column(
-        editable=False, 
-        filter=True, 
-        sortable=True, 
-        resizable=True,
-        cellStyle={
-            "styleConditions": [
-                {
-                    "condition": "params.node.rowIndex % 2 == 0",
-                    "style": {"backgroundColor": "rgba(30, 30, 30, 0.8)"}
-                },
-                {
-                    "condition": "params.node.rowIndex % 2 == 1",
-                    "style": {"backgroundColor": "rgba(20, 20, 20, 0.8)"}
-                }
-            ]
-        }
-    )
-    grid_options = gb.build()
-    
-    # Display the table
+    # Display the table using Streamlit's dataframe (no PyArrow needed)
     st.markdown('<div class="packet-table-container">', unsafe_allow_html=True)
-    grid_response = AgGrid(
+    st.dataframe(
         df,
-        gridOptions=grid_options,
+        use_container_width=True,
         height=400,
-        width='100%',
-        data_return_mode=DataReturnMode.FILTERED_AND_SORTED,
-        update_mode=GridUpdateMode.SELECTION_CHANGED,
-        fit_columns_on_grid_load=True,
-        enable_enterprise_modules=False,
-        allow_unsafe_jscode=False,
-        theme="dark"
+        hide_index=True
     )
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Handle selected packet
-    selected_rows = grid_response.get("selected_rows", [])
+    # Packet selection using number input
+    st.markdown("## 🔍 Select Packet for Analysis")
+    packet_number = st.number_input(
+        "Enter packet number to analyze:",
+        min_value=1,
+        max_value=len(packets),
+        value=1,
+        step=1
+    )
     
-    if selected_rows:
-        selected_index = selected_rows[0]["No."] - 1
+    if packet_number:
+        selected_index = packet_number - 1
         pkt = packets[selected_index]
+        packet_row = df.iloc[selected_index]
         
         # Packet summary section
         st.markdown("## 🔍 Selected Packet Analysis")
@@ -563,12 +539,12 @@ def display_packet_table(packets: List[Packet]):
         
         # Summary items
         summary_items = [
-            ("Packet Number", str(selected_rows[0]["No."])),
-            ("Timestamp", selected_rows[0]["Timestamp"]),
-            ("Source IP", selected_rows[0]["Source IP"]),
-            ("Destination IP", selected_rows[0]["Destination IP"]),
-            ("Protocol", selected_rows[0]["Protocol"]),
-            ("Length", f"{selected_rows[0]['Length']} bytes")
+            ("Packet Number", str(packet_row["No."])),
+            ("Timestamp", packet_row["Timestamp"]),
+            ("Source IP", packet_row["Source IP"]),
+            ("Destination IP", packet_row["Destination IP"]),
+            ("Protocol", packet_row["Protocol"]),
+            ("Length", f"{packet_row['Length']} bytes")
         ]
         
         for label, value in summary_items:
