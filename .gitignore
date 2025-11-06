@@ -135,3 +135,6 @@ id_rsa*
 # Project specific
 summary.json
 output/summary.json
+
+# Local Kubernetes manifests (Bridge to Kubernetes / Docker Desktop)
+bridge/
