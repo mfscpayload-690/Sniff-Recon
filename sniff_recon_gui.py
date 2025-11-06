@@ -27,7 +27,8 @@ def inject_modern_css():
     st.markdown(
         """
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        /* Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@600;700;800&family=Rajdhani:wght@600;700&family=Exo+2:wght@700;800&display=swap');
         
         /* Global styles */
         .main {
@@ -39,33 +40,44 @@ def inject_modern_css():
         
         /* Title styling */
         .main-title {
-            background: linear-gradient(45deg, #00ffff, #00b3b3);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-family: 'Orbitron','Rajdhani','Exo 2','Inter',sans-serif;
+            letter-spacing: 2px;
+            color: #00e6ff;
+            text-shadow: 0 0 8px rgba(0, 238, 255, 0.7), 0 0 18px rgba(0, 238, 255, 0.4);
             font-size: 3rem;
-            font-weight: 700;
+            font-weight: 800;
             text-align: center;
-            margin-bottom: 1rem;
-            animation: glow 2s ease-in-out infinite alternate;
+            margin-bottom: 0.25rem;
+            animation: neonPulse 2.4s ease-in-out infinite;
+            text-transform: uppercase;
         }
         
-        @keyframes glow {
-            from {
-                text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
-            }
-            to {
-                text-shadow: 0 0 30px rgba(0, 255, 255, 0.8), 0 0 40px rgba(0, 255, 255, 0.6);
-            }
+        @keyframes neonPulse {
+            0% { text-shadow: 0 0 8px rgba(0, 238, 255, 0.6), 0 0 18px rgba(0, 238, 255, 0.35); }
+            50% { text-shadow: 0 0 14px rgba(0, 255, 255, 0.85), 0 0 28px rgba(0, 255, 255, 0.55); }
+            100% { text-shadow: 0 0 8px rgba(0, 238, 255, 0.6), 0 0 18px rgba(0, 238, 255, 0.35); }
         }
         
         .subtitle {
-            color: #00b3b3;
+            color: #66ffff;
             text-align: center;
-            font-size: 1.2rem;
+            font-size: 1.15rem;
             margin-bottom: 2rem;
-            font-weight: 400;
+            font-weight: 500;
+            text-shadow: 0 0 6px rgba(102, 255, 255, 0.35);
         }
+
+        /* Typewriter */
+        .typewriter {
+            display: inline-block;
+            white-space: nowrap;
+            overflow: hidden;
+            border-right: 0.12em solid rgba(102,255,255,0.65);
+            animation: caret 0.9s step-end infinite;
+        }
+        .typewriter .cursor { color: #66ffff; animation: blink 1.1s steps(2, start) infinite; }
+        @keyframes blink { to { visibility: hidden; } }
+        @keyframes caret { 50% { border-color: transparent; } }
         
         /* File uploader styling */
         .stFileUploader {
@@ -216,6 +228,43 @@ def inject_modern_css():
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
+
+        /* Modal (popup) styles */
+        .sr-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999;
+        }
+        .sr-modal {
+            width: min(720px, 92vw);
+            background: linear-gradient(145deg, rgba(18, 18, 30, 0.95), rgba(10, 10, 20, 0.95));
+            border: 1px solid rgba(0,255,255,0.25);
+            box-shadow: 0 12px 40px rgba(0,255,255,0.15), inset 0 0 18px rgba(0,255,255,0.06);
+            border-radius: 14px; padding: 1.25rem 1.25rem 1rem;
+            color: #e0f7ff;
+        }
+        .sr-modal h3 { color: #00ffff; margin: 0 0 0.6rem 0; font-family: 'Exo 2','Inter',sans-serif; }
+        .sr-modal p { margin: 0.35rem 0; color: #d5f9ff; }
+        .sr-modal .sr-close {
+            margin-top: 0.8rem;
+        }
+
+        /* Sidebar mini cards */
+        .sr-card {
+            border: 1px solid rgba(0,255,255,0.25);
+            border-radius: 10px;
+            padding: 0.75rem; margin-bottom: 0.6rem;
+            background: rgba(20,25,35,0.65);
+            box-shadow: inset 0 0 12px rgba(0,255,255,0.06);
+        }
+        .sr-card h4 { color: #00ffff; margin: 0 0 0.35rem 0; font-size: 0.95rem; }
+        .sr-mini-btn > button {
+            width: 100%;
+            background: linear-gradient(45deg, #00ffff, #00b3b3);
+            color: #121212; border: none; border-radius: 8px;
+            padding: 0.45rem 0.6rem; font-weight: 600; font-size: 0.9rem;
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.28);
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -233,16 +282,100 @@ def main():
     # Inject modern CSS
     inject_modern_css()
 
-    # Main title with animation
+    # Sidebar: About, Contact, Help Desk (left side)
+    with st.sidebar:
+        st.markdown('<div class="sr-card"><h4>About</h4>', unsafe_allow_html=True)
+        if st.button("About Sniff Recon", key="aboutBtn"):
+            st.session_state["sr_modal"] = {"type": "about"}
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown('<div class="sr-card"><h4>Contact Us</h4>', unsafe_allow_html=True)
+        if st.button("Contact Team", key="contactBtn"):
+            st.session_state["sr_modal"] = {"type": "contact"}
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown('<div class="sr-card"><h4>Help Desk</h4>', unsafe_allow_html=True)
+        faq_items = [
+            ("Why use Sniff Recon?", "Sniff Recon quickly parses packet captures and highlights patterns, anomalies, and potential threats with AI-assisted summaries."),
+            ("Supported files?", "PCAP, PCAPNG, CSV, and TXT are supported. CSV column names are auto-mapped when possible."),
+            ("Is AI required?", "No. When AI providers aren’t configured, the app still provides local statistical analysis and summaries."),
+            ("File size limit?", "The UI limits uploads to 200MB to protect memory. Large captures should be trimmed or filtered before upload."),
+            ("Is my data stored?", "Summaries are saved to output/summary.json locally. Packet data is processed in-memory and temp files are cleaned up.")
+        ]
+        for idx, (q, _a) in enumerate(faq_items):
+            if st.button(q, key=f"faqBtn{idx}"):
+                st.session_state["sr_modal"] = {"type": "faq", "index": idx}
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # Main title with neon glow (keep logo/title feel and spacing)
     st.markdown(
-        '<h1 class="main-title fade-in-up">🔍 Sniff Recon</h1>',
+        '<h1 class="main-title fade-in-up">SNIFF RECON</h1>',
         unsafe_allow_html=True
     )
-    
-    st.markdown(
-        '<p class="subtitle fade-in-up">Advanced Network Packet Analyzer & AI-Powered Protocol Dissector</p>',
-        unsafe_allow_html=True
-    )
+
+    # Tagline: one-time typewriter; then steady with blinking cursor
+    tagline_text = "Advanced Network Packet Analyzer & AI-Powered Protocol Dissector"
+    if not st.session_state.get("sr_tagline_done"):
+        st.markdown(
+            f'''
+            <p class="subtitle fade-in-up">
+              <span id="sr-typewriter" class="typewriter"></span><span class="cursor">_</span>
+            </p>
+            <script>
+              const txt = {json.dumps(tagline_text)};
+              const el = window.parent.document.getElementById('sr-typewriter');
+              if (el) {{
+                  let i=0; const speed=28;
+                  const type = () => {{
+                      if (i <= txt.length) {{ el.textContent = txt.substring(0,i); i++; setTimeout(type, speed); }}
+                  }}; type();
+              }}
+            </script>
+            ''',
+            unsafe_allow_html=True,
+        )
+        # Mark as done to avoid re-animating on further reruns
+        st.session_state["sr_tagline_done"] = True
+    else:
+        st.markdown(
+            f'<p class="subtitle fade-in-up">{tagline_text} <span class="cursor">_</span></p>',
+            unsafe_allow_html=True,
+        )
+
+    # Optional modal renderer (centered popup)
+    modal = st.session_state.get("sr_modal")
+    if modal:
+        # Build modal content
+        title = ""
+        body = ""
+        if modal.get("type") == "about":
+            title = "About Sniff Recon"
+            body = (
+                "Sniff Recon is a Streamlit-based network packet analyzer that supports PCAP/CSV/TXT parsing, "
+                "with optional multi-provider AI analysis. It emphasizes safe defaults, memory-aware parsing, and "
+                "clear visualizations to help you investigate traffic quickly."
+            )
+        elif modal.get("type") == "contact":
+            title = "Contact Us"
+            body = (
+                "For support or inquiries, please open an issue on the repository or email the maintainers. "
+                "Remember to exclude sensitive data when sharing captures."
+            )
+        elif modal.get("type") == "faq":
+            idx = int(modal.get("index", 0))
+            q, a = faq_items[idx]
+            title = q
+            body = a
+
+        # Render overlay
+        st.markdown('<div class="sr-modal-overlay">', unsafe_allow_html=True)
+        st.markdown('<div class="sr-modal">', unsafe_allow_html=True)
+        st.markdown(f'<h3>{title}</h3><p>{body}</p>', unsafe_allow_html=True)
+        close_col = st.columns([1,1,1])[1]
+        with close_col:
+            if st.button("Close", key="srCloseModal", help="Close this dialog"):
+                st.session_state["sr_modal"] = None
+        st.markdown('</div></div>', unsafe_allow_html=True)
 
     # File upload section
     st.markdown('<div class="fade-in-up">', unsafe_allow_html=True)
