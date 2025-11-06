@@ -21,9 +21,10 @@ import time
 import hashlib
 from concurrent.futures import ThreadPoolExecutor
 import math
+import random  # For randomizing provider order
 
 # Load environment variables
-load_dotenv()
+load_dotenv('/app/.env')  # Explicitly load from Docker mounted path
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -77,7 +78,7 @@ class AIProvider(ABC):
 class GroqProvider(AIProvider):
     """Groq AI Provider"""
     
-    def __init__(self, api_key: str, model_name: str = "llama3-8b-8192"):
+    def __init__(self, api_key: str, model_name: str = "llama-3.3-70b-versatile"):
         self.api_key = api_key
         self.model_name = model_name
         self.api_url = "https://api.groq.com/openai/v1/chat/completions"
@@ -339,6 +340,113 @@ class AnthropicProvider(AIProvider):
                 provider=self.name
             )
 
+class GoogleGeminiProvider(AIProvider):
+    """Google Gemini AI Provider"""
+    
+    def __init__(self, api_key: str, model_name: str = "gemini-2.5-flash"):
+        self.api_key = api_key
+        self.model_name = model_name
+        self.api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
+        self.headers = {
+            "Content-Type": "application/json"
+        }
+    
+    @property
+    def name(self) -> str:
+        return "Google Gemini"
+    
+    @property
+    def max_tokens(self) -> int:
+        return 8192  # Gemini Flash supports up to 8K output tokens
+    
+    def test_connection(self) -> bool:
+        try:
+            # Test with a minimal request
+            test_url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model_name}:generateContent?key={self.api_key}"
+            payload = {
+                "contents": [{"parts": [{"text": "Hello"}]}],
+                "generationConfig": {"maxOutputTokens": 10}
+            }
+            response = requests.post(
+                test_url,
+                headers=self.headers,
+                json=payload,
+                timeout=10
+            )
+            return response.status_code == 200
+        except Exception as e:
+            logger.error(f"Google Gemini connection test failed: {e}")
+            return False
+    
+    async def query(self, prompt: str, context: str = None) -> AIResponse:
+        start_time = time.time()
+        
+        # Build the full prompt
+        full_prompt = "You are a network security expert analyzing packet capture data. Provide detailed, actionable insights.\n\n"
+        if context:
+            full_prompt += f"Context:\n{context}\n\n"
+        full_prompt += prompt
+        
+        # Gemini API format
+        api_url_with_key = f"{self.api_url}?key={self.api_key}"
+        payload = {
+            "contents": [
+                {
+                    "parts": [
+                        {"text": full_prompt}
+                    ]
+                }
+            ],
+            "generationConfig": {
+                "temperature": 0.1,
+                "maxOutputTokens": 4000,
+                "topP": 0.95,
+                "topK": 40
+            }
+        }
+        
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    api_url_with_key,
+                    headers=self.headers,
+                    json=payload,
+                    timeout=aiohttp.ClientTimeout(total=60)
+                ) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        response_time = time.time() - start_time
+                        
+                        # Extract text from Gemini response format
+                        response_text = data["candidates"][0]["content"]["parts"][0]["text"]
+                        
+                        # Gemini uses different token counting
+                        tokens_used = data.get("usageMetadata", {}).get("totalTokenCount", 0)
+                        
+                        return AIResponse(
+                            success=True,
+                            response=response_text,
+                            provider=self.name,
+                            tokens_used=tokens_used,
+                            response_time=response_time
+                        )
+                    else:
+                        error_text = await response.text()
+                        return AIResponse(
+                            success=False,
+                            response="",
+                            error=f"HTTP {response.status}: {error_text}",
+                            provider=self.name
+                        )
+        
+        except Exception as e:
+            return AIResponse(
+                success=False,
+                response="",
+                error=str(e),
+                provider=self.name
+            )
+
 class MultiAgentAI:
     """Multi-Agent AI System with load balancing and chunking"""
     
@@ -362,7 +470,7 @@ class MultiAgentAI:
         # Groq
         groq_key = os.getenv("GROQ_API_KEY")
         if groq_key and groq_key != "your_groq_api_key_here":
-            groq_model = os.getenv("GROQ_MODEL", "llama3-8b-8192")
+            groq_model = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
             self.providers.append(GroqProvider(groq_key, groq_model))
         
         # OpenAI
@@ -376,6 +484,12 @@ class MultiAgentAI:
         if anthropic_key and anthropic_key != "your_anthropic_api_key_here":
             anthropic_model = os.getenv("ANTHROPIC_MODEL", "claude-3-sonnet-20240229")
             self.providers.append(AnthropicProvider(anthropic_key, anthropic_model))
+        
+        # Google Gemini
+        google_key = os.getenv("GOOGLE_API_KEY")
+        if google_key and google_key != "your_google_api_key_here":
+            google_model = os.getenv("GOOGLE_MODEL", "gemini-2.5-flash")
+            self.providers.append(GoogleGeminiProvider(google_key, google_model))
     
     def _test_providers(self):
         """Test provider connections and populate active providers"""
@@ -393,7 +507,11 @@ class MultiAgentAI:
                     else:
                         logger.warning(f"❌ {provider.name} provider connection failed")
                 except Exception as e:
-                    logger.error(f"❌ {provider.name} provider test error: {e}")
+                    logger.warning(f"❌ {provider.name} provider test failed: {e}")
+        
+        # Shuffle active providers to distribute load evenly
+        # This prevents always using Groq first for single-chunk queries
+        random.shuffle(self.active_providers)
     
     def chunk_packets(self, packets: List[Packet]) -> List[PacketChunk]:
         """Split packets into manageable chunks for processing"""
@@ -633,6 +751,11 @@ Protocol Distribution:
         """Combine multiple chunk responses into a coherent analysis"""
         successful_responses = [r for r in responses if r.success]
         failed_responses = [r for r in responses if not r.success]
+        
+        # Log failures for debugging
+        if failed_responses:
+            for failed in failed_responses:
+                logger.error(f"❌ Provider {failed.provider} failed: {failed.error}")
         
         if not successful_responses:
             return "❌ Analysis failed for all chunks. Please check your AI provider connections."

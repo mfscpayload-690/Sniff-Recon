@@ -243,7 +243,7 @@ def render_ai_query_interface(packets: List[Packet]):
         query_button = st.button(
             "🚀 Analyze with AI",
             type="primary",
-            use_container_width=True,
+            width='stretch',
             help="Send your question to the AI for analysis"
         )
     
@@ -254,29 +254,18 @@ def render_ai_query_interface(packets: List[Packet]):
         with st.spinner("🤖 AI is analyzing your network traffic..."):
             # Layered Filtering: Get suspicious, cluster, summarize
             suspicious = ai_engine.filter_suspicious_packets(packets)
-            clusters = ai_engine.cluster_packets_by_ip(suspicious)
-            triaged_summaries = ai_engine.summarize_clusters(clusters)
-
-            if not triaged_summaries:
-                st.warning("No suspicious packets found after triage. Using full summary for AI analysis.")
+            
+            # If no suspicious packets found, analyze ALL packets instead
+            if not suspicious or len(suspicious) == 0:
+                st.info("ℹ️ No suspicious patterns detected. Analyzing all packets...")
+                # Extract full packet statistics
                 packet_summary = ai_engine.extract_packet_statistics(packets)
+                ai_result = ai_engine.query_ai(user_query, packet_summary)
             else:
-                st.info(f"{len(triaged_summaries)} suspicious flows detected. Only summarizing these for AI.")
-                packet_summary = PacketSummary(
-                    total_packets=sum(x['packet_count'] for x in triaged_summaries),
-                    unique_src_ips=[x['src_ip'] for x in triaged_summaries],
-                    unique_dst_ips=[x['dst_ip'] for x in triaged_summaries],
-                    protocol_distribution={},
-                    top_src_ips={},
-                    top_dst_ips={},
-                    port_analysis={},
-                    packet_sizes=[],
-                    time_range=(0, 0),
-                    suspicious_patterns=[pat for x in triaged_summaries for pat in x['suspicious_patterns']],
-                )
-
-            # Query AI
-            ai_result = ai_engine.query_ai(user_query, packet_summary)
+                st.success(f"🔍 Found {len(suspicious)} suspicious packets. Analyzing focused dataset...")
+                # Extract statistics from suspicious packets only
+                packet_summary = ai_engine.extract_packet_statistics(suspicious)
+                ai_result = ai_engine.query_ai(user_query, packet_summary)
             
             # Store response in session state
             response_entry = {
@@ -397,4 +386,4 @@ def render_ai_quick_analysis(packets: List[Packet]):
             list(packet_summary.top_src_ips.items())[:5],
             columns=["IP Address", "Packet Count"]
         )
-        st.dataframe(top_src_df, use_container_width=True) 
+        st.dataframe(top_src_df, width='stretch') 
