@@ -634,6 +634,11 @@ Protocol Distribution:
         successful_responses = [r for r in responses if r.success]
         failed_responses = [r for r in responses if not r.success]
         
+        # Log failures for debugging
+        if failed_responses:
+            for failed in failed_responses:
+                logger.error(f"❌ Provider {failed.provider} failed: {failed.error}")
+        
         if not successful_responses:
             return "❌ Analysis failed for all chunks. Please check your AI provider connections."
         
