@@ -94,6 +94,7 @@ cover/
 output/
 *.json
 !requirements.json
+!output/.gitkeep
 
 # PCAP files (can be large)
 *.pcap
