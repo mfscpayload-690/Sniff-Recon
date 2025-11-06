@@ -77,7 +77,7 @@ class AIProvider(ABC):
 class GroqProvider(AIProvider):
     """Groq AI Provider"""
     
-    def __init__(self, api_key: str, model_name: str = "llama3-8b-8192"):
+    def __init__(self, api_key: str, model_name: str = "llama-3.3-70b-versatile"):
         self.api_key = api_key
         self.model_name = model_name
         self.api_url = "https://api.groq.com/openai/v1/chat/completions"
@@ -362,7 +362,7 @@ class MultiAgentAI:
         # Groq
         groq_key = os.getenv("GROQ_API_KEY")
         if groq_key and groq_key != "your_groq_api_key_here":
-            groq_model = os.getenv("GROQ_MODEL", "llama3-8b-8192")
+            groq_model = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
             self.providers.append(GroqProvider(groq_key, groq_model))
         
         # OpenAI

@@ -348,7 +348,7 @@ def render_ip_layer(pkt: Packet):
         render_field_row("Type of Service", f"0x{ip_layer.tos:02x}")
         render_field_row("Total Length", f"{ip_layer.len} bytes")
         render_field_row("Identification", f"0x{ip_layer.id:04x}")
-        render_field_row("Flags", f"0x{ip_layer.flags:02x}")
+        render_field_row("Flags", f"0x{int(ip_layer.flags):02x}")
         render_field_row("Fragment Offset", str(ip_layer.frag))
         render_field_row("Time to Live", str(ip_layer.ttl))
         render_field_row("Protocol", f"{ip_layer.proto} ({get_protocol_name(ip_layer.proto)})")
@@ -386,7 +386,7 @@ def render_transport_layer(pkt: Packet):
         if tcp_layer.flags & 0x08: flags.append("PSH")
         if tcp_layer.flags & 0x10: flags.append("ACK")
         if tcp_layer.flags & 0x20: flags.append("URG")
-        render_field_row("Flags", f"0x{tcp_layer.flags:02x} [{', '.join(flags)}]")
+        render_field_row("Flags", f"0x{int(tcp_layer.flags):02x} [{', '.join(flags)}]")
         
         render_field_row("Window Size", str(tcp_layer.window))
         render_field_row("Checksum", f"0x{tcp_layer.chksum:04x}")
@@ -511,7 +511,7 @@ def display_packet_table(packets: List[Packet]):
     st.markdown('<div class="packet-table-container">', unsafe_allow_html=True)
     st.dataframe(
         df,
-        use_container_width=True,
+        width='stretch',
         height=400,
         hide_index=True
     )

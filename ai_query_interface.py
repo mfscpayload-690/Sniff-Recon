@@ -243,7 +243,7 @@ def render_ai_query_interface(packets: List[Packet]):
         query_button = st.button(
             "🚀 Analyze with AI",
             type="primary",
-            use_container_width=True,
+            width='stretch',
             help="Send your question to the AI for analysis"
         )
     
@@ -397,4 +397,4 @@ def render_ai_quick_analysis(packets: List[Packet]):
             list(packet_summary.top_src_ips.items())[:5],
             columns=["IP Address", "Packet Count"]
         )
-        st.dataframe(top_src_df, use_container_width=True) 
+        st.dataframe(top_src_df, width='stretch') 

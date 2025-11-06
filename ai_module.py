@@ -128,7 +128,7 @@ class AIQueryEngine:
     def __init__(self):
         self.api_url = "https://api.groq.com/openai/v1/chat/completions"
         self.api_key = os.getenv("GROQ_API_KEY")
-        self.model_name = os.getenv("MODEL_NAME", "llama3-8b-8192")
+        self.model_name = os.getenv("MODEL_NAME", "llama-3.3-70b-versatile")
 
         if not self.api_key or self.api_key == "your_groq_api_key_here":
             logger.warning("GROQ_API_KEY not found or invalid in environment variables")
