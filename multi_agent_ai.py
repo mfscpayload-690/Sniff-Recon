@@ -23,7 +23,7 @@ from concurrent.futures import ThreadPoolExecutor
 import math
 
 # Load environment variables
-load_dotenv()
+load_dotenv('/app/.env')  # Explicitly load from Docker mounted path
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
