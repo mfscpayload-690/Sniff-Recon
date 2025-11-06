@@ -456,6 +456,16 @@ class MultiAgentAI:
         self.chunk_size_mb = 5  # Process 5MB chunks
         self.max_packets_per_chunk = 5000  # Max packets per chunk
         
+        # Weighted load balancing configuration
+        self.use_weighted_balancing = os.getenv("USE_WEIGHTED_BALANCING", "true").lower() == "true"
+        self.provider_weights = {
+            "Groq": float(os.getenv("GROQ_WEIGHT", "30")),
+            "OpenAI": float(os.getenv("OPENAI_WEIGHT", "35")),
+            "Google Gemini": float(os.getenv("GEMINI_WEIGHT", "35")),
+            "Anthropic": float(os.getenv("ANTHROPIC_WEIGHT", "30"))
+        }
+        self.provider_usage_count = {}  # Track actual usage for self-balancing
+        
         # Initialize providers from environment variables
         self._initialize_providers()
         
@@ -512,6 +522,16 @@ class MultiAgentAI:
         # Shuffle active providers to distribute load evenly
         # This prevents always using Groq first for single-chunk queries
         random.shuffle(self.active_providers)
+        
+        # Initialize usage tracking for weighted balancing
+        for provider in self.active_providers:
+            self.provider_usage_count[provider.name] = 0
+        
+        # Log weighted balancing status
+        if self.use_weighted_balancing and self.active_providers:
+            weights_str = ", ".join([f"{p.name}: {self.provider_weights.get(p.name, 33)}%" 
+                                     for p in self.active_providers])
+            logger.info(f"🎯 Weighted balancing enabled: {weights_str}")
     
     def chunk_packets(self, packets: List[Packet]) -> List[PacketChunk]:
         """Split packets into manageable chunks for processing"""
@@ -636,20 +656,56 @@ class MultiAgentAI:
         
         return stats
     
-    def _select_provider(self) -> Optional[AIProvider]:
-        """Select the best available provider using round-robin"""
+    def _select_provider(self, chunk: Optional[PacketChunk] = None) -> Optional[AIProvider]:
+        """
+        Select the best available provider using weighted probability or round-robin.
+        
+        Weighted balancing uses a self-correcting algorithm that:
+        1. Calculates target usage percentage for each provider
+        2. Compares actual usage to target
+        3. Prioritizes providers that are underused
+        4. Falls back to configured weights for new sessions
+        """
         if not self.active_providers:
             return None
         
-        # Simple round-robin for now
-        # TODO: Implement more sophisticated load balancing
-        provider = self.active_providers[0]
-        self.active_providers.append(self.active_providers.pop(0))  # Move to end
+        # Use weighted balancing if enabled
+        if self.use_weighted_balancing:
+            total_queries = sum(self.provider_usage_count.values())
+            
+            if total_queries == 0:
+                # First query: use weighted random selection
+                weights = [self.provider_weights.get(p.name, 33) for p in self.active_providers]
+                provider = random.choices(self.active_providers, weights=weights, k=1)[0]
+            else:
+                # Self-balancing: prioritize underused providers
+                scores = []
+                for provider in self.active_providers:
+                    target_weight = self.provider_weights.get(provider.name, 33)
+                    actual_usage = self.provider_usage_count.get(provider.name, 0)
+                    actual_percentage = (actual_usage / total_queries) * 100 if total_queries > 0 else 0
+                    
+                    # Score = how much below target (higher = more underused)
+                    # Add small random factor to break ties
+                    score = (target_weight - actual_percentage) + random.uniform(0, 5)
+                    scores.append(score)
+                
+                # Select provider with highest score (most underused)
+                max_score_idx = scores.index(max(scores))
+                provider = self.active_providers[max_score_idx]
+        else:
+            # Simple round-robin fallback
+            provider = self.active_providers[0]
+            self.active_providers.append(self.active_providers.pop(0))
+        
+        # Track usage
+        self.provider_usage_count[provider.name] = self.provider_usage_count.get(provider.name, 0) + 1
+        
         return provider
     
     async def query_single_chunk(self, prompt: str, chunk: PacketChunk) -> AIResponse:
         """Query AI for a single packet chunk"""
-        provider = self._select_provider()
+        provider = self._select_provider(chunk)
         if not provider:
             return AIResponse(
                 success=False,
