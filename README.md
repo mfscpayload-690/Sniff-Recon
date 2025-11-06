@@ -21,7 +21,7 @@ Sniff Recon is a user-friendly GUI application built with Streamlit that analyze
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/mfscpayload-690/Sniff-Recon.git
 cd Sniff-Recon
 
 # Create and activate virtual environment (recommended)
