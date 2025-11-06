@@ -1,180 +1,221 @@
 # Sniff Recon 🔍
 
-**AI-Powered Network Packet Analyzer - GUI Edition**
+**AI-Powered Network Packet Analyzer with Modern GUI**
 
-Sniff Recon is a user-friendly GUI application built with Streamlit that analyzes network packet capture files (PCAP, CSV, TXT) with AI-powered insights for network traffic analysis and security monitoring.
+Sniff Recon is a powerful network packet analyzer built with Streamlit that provides AI-powered insights for network traffic analysis and security monitoring. Analyze PCAP, CSV, and TXT packet captures with natural language queries and intelligent threat detection.
 
 ## Features ✨
 
-- 🖥️ **Modern Web-Based GUI**: Beautiful, responsive interface built with Streamlit
-- 📁 **Multiple File Formats**: Support for .pcap, .pcapng, .csv, and .txt files
-- 🤖 **AI-Powered Analysis**: Intelligent packet analysis and threat detection
-- 📊 **Interactive Visualizations**: Real-time packet tables and statistics
+- 🖥️ **Modern Web-Based GUI**: Beautiful, responsive Streamlit interface
+- 📁 **Multiple File Formats**: Support for PCAP, PCAPNG, CSV, and TXT files
+- 🤖 **Multi-Agent AI System**: Leverages Groq, OpenAI, and Anthropic for intelligent analysis
+- 🔍 **Smart Packet Filtering**: Automatic suspicious packet detection and clustering
+- 📊 **Interactive Visualizations**: Real-time packet tables with AgGrid
 - 💾 **Export Capabilities**: Download analysis results as JSON
-- 🎨 **Beautiful Dark Theme**: Modern cyberpunk-inspired design
-- ⚡ **Real-Time Processing**: Live progress tracking for large files
-- 🔍 **Detailed Packet Inspection**: Comprehensive packet metadata display
+- 🎨 **Cyberpunk Dark Theme**: Modern UI with custom CSS styling
+- ⚡ **Large File Support**: Handles files up to 200MB with chunking
+- � **Detailed Packet Inspection**: Layer-by-layer protocol analysis (Ethernet, IP, TCP/UDP, Application)
+- 🐳 **Docker Support**: Containerized deployment with health checks
 
 ## Quick Start 🚀
 
-### 1. Installation
+### Option 1: Docker (Recommended)
 
 ```bash
 # Clone the repository
 git clone https://github.com/mfscpayload-690/Sniff-Recon.git
 cd Sniff-Recon
 
-# Create and activate virtual environment (recommended)
-python3 -m venv venv_gui
-source venv_gui/bin/activate  # On Windows: venv_gui\Scripts\activate
+# Create .env file with your AI API keys (optional)
+# GROQ_API_KEY=your_key_here
+# OPENAI_API_KEY=your_key_here
+# ANTHROPIC_API_KEY=your_key_here
+
+# Build and run with Docker Compose
+docker-compose up -d
+
+# Access at http://localhost:8501
+```
+
+### Option 2: Local Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/mfscpayload-690/Sniff-Recon.git
+cd Sniff-Recon
+
+# Create and activate virtual environment
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+# Linux/Mac: source .venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
-```
 
-### 2. AI Setup (Optional)
-
-For AI-powered analysis features, create a `.env` file with your API keys:
-
-```env
-# AI Providers (Optional - for enhanced analysis)
-GROQ_API_KEY=your_groq_key_here
-OPENAI_API_KEY=your_openai_key_here
-# Add other provider keys as needed
-```
-
-### 3. Launch the GUI
-
-```bash
-# Option 1: Use the shell script (if in venv)
-./run_gui.sh
-
-# Option 2: Use the Python startup script
+# Launch the GUI
 python start_gui.py
-
-# Option 3: Start directly with Streamlit
-streamlit run sniff_recon_gui.py
 ```
 
-**Note**: If you're using the virtual environment, the shell script `./run_gui.sh` will automatically activate it for you.
-
-The application will open in your default web browser at `http://localhost:8501`
+The application will open in your browser at `http://localhost:8501`
 
 ## Usage 💡
 
-### File Upload
-1. **Drag & Drop**: Simply drag your packet capture file into the upload area
-2. **Browse**: Click the upload button to browse for files
-3. **Supported Formats**: .pcap, .pcapng, .csv, .txt (up to 200MB)
+### Analyzing Packet Captures
 
-### Analysis Tabs
+1. **Upload File**: Drag and drop or browse for your packet capture file (PCAP, PCAPNG, CSV, TXT)
+2. **View Statistics**: See protocol distribution, top talkers, and packet summaries
+3. **Inspect Packets**: Click on any packet for detailed layer-by-layer analysis
+4. **AI Analysis**: Use natural language queries like:
+   - "Show me all suspicious packets"
+   - "Find potential security threats"
+   - "Analyze traffic patterns"
+   - "What ports are being scanned?"
+5. **Export Results**: Download comprehensive analysis as JSON
 
-#### 📊 Packet Analysis
-- View comprehensive packet statistics
-- Interactive packet table with filtering
-- Protocol distribution charts
-- Source/destination IP analysis
+### AI-Powered Features
 
-#### 🤖 AI Analysis (If configured)
-- Quick AI-powered threat assessment
-- Natural language query interface
-- Ask questions about your network traffic
-- Get intelligent insights and recommendations
+The app works **with or without AI**:
+- ✅ **With AI**: Get intelligent threat detection, natural language querying, and automated analysis
+- ✅ **Without AI**: Still get full packet parsing, statistics, and manual inspection capabilities
 
-#### 💾 Export Results
-- Download analysis results as JSON
-- View raw data in formatted display
-- Save reports for further analysis
+AI providers are automatically detected from your `.env` file. The system uses a multi-agent approach with load balancing across available providers.
 
-## Error Handling 🛠️
+## Architecture 🏗️
 
-The app handles various error scenarios:
+```
+┌─────────────────────────────────────────────────────────┐
+│                  Streamlit GUI Layer                    │
+│  (sniff_recon_gui.py, display_packet_table.py,         │
+│   ai_query_interface.py)                                │
+└─────────────────────┬───────────────────────────────────┘
+                      │
+┌─────────────────────▼───────────────────────────────────┐
+│                   Parser Layer                          │
+│  (pcap_parser.py, csv_parser.py, txt_parser.py)        │
+└─────────────────────┬───────────────────────────────────┘
+                      │
+┌─────────────────────▼───────────────────────────────────┐
+│              AI Multi-Agent System                      │
+│  • Groq Provider (llama-3.3-70b-versatile)             │
+│  • OpenAI Provider (gpt-4o)                            │
+│  • Anthropic Provider (claude-3-5-sonnet-20241022)     │
+│  • Load balancing & automatic chunking                 │
+└─────────────────────┬───────────────────────────────────┘
+                      │
+┌─────────────────────▼───────────────────────────────────┐
+│           Scapy Packet Analysis Engine                  │
+│  • Layer-by-layer parsing (Ethernet → IP → TCP/UDP)    │
+│  • Suspicious packet filtering                         │
+│  • IP clustering and summarization                     │
+└─────────────────────────────────────────────────────────┘
+```
 
-- **401 Unauthorized**: Invalid API key
-- **429 Rate Limited**: Too many requests (automatic retry with backoff)
-- **404 Not Found**: Invalid model name
-- **Network Timeouts**: Connection issues
-- **Missing Environment Variables**: Configuration problems
+### Key Components
 
-## Future Features 🎯
-
-### Planned PCAP Analysis Features
-
-1. **PCAP File Processing**
-   - Load and parse PCAP files using scapy or pyshark
-   - Extract packet metadata (timestamps, protocols, IPs, ports)
-   - Generate summary statistics
-
-2. **Natural Language PCAP Queries**
-   - "Show me all HTTP requests to suspicious domains"
-   - "Find packets with unusual port activity"
-   - "Analyze traffic patterns between 10:00 AM and 2:00 PM"
-   - "Identify potential security threats in this capture"
-
-3. **AI-Powered Analysis**
-   - Automatic threat detection and classification
-   - Anomaly detection in network traffic
-   - Behavioral analysis of network flows
-   - Security incident correlation
-
-4. **Advanced Features**
-   - Real-time packet capture analysis
-   - Network topology mapping
-   - Protocol-specific analysis (HTTP, DNS, TLS, etc.)
-   - Export findings to reports (PDF, JSON, CSV)
-   - Integration with threat intelligence feeds
+- **Parsers**: Convert PCAP/CSV/TXT → Pandas DataFrames
+- **Multi-Agent AI**: Parallel processing across multiple LLM providers with 5MB/5000-packet chunking
+- **Packet Filtering**: 3-stage process (filter suspicious → cluster by IP → summarize) reduces payload by ~90%
+- **Session State**: Streamlit state management for AI query history and user preferences
 
 ## Troubleshooting 🔧
 
+See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for detailed solutions.
+
 ### Common Issues
 
-1. **"Module not found" errors**
-   - Make sure all dependencies are installed: `pip install -r requirements.txt`
-   - Check that you're in the correct directory
+- **Module not found**: Run `pip install -r requirements.txt`
+- **File upload failures**: Check file size (<200MB) and format (PCAP/CSV/TXT)
+- **AI not working**: Verify `.env` file contains valid API keys
+- **Docker issues**: Check logs with `docker-compose logs -f`
 
-2. **File upload failures**
-   - Ensure your file is under 200MB
-   - Check file format is supported (.pcap, .pcapng, .csv, .txt)
-   - Verify file permissions
+For more help, check the [SETUP.md](SETUP.md) guide.
 
-3. **GUI not loading**
-   - Make sure Streamlit is installed: `pip install streamlit`
-   - Try running: `streamlit run sniff_recon_gui.py --server.port 8501`
-   - Check if port 8501 is available
+## Technology Stack �️
 
-4. **AI Analysis not working**
-   - Verify your `.env` file contains valid API keys
-   - Check your internet connection
-   - Ensure API keys are properly formatted
+- **Frontend**: Streamlit, st-aggrid, custom CSS
+- **Packet Analysis**: Scapy, PyShark
+- **AI/ML**: Multi-agent system (Groq, OpenAI, Anthropic)
+- **Data Processing**: Pandas, asyncio/aiohttp
+- **Deployment**: Docker, Docker Compose
+- **Languages**: Python 3.11+
 
-### Getting Help
+## Development 👨‍💻
 
-If you encounter issues:
+### Project Structure
 
-1. Check that all dependencies are installed correctly
-2. Verify your `.env` file configuration (if using AI features)
-3. Ensure your network connection is stable
-4. Try with a smaller test file first
+```
+Sniff-Recon/
+├── sniff_recon_gui.py          # Main Streamlit app
+├── multi_agent_ai.py           # Multi-provider AI system
+├── ai_module.py                # Fallback AI + packet filtering
+├── display_packet_table.py     # AgGrid packet tables
+├── ai_query_interface.py       # AI chat interface
+├── parsers/                    # Format-specific parsers
+│   ├── pcap_parser.py
+│   ├── csv_parser.py
+│   └── txt_parser.py
+├── utils/                      # Helper functions
+│   └── helpers.py
+├── .github/
+│   └── copilot-instructions.md # AI development guidelines
+├── Dockerfile                  # Container image definition
+├── docker-compose.yml          # Multi-container orchestration
+└── requirements.txt            # Python dependencies
+```
+
+### Running Tests
+
+```bash
+# Install dev dependencies
+pip install pytest pytest-cov
+
+# Run tests (when implemented)
+pytest tests/ -v
+
+# Run with coverage
+pytest --cov=. --cov-report=html
+```
+
+### Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Make your changes following the code style in `.github/copilot-instructions.md`
+4. Test thoroughly with sample PCAP files
+5. Submit a pull request to `main` branch
+
+**Branch Workflow**:
+- `main`: Production-ready code
+- `front-end-test`: UI/UX development (maintained by [@krizzdev7](https://github.com/krizzdev7))
+- Feature branches: Temporary branches for specific features
 
 ## Security 🔒
 
-- **API Key Protection**: Never hardcode API keys in your code
-- **Environment Variables**: All sensitive data is stored in `.env` files
-- **Input Validation**: User inputs are properly sanitized
-- **Error Handling**: Sensitive information is not exposed in error messages
+- **API Key Protection**: Store API keys in `.env` (gitignored)
+- **Input Validation**: File size limits and format validation
+- **Error Handling**: Sensitive information never exposed in logs
+- **Docker Security**: Regular `apt-get upgrade` for vulnerability patching
+- **No Hardcoded Secrets**: All credentials via environment variables
 
-## Contributing 🤝
+## Developers 👥
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+| Developer | Role | GitHub |
+|-----------|------|--------|
+| **Aravind Lal** | Lead Developer, Backend & AI Architecture | [@mfscpayload-690](https://github.com/mfscpayload-690) |
+| **Devu Krishna** | UI/UX Developer, Frontend Design | [@krizzdev7](https://github.com/krizzdev7) |
 
 ## License 📄
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments 🙏
+
+- Built with [Streamlit](https://streamlit.io/) for the web interface
+- Powered by [Scapy](https://scapy.net/) for packet analysis
+- AI capabilities via [Groq](https://groq.com/), [OpenAI](https://openai.com/), and [Anthropic](https://anthropic.com/)
 
 ---
 
 **Happy Network Analysis! 🔍📊**
+
+Made with ❤️ by the Sniff Recon Team
