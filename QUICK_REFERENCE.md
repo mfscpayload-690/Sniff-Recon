@@ -10,22 +10,34 @@
 git status                          # Check what changed
 git add .                           # Stage all changes
 git commit -m "UI: Your message"    # Commit changes
-git push origin front-end-test      # Push to your branch
+git push origin front-end-test      # ⚠️ ALWAYS push to front-end-test!
 ```
 
-## 🚀 Daily Workflow (3 Steps)
+## � Docker-First Workflow (4 Steps)
 
 1. **Make UI changes** → Edit CSS/layout in `sniff_recon_gui.py`, `display_packet_table.py`, etc.
-2. **Test locally** → `python start_gui.py` or `streamlit run sniff_recon_gui.py`
-3. **Commit & Push** → `git add .` → `git commit -m "UI: description"` → `git push origin front-end-test`
+2. **Test in Docker** → `docker-compose up --build -d` (rebuilds with your changes)
+3. **Verify** → Open http://localhost:8501 and test your UI changes
+4. **Commit & Push** → `git add .` → `git commit -m "UI: description"` → `git push origin front-end-test`
+
+### 🚀 Essential Docker Commands
+
+```powershell
+docker-compose up --build -d    # Build & start (always use this after changes)
+docker-compose logs -f          # View real-time logs
+docker-compose down             # Stop & remove container
+docker-compose restart          # Quick restart (no rebuild)
+docker ps                       # Check if container is running
+```
 
 ## ⚠️ Golden Rules
 
-1. ✅ **ALWAYS** work on `front-end-test` branch
-2. ❌ **NEVER** push to `main` branch
-3. ✅ **ALWAYS** test changes locally before pushing
-4. ✅ **SYNC** with main branch regularly: `git merge origin/main`
+1. 🐳 **ALWAYS** test in Docker: `docker-compose up --build -d`
+2. 🌿 **ALWAYS** work on `front-end-test` branch
+3. ❌ **NEVER** push to `main` branch - ONLY `front-end-test`!
+4. 🔄 **SYNC** with main branch regularly: `git merge origin/main`
 5. ✅ **CREATE PR** when feature is complete for review by @mfscpayload-690
+6. 🐳 **Docker is production** - If it works in Docker, it works in production!
 
 ## 📁 Files You'll Edit
 
