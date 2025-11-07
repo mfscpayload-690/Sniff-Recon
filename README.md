@@ -19,7 +19,9 @@ Sniff Recon is a powerful network packet analyzer built with Streamlit that prov
 
 ## Quick Start 🚀
 
-### Option 1: Docker (Recommended)
+### Docker Deployment (Production)
+
+**Sniff Recon now runs exclusively in Docker for better isolation and consistency.**
 
 ```bash
 # Clone the repository
@@ -31,13 +33,35 @@ cd Sniff-Recon
 # OPENAI_API_KEY=your_key_here
 # ANTHROPIC_API_KEY=your_key_here
 
-# Build and run with Docker Compose
+# Start with Docker Compose
 docker-compose up -d
+
+# Or use the PowerShell helper script (Windows)
+.\docker-start.ps1
 
 # Access at http://localhost:8501
 ```
 
-### Option 2: Local Installation
+**Managing the Container:**
+
+```bash
+# View logs
+docker logs sniff-recon-app -f
+
+# Stop the container
+docker-compose down
+# Or: .\docker-stop.ps1
+
+# Restart the container
+docker-compose restart
+
+# Rebuild after code changes
+docker-compose up -d --build
+```
+
+### Local Development Only
+
+**Note:** Local installation is only for development purposes. Production deployments should use Docker.
 
 ```bash
 # Clone the repository

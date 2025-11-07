@@ -279,7 +279,7 @@ def render_ai_query_interface(packets: List[Packet]):
     
     # Display AI responses
     if st.session_state.ai_responses:
-        st.markdown("## 📊 AI Analysis Results")
+        st.markdown('<div class="section-heading">AI ANALYSIS RESULTS</div>', unsafe_allow_html=True)
         
         for i, response_entry in enumerate(reversed(st.session_state.ai_responses)):
             result = response_entry["result"]
@@ -345,7 +345,7 @@ def render_ai_quick_analysis(packets: List[Packet]):
     # Extract basic statistics
     packet_summary = ai_engine.extract_packet_statistics(packets)
     
-    st.markdown("## 🤖 Quick AI Analysis")
+    st.markdown('<div class="section-heading">QUICK AI ANALYSIS</div>', unsafe_allow_html=True)
     
     # Create columns for statistics
     col1, col2, col3 = st.columns(3)
@@ -370,7 +370,7 @@ def render_ai_quick_analysis(packets: List[Packet]):
     
     # Protocol distribution chart
     if packet_summary.protocol_distribution:
-        st.markdown("### 📊 Protocol Distribution")
+        st.markdown('<div class="subsection-heading">📊 Protocol Distribution</div>', unsafe_allow_html=True)
         protocol_df = pd.DataFrame(
             list(packet_summary.protocol_distribution.items()),
             columns=["Protocol", "Count"]
@@ -379,7 +379,7 @@ def render_ai_quick_analysis(packets: List[Packet]):
     
     # Top IPs
     if packet_summary.top_src_ips:
-        st.markdown("### 🌐 Top Source IPs")
+        st.markdown('<div class="subsection-heading">🌐 Top Source IPs</div>', unsafe_allow_html=True)
         top_src_df = pd.DataFrame(
             list(packet_summary.top_src_ips.items())[:5],
             columns=["IP Address", "Packet Count"]

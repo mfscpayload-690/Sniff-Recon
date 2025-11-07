@@ -503,7 +503,7 @@ def display_packet_table(packets: List[Packet]):
     # Inject CSS
     inject_modern_css()
     
-    st.markdown("## 📊 Packet Summary Table")
+    st.markdown('<div class="section-heading">PACKET SUMMARY TABLE</div>', unsafe_allow_html=True)
     
     df = extract_packet_summary(packets)
     
@@ -518,7 +518,7 @@ def display_packet_table(packets: List[Packet]):
     st.markdown('</div>', unsafe_allow_html=True)
     
     # Packet selection using number input
-    st.markdown("## 🔍 Select Packet for Analysis")
+    st.markdown('<div class="section-heading">SELECT PACKET FOR ANALYSIS</div>', unsafe_allow_html=True)
     packet_number = st.number_input(
         "Enter packet number to analyze:",
         min_value=1,
@@ -533,7 +533,7 @@ def display_packet_table(packets: List[Packet]):
         packet_row = df.iloc[selected_index]
         
         # Packet summary section
-        st.markdown("## 🔍 Selected Packet Analysis")
+        st.markdown('<div class="section-heading">SELECTED PACKET ANALYSIS</div>', unsafe_allow_html=True)
         st.markdown('<div class="packet-summary">', unsafe_allow_html=True)
         st.markdown('<div class="summary-grid">', unsafe_allow_html=True)
         
@@ -562,7 +562,7 @@ def display_packet_table(packets: List[Packet]):
         st.markdown('</div>', unsafe_allow_html=True)
         
         # Protocol layers section
-        st.markdown("## 🧩 Protocol Layer Analysis")
+        st.markdown('<div class="section-heading">PROTOCOL LAYER ANALYSIS</div>', unsafe_allow_html=True)
         
         # Render each protocol layer
         render_ethernet_layer(pkt)
