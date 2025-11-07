@@ -656,7 +656,7 @@ class MultiAgentAI:
         
         return stats
     
-    def _select_provider(self, chunk: Optional[PacketChunk] = None) -> Optional[AIProvider]:
+    def _select_provider(self, chunk: Optional[PacketChunk] = None, exclude: Optional[set] = None) -> Optional[AIProvider]:
         """
         Select the best available provider using weighted probability or round-robin.
         
@@ -669,18 +669,26 @@ class MultiAgentAI:
         if not self.active_providers:
             return None
         
+        # Build candidate list honoring optional exclusions
+        if exclude:
+            candidates = [p for p in self.active_providers if p.name not in exclude]
+        else:
+            candidates = list(self.active_providers)
+        if not candidates:
+            return None
+
         # Use weighted balancing if enabled
         if self.use_weighted_balancing:
             total_queries = sum(self.provider_usage_count.values())
             
             if total_queries == 0:
                 # First query: use weighted random selection
-                weights = [self.provider_weights.get(p.name, 33) for p in self.active_providers]
-                provider = random.choices(self.active_providers, weights=weights, k=1)[0]
+                weights = [self.provider_weights.get(p.name, 33) for p in candidates]
+                provider = random.choices(candidates, weights=weights, k=1)[0]
             else:
                 # Self-balancing: prioritize underused providers
                 scores = []
-                for provider in self.active_providers:
+                for provider in candidates:
                     target_weight = self.provider_weights.get(provider.name, 33)
                     actual_usage = self.provider_usage_count.get(provider.name, 0)
                     actual_percentage = (actual_usage / total_queries) * 100 if total_queries > 0 else 0
@@ -692,11 +700,13 @@ class MultiAgentAI:
                 
                 # Select provider with highest score (most underused)
                 max_score_idx = scores.index(max(scores))
-                provider = self.active_providers[max_score_idx]
+                provider = candidates[max_score_idx]
         else:
             # Simple round-robin fallback
-            provider = self.active_providers[0]
-            self.active_providers.append(self.active_providers.pop(0))
+            provider = candidates[0]
+            # Rotate only if we're using the full active list
+            if not exclude:
+                self.active_providers.append(self.active_providers.pop(0))
         
         # Track usage
         self.provider_usage_count[provider.name] = self.provider_usage_count.get(provider.name, 0) + 1
@@ -704,24 +714,49 @@ class MultiAgentAI:
         return provider
     
     async def query_single_chunk(self, prompt: str, chunk: PacketChunk) -> AIResponse:
-        """Query AI for a single packet chunk"""
-        provider = self._select_provider(chunk)
-        if not provider:
-            return AIResponse(
-                success=False,
-                response="",
-                error="No active AI providers available",
-                chunk_id=chunk.chunk_id
-            )
-        
-        # Create context from chunk statistics
+        """Query AI for a single packet chunk with failover across providers"""
+        # Prepare context once per chunk
         context = self._format_chunk_context(chunk)
-        
-        # Execute query
-        response = await provider.query(prompt, context)
-        response.chunk_id = chunk.chunk_id
-        
-        return response
+
+        tried: set = set()
+        errors: List[str] = []
+        max_attempts = min(len(self.active_providers), 3)  # avoid long cascades
+
+        for _ in range(max_attempts):
+            provider = self._select_provider(chunk, exclude=tried)
+            if not provider:
+                break
+
+            try:
+                response = await provider.query(prompt, context)
+            except Exception as e:
+                # Normalize exception into AIResponse-like failure
+                response = AIResponse(success=False, response="", error=str(e), provider=provider.name)
+
+            # Ensure provider and chunk metadata
+            response.provider = response.provider or provider.name
+            response.chunk_id = chunk.chunk_id
+
+            if response.success and response.response:
+                return response
+
+            # On failure, collect error and try next provider
+            err_text = response.error or "Unknown error"
+            errors.append(f"{provider.name}: {err_text}")
+            tried.add(provider.name)
+
+            # If provider reports quota/429, deprioritize it for this run (already excluded by tried)
+            if "insufficient_quota" in err_text.lower() or "429" in err_text:
+                logger.warning(f"{provider.name} reported quota/429; failing over to another provider")
+                continue
+
+        # If we reach here, all attempts failed
+        return AIResponse(
+            success=False,
+            response="",
+            error="; ".join(errors) if errors else "All providers failed",
+            chunk_id=chunk.chunk_id
+        )
     
     def _format_chunk_context(self, chunk: PacketChunk) -> str:
         """Format chunk statistics as context for AI"""
@@ -833,7 +868,8 @@ Protocol Distribution:
         combined += f"\n📊 **Performance Summary**:\n"
         combined += f"- Total processing time: {total_time:.2f} seconds\n"
         combined += f"- Total tokens used: {total_tokens}\n"
-        combined += f"- Providers used: {', '.join(set(r.provider for r in successful_responses))}\n"
+        providers_used = sorted({p for p in (r.provider for r in successful_responses) if p})
+        combined += f"- Providers used: {', '.join(providers_used)}\n"
         
         return combined
 
@@ -855,6 +891,7 @@ async def query_ai_async(prompt: str, packets: List[Packet]) -> Dict[str, Any]:
 
 def query_ai(prompt: str, packets: List[Packet]) -> Dict[str, Any]:
     """Synchronous wrapper for async query"""
+    loop: Optional[asyncio.AbstractEventLoop] = None
     try:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -866,7 +903,8 @@ def query_ai(prompt: str, packets: List[Packet]) -> Dict[str, Any]:
             "error": str(e)
         }
     finally:
-        loop.close()
+        if loop is not None:
+            loop.close()
 
 def get_active_providers() -> List[str]:
     """Get list of active provider names"""
