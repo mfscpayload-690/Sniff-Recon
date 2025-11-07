@@ -54,11 +54,11 @@ class AIProvider(ABC):
     """Abstract base class for AI providers"""
     
     @abstractmethod
-    def __init__(self, api_key: str, model_name: str = None):
+    def __init__(self, api_key: str, model_name: Optional[str] = None):
         pass
     
     @abstractmethod
-    async def query(self, prompt: str, context: str = None) -> AIResponse:
+    async def query(self, prompt: str, context: Optional[str] = None) -> AIResponse:
         pass
     
     @abstractmethod
@@ -107,7 +107,7 @@ class GroqProvider(AIProvider):
             logger.error(f"Groq connection test failed: {e}")
             return False
     
-    async def query(self, prompt: str, context: str = None) -> AIResponse:
+    async def query(self, prompt: str, context: Optional[str] = None) -> AIResponse:
         start_time = time.time()
         
         messages = [
@@ -195,7 +195,7 @@ class OpenAIProvider(AIProvider):
             logger.error(f"OpenAI connection test failed: {e}")
             return False
     
-    async def query(self, prompt: str, context: str = None) -> AIResponse:
+    async def query(self, prompt: str, context: Optional[str] = None) -> AIResponse:
         start_time = time.time()
         
         messages = [
@@ -290,7 +290,7 @@ class AnthropicProvider(AIProvider):
             logger.error(f"Anthropic connection test failed: {e}")
             return False
     
-    async def query(self, prompt: str, context: str = None) -> AIResponse:
+    async def query(self, prompt: str, context: Optional[str] = None) -> AIResponse:
         start_time = time.time()
         
         content = "You are a network security expert analyzing packet capture data. Provide detailed, actionable insights.\n\n"
@@ -378,7 +378,7 @@ class GoogleGeminiProvider(AIProvider):
             logger.error(f"Google Gemini connection test failed: {e}")
             return False
     
-    async def query(self, prompt: str, context: str = None) -> AIResponse:
+    async def query(self, prompt: str, context: Optional[str] = None) -> AIResponse:
         start_time = time.time()
         
         # Build the full prompt

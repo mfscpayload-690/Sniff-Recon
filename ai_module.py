@@ -323,13 +323,13 @@ Suspicious Patterns Detected:
         Send query to AI system with actual packet data (for multi-agent system)
         """
         # Try multi-agent system first if available
-        if USE_MULTI_AGENT and hasattr(multi_agent, 'active_providers') and multi_agent.active_providers:
+        if USE_MULTI_AGENT and hasattr(multi_agent, 'active_providers') and multi_agent.active_providers:  # type: ignore[possibly-unbound]
             try:
                 # Use async query with actual packets
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
                 try:
-                    result = loop.run_until_complete(query_ai_async(user_query, packets))
+                    result = loop.run_until_complete(query_ai_async(user_query, packets))  # type: ignore[possibly-unbound]
                     if result.get('success'):
                         return result
                     else:
@@ -351,7 +351,7 @@ Suspicious Patterns Detected:
         Send query to AI system (multi-agent or fallback to Groq)
         """
         # Try multi-agent system first if available
-        if USE_MULTI_AGENT and hasattr(multi_agent, 'active_providers') and multi_agent.active_providers:
+        if USE_MULTI_AGENT and hasattr(multi_agent, 'active_providers') and multi_agent.active_providers:  # type: ignore[possibly-unbound]
             try:
                 # Convert PacketSummary to packets list (dummy for multi-agent compatibility)
                 # In a real scenario, you'd pass the actual packets
@@ -361,7 +361,7 @@ Suspicious Patterns Detected:
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
                 try:
-                    result = loop.run_until_complete(query_ai_async(user_query, dummy_packets))
+                    result = loop.run_until_complete(query_ai_async(user_query, dummy_packets))  # type: ignore[possibly-unbound]
                     if result.get('success'):
                         return result
                     else:
