@@ -574,7 +574,40 @@ def main():
         unsafe_allow_html=True
     )
 
-    # File uploader (check early to control sidebar visibility)
+    # Show selected section content (ABOVE file uploader)
+    show_section = st.session_state.get("show_section")
+    
+    # Display help content if a topic is selected
+    if show_section:
+        if show_section == "about":
+            st.markdown('''
+                <div class="answer-box fade-in-up">
+                    <h4>📖 About Sniff Recon</h4>
+                    <p>Sniff Recon is a powerful Streamlit-based network packet analyzer that supports PCAP, PCAPNG, CSV, and TXT file formats.</p>
+                    <p>It provides comprehensive packet analysis with optional multi-provider AI assistance, memory-aware parsing, and clear visualizations to help you investigate network traffic quickly and safely.</p>
+                    <p>Built with modern cybersecurity professionals in mind, it combines ease of use with powerful analysis capabilities.</p>
+                </div>
+            ''', unsafe_allow_html=True)
+        
+        elif show_section and show_section.startswith("help_"):
+            help_answers = {
+                "help_why": ("🔹 Why use Sniff Recon?", "Quickly parse network captures and highlight patterns, anomalies, and potential security threats with AI-assisted summaries. Get instant insights without complex command-line tools."),
+                "help_files": ("🔹 Supported File Formats", "PCAP, PCAPNG, CSV, and TXT files are supported. CSV column names are automatically mapped when possible to ensure compatibility with various export formats."),
+                "help_ai": ("🔹 AI Requirement", "No, AI is NOT required! The tool provides local statistical analysis that works perfectly without any API keys. AI features are optional enhancements."),
+                "help_size": ("🔹 File Size Limits", "Maximum file size is 200MB to protect system memory. For larger captures, prefer trimming or filtering the capture file before analysis."),
+                "help_data": ("🔹 Data Handling", "Summaries are saved to output/summary.json. All packet data is processed via temporary files and automatically cleaned up after analysis. Your data stays local and secure.")
+            }
+            
+            if show_section in help_answers:
+                title, answer = help_answers[show_section]
+                st.markdown(f'''
+                    <div class="answer-box fade-in-up">
+                        <h4>{title}</h4>
+                        <p>{answer}</p>
+                    </div>
+                ''', unsafe_allow_html=True)
+
+    # File uploader (moved after help content display)
     st.markdown('<div class="fade-in-up">', unsafe_allow_html=True)
     uploaded_file = st.file_uploader(
         label="📁 Upload Packet Capture File",
@@ -619,39 +652,6 @@ def main():
                         st.session_state["show_section"] = None  # Hide
                     else:
                         st.session_state["show_section"] = section_key  # Show
-
-    # Show selected section content ONLY if no file is uploaded
-    show_section = st.session_state.get("show_section")
-    
-    # Only show sidebar content if no file is being analyzed
-    if show_section and uploaded_file is None:
-        if show_section == "about":
-            st.markdown('''
-                <div class="answer-box fade-in-up">
-                    <h4>📖 About Sniff Recon</h4>
-                    <p>Sniff Recon is a powerful Streamlit-based network packet analyzer that supports PCAP, PCAPNG, CSV, and TXT file formats.</p>
-                    <p>It provides comprehensive packet analysis with optional multi-provider AI assistance, memory-aware parsing, and clear visualizations to help you investigate network traffic quickly and safely.</p>
-                    <p>Built with modern cybersecurity professionals in mind, it combines ease of use with powerful analysis capabilities.</p>
-                </div>
-            ''', unsafe_allow_html=True)
-        
-        elif show_section and show_section.startswith("help_"):
-            help_answers = {
-                "help_why": ("🔹 Why use Sniff Recon?", "Quickly parse network captures and highlight patterns, anomalies, and potential security threats with AI-assisted summaries. Get instant insights without complex command-line tools."),
-                "help_files": ("🔹 Supported File Formats", "PCAP, PCAPNG, CSV, and TXT files are supported. CSV column names are automatically mapped when possible to ensure compatibility with various export formats."),
-                "help_ai": ("🔹 AI Requirement", "No, AI is NOT required! The tool provides local statistical analysis that works perfectly without any API keys. AI features are optional enhancements."),
-                "help_size": ("🔹 File Size Limits", "Maximum file size is 200MB to protect system memory. For larger captures, prefer trimming or filtering the capture file before analysis."),
-                "help_data": ("🔹 Data Handling", "Summaries are saved to output/summary.json. All packet data is processed via temporary files and automatically cleaned up after analysis. Your data stays local and secure.")
-            }
-            
-            if show_section in help_answers:
-                title, answer = help_answers[show_section]
-                st.markdown(f'''
-                    <div class="answer-box fade-in-up">
-                        <h4>{title}</h4>
-                        <p>{answer}</p>
-                    </div>
-                ''', unsafe_allow_html=True)
 
     # Process uploaded file
     if uploaded_file is not None:
