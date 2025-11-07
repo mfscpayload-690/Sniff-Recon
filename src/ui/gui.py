@@ -1,14 +1,12 @@
 import streamlit as st
 import os
-import os
 import json
 import tempfile
 import pandas as pd
-import streamlit as st
 
-from parsers.pcap_parser import parse_pcap
-from parsers.csv_parser import parse_csv
-from parsers.txt_parser import parse_txt
+from src.parsers.pcap_parser import parse_pcap
+from src.parsers.csv_parser import parse_csv
+from src.parsers.txt_parser import parse_txt
 
 # Ensure output directory exists
 os.makedirs("output", exist_ok=True)
@@ -746,7 +744,7 @@ def main():
             # Tab 1: Packet analysis  
             with tab1:
                 st.markdown('<div class="section-heading">PACKET ANALYSIS</div>', unsafe_allow_html=True)
-                from display_packet_table import display_packet_table
+                from src.ui.display_packet_table import display_packet_table
                 import scapy.all as scapy
                 try:
                     packets = scapy.PcapReader(tmp_file_path)
@@ -773,7 +771,7 @@ def main():
             # Tab 2: AI analysis
             with tab2:
                 try:
-                    from ai_query_interface import render_ai_query_interface, render_ai_quick_analysis
+                    from src.ai.ai_query_interface import render_ai_query_interface, render_ai_quick_analysis
                     import scapy.all as scapy
                     packets = scapy.rdpcap(tmp_file_path)
                     packets_list = list(packets)

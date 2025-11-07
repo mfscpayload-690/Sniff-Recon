@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 # Import multi-agent system
 try:
-    from multi_agent_ai import multi_agent, query_ai_async, get_active_providers, get_suggested_queries
+    from src.ai.multi_agent_ai import multi_agent, query_ai_async, get_active_providers, get_suggested_queries
     USE_MULTI_AGENT = True
     logger.info("Multi-agent AI system loaded successfully")
 except ImportError as e:
