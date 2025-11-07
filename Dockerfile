@@ -23,6 +23,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application files
 COPY . .
 
+# Add src to PYTHONPATH
+# Add /app (which contains src/) to PYTHONPATH so Streamlit/app.py can import from src.*
+ENV PYTHONPATH="/app:${PYTHONPATH}"
+
 # Create output directory
 RUN mkdir -p output
 
@@ -40,4 +44,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl --fail http://localhost:8501/_stcore/health || exit 1
 
 # Run the application
-CMD ["streamlit", "run", "sniff_recon_gui.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# Run Streamlit using app.py as the entry point (imports from src/ui/gui.py)
+CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]

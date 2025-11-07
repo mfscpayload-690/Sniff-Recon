@@ -6,7 +6,7 @@ This module provides a beautiful Streamlit interface for AI-powered packet analy
 
 import streamlit as st
 from typing import List, Dict, Any
-from ai_module import ai_engine, PacketSummary
+from src.ai.ai_module import ai_engine, PacketSummary
 from scapy.packet import Packet
 import time
 import pandas as pd

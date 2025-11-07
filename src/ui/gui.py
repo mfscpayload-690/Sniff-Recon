@@ -1,14 +1,12 @@
 import streamlit as st
 import os
-import os
 import json
 import tempfile
 import pandas as pd
-import streamlit as st
 
-from parsers.pcap_parser import parse_pcap
-from parsers.csv_parser import parse_csv
-from parsers.txt_parser import parse_txt
+from src.parsers.pcap_parser import parse_pcap
+from src.parsers.csv_parser import parse_csv
+from src.parsers.txt_parser import parse_txt
 
 # Ensure output directory exists
 os.makedirs("output", exist_ok=True)
@@ -250,9 +248,9 @@ def inject_modern_css():
 
         /* File uploader */
         .stFileUploader {
-            background: rgba(30, 30, 30, 0.8);
+            background: rgba(40, 40, 50, 0.95) !important;
             border-radius: 16px;
-            border: 2px dashed rgba(0, 255, 255, 0.3);
+            border: 2px dashed rgba(0, 255, 255, 0.4) !important;
             padding: 2rem;
             text-align: center;
             transition: all 0.3s ease;
@@ -261,9 +259,35 @@ def inject_modern_css():
             z-index: 10;
         }
         .stFileUploader:hover { 
-            border-color: rgba(0, 255, 255, 0.6); 
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2); 
-            background: rgba(40, 40, 40, 0.9);
+            border-color: rgba(0, 255, 255, 0.7) !important; 
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3) !important; 
+            background: rgba(50, 50, 60, 0.98) !important;
+        }
+        /* File uploader text visibility fix */
+        .stFileUploader label,
+        .stFileUploader div,
+        .stFileUploader span,
+        .stFileUploader p,
+        .stFileUploader small {
+            color: #e0e0e0 !important;
+        }
+        .stFileUploader [data-testid="stMarkdownContainer"] p {
+            color: #c0c0c0 !important;
+            font-weight: 500 !important;
+        }
+        /* File uploader button */
+        .stFileUploader button {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.15), rgba(0, 200, 200, 0.15)) !important;
+            border: 2px solid rgba(0, 255, 255, 0.4) !important;
+            color: #00ffff !important;
+            font-weight: 600 !important;
+            padding: 0.6rem 1.5rem !important;
+            border-radius: 8px !important;
+        }
+        .stFileUploader button:hover {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.25), rgba(0, 220, 220, 0.25)) !important;
+            border-color: rgba(0, 255, 255, 0.6) !important;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4) !important;
         }
 
         /* File info */
@@ -526,21 +550,27 @@ def main():
         }
         /* Bright answer box */
         .answer-box {
-            background: linear-gradient(145deg, rgba(0,40,50,0.95), rgba(0,30,40,0.95));
-            border: 2px solid rgba(0,255,255,0.6);
+            background: linear-gradient(145deg, rgba(10,50,60,0.98), rgba(10,40,50,0.98)) !important;
+            border: 2px solid rgba(0,255,255,0.7) !important;
             border-radius: 12px;
             padding: 1.5rem;
             margin: 1rem 0;
-            color: #e8f8ff !important;
-            box-shadow: 0 0 25px rgba(0,255,255,0.3), inset 0 0 15px rgba(0,255,255,0.1);
-            font-size: 1.05rem;
-            line-height: 1.7;
+            color: #f0f8ff !important;
+            box-shadow: 0 0 30px rgba(0,255,255,0.4), inset 0 0 20px rgba(0,255,255,0.15) !important;
+            font-size: 1.1rem;
+            line-height: 1.8;
         }
         .answer-box h4 {
             color: #00ffff !important;
             margin-bottom: 0.8rem;
-            font-size: 1.3rem;
-            text-shadow: 0 0 10px rgba(0,255,255,0.6);
+            font-size: 1.4rem;
+            font-weight: 700 !important;
+            text-shadow: 0 0 12px rgba(0,255,255,0.7) !important;
+        }
+        .answer-box p {
+            color: #e8f8ff !important;
+            font-weight: 500 !important;
+            margin-bottom: 0.7rem !important;
         }
         /* Sidebar question items */
         .help-question {
@@ -714,7 +744,7 @@ def main():
             # Tab 1: Packet analysis  
             with tab1:
                 st.markdown('<div class="section-heading">PACKET ANALYSIS</div>', unsafe_allow_html=True)
-                from display_packet_table import display_packet_table
+                from src.ui.display_packet_table import display_packet_table
                 import scapy.all as scapy
                 try:
                     packets = scapy.PcapReader(tmp_file_path)
@@ -741,7 +771,7 @@ def main():
             # Tab 2: AI analysis
             with tab2:
                 try:
-                    from ai_query_interface import render_ai_query_interface, render_ai_quick_analysis
+                    from src.ai.ai_query_interface import render_ai_query_interface, render_ai_quick_analysis
                     import scapy.all as scapy
                     packets = scapy.rdpcap(tmp_file_path)
                     packets_list = list(packets)

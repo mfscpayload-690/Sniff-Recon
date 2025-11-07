@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 # Import multi-agent system
 try:
-    from multi_agent_ai import multi_agent, query_ai_async, get_active_providers, get_suggested_queries
+    from src.ai.multi_agent_ai import multi_agent, query_ai_async, get_active_providers, get_suggested_queries
     USE_MULTI_AGENT = True
     logger.info("Multi-agent AI system loaded successfully")
 except ImportError as e:
@@ -349,12 +349,14 @@ Suspicious Patterns Detected:
     def query_ai(self, user_query: str, packet_summary: PacketSummary) -> Dict[str, Any]:
         """
         Send query to AI system (multi-agent or fallback to Groq)
+        
+        Note: This is the legacy method kept for backward compatibility.
+        Use query_ai_with_packets() for direct packet analysis instead.
         """
         # Try multi-agent system first if available
         if USE_MULTI_AGENT and hasattr(multi_agent, 'active_providers') and multi_agent.active_providers:  # type: ignore[possibly-unbound]
             try:
-                # Convert PacketSummary to packets list (dummy for multi-agent compatibility)
-                # In a real scenario, you'd pass the actual packets
+                # Legacy: Uses empty packet list for compatibility with PacketSummary-based queries
                 dummy_packets = []
                 
                 # Use async query with run_until_complete for sync compatibility
