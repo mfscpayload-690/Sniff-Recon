@@ -318,6 +318,34 @@ Suspicious Patterns Detected:
 """
         return data_str
     
+    def query_ai_with_packets(self, user_query: str, packets: List[Packet]) -> Dict[str, Any]:
+        """
+        Send query to AI system with actual packet data (for multi-agent system)
+        """
+        # Try multi-agent system first if available
+        if USE_MULTI_AGENT and hasattr(multi_agent, 'active_providers') and multi_agent.active_providers:
+            try:
+                # Use async query with actual packets
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    result = loop.run_until_complete(query_ai_async(user_query, packets))
+                    if result.get('success'):
+                        return result
+                    else:
+                        logger.warning(f"Multi-agent query failed: {result.get('error')}")
+                except Exception as e:
+                    logger.error(f"Multi-agent async query error: {e}")
+                finally:
+                    loop.close()
+                    
+            except Exception as e:
+                logger.error(f"Multi-agent system error: {e}")
+        
+        # Fallback to original Groq implementation with packet summary
+        packet_summary = self.extract_packet_statistics(packets)
+        return self.query_ai(user_query, packet_summary)
+    
     def query_ai(self, user_query: str, packet_summary: PacketSummary) -> Dict[str, Any]:
         """
         Send query to AI system (multi-agent or fallback to Groq)
