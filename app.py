@@ -13,4 +13,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 from ui.gui import main
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        import traceback, sys
+        print("[ERROR] Sniff Recon failed to start:", file=sys.stderr)
+        traceback.print_exc()
