@@ -258,14 +258,12 @@ def render_ai_query_interface(packets: List[Packet]):
             # If no suspicious packets found, analyze ALL packets instead
             if not suspicious or len(suspicious) == 0:
                 st.info("ℹ️ No suspicious patterns detected. Analyzing all packets...")
-                # Extract full packet statistics
-                packet_summary = ai_engine.extract_packet_statistics(packets)
-                ai_result = ai_engine.query_ai(user_query, packet_summary)
+                # Pass actual packets to AI (for multi-agent system)
+                ai_result = ai_engine.query_ai_with_packets(user_query, packets)
             else:
                 st.success(f"🔍 Found {len(suspicious)} suspicious packets. Analyzing focused dataset...")
-                # Extract statistics from suspicious packets only
-                packet_summary = ai_engine.extract_packet_statistics(suspicious)
-                ai_result = ai_engine.query_ai(user_query, packet_summary)
+                # Pass suspicious packets to AI
+                ai_result = ai_engine.query_ai_with_packets(user_query, suspicious)
             
             # Store response in session state
             response_entry = {
