@@ -34,47 +34,45 @@ def inject_modern_css():
         
         /* Protocol layer cards */
         .protocol-card {
-            background: linear-gradient(145deg, rgba(30, 30, 30, 0.9), rgba(20, 20, 20, 0.9));
-            border: 2px solid rgba(0, 255, 255, 0.3);
-            border-radius: 16px;
-            padding: 1.5rem;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            padding: 1.5rem 0;
             margin: 1rem 0;
-            box-shadow: 0 4px 20px rgba(0, 255, 255, 0.1);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: none;
+            transition: none;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
         }
         
         .protocol-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #00ffff, #00b3b3, #00ffff);
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
+            display: none;
         }
         
         .protocol-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 40px rgba(0, 255, 255, 0.2);
-            border-color: rgba(0, 255, 255, 0.6);
+            transform: none;
+            box-shadow: none;
+            border-color: transparent;
         }
         
         .protocol-card:hover::before {
-            transform: scaleX(1);
+            transform: none;
         }
         
         .protocol-header {
             font-size: 1.25rem;
             font-weight: 600;
             color: #00ffff;
-            margin-bottom: 1rem;
-            display: flex;
+            margin-bottom: 1.5rem;
+            display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: rgba(0, 20, 30, 0.8);
+            border: 2px solid rgba(0, 255, 255, 0.6);
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
         }
         
         .protocol-header::before {
@@ -137,12 +135,12 @@ def inject_modern_css():
         
         /* Packet summary styling */
         .packet-summary {
-            background: linear-gradient(145deg, rgba(30, 30, 30, 0.9), rgba(20, 20, 20, 0.9));
-            border: 2px solid rgba(0, 255, 255, 0.3);
-            border-radius: 16px;
-            padding: 1.5rem;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            padding: 1.5rem 0;
             margin: 1rem 0;
-            box-shadow: 0 4px 20px rgba(0, 255, 255, 0.1);
+            box-shadow: none;
         }
         
         .summary-grid {
@@ -507,10 +505,42 @@ def display_packet_table(packets: List[Packet]):
     
     df = extract_packet_summary(packets)
     
-    # Display the table using Streamlit's dataframe (no PyArrow needed)
+    # --- Advanced Filtering & Search Controls ---
+    st.markdown('<div class="section-heading">FILTER & SEARCH</div>', unsafe_allow_html=True)
+    col1, col2, col3, col4, col5 = st.columns(5)
+    with col1:
+        src_ip_filter = st.text_input("Source IP", "", key="filter_src_ip")
+    with col2:
+        dst_ip_filter = st.text_input("Destination IP", "", key="filter_dst_ip")
+    with col3:
+        protocol_filter = st.selectbox("Protocol", ["Any"] + sorted(df["Protocol"].unique()), key="filter_protocol")
+    with col4:
+        port_filter = st.text_input("Port (src/dst)", "", key="filter_port")
+    with col5:
+        time_range = st.slider("Time Range", 1, len(df), (1, len(df)), key="filter_time")
+
+    search_text = st.text_input("🔍 Search Info", "", key="search_info")
+
+    # --- Filtering Logic ---
+    filtered_df = df.copy()
+    if src_ip_filter:
+        filtered_df = filtered_df[filtered_df["Source IP"].str.contains(src_ip_filter, na=False)]
+    if dst_ip_filter:
+        filtered_df = filtered_df[filtered_df["Destination IP"].str.contains(dst_ip_filter, na=False)]
+    if protocol_filter and protocol_filter != "Any":
+        filtered_df = filtered_df[filtered_df["Protocol"] == protocol_filter]
+    if port_filter:
+        filtered_df = filtered_df[filtered_df["Info"].str.contains(port_filter, na=False)]
+    # Time range filter (by packet number)
+    filtered_df = filtered_df[(filtered_df["No."] >= time_range[0]) & (filtered_df["No."] <= time_range[1])]
+    if search_text:
+        mask = filtered_df.apply(lambda row: search_text.lower() in str(row["Info"]).lower() or search_text.lower() in str(row["Source IP"]).lower() or search_text.lower() in str(row["Destination IP"]).lower(), axis=1)
+        filtered_df = filtered_df[mask]
+
+    # Display the filtered table
     st.markdown('<div class="packet-table-container">', unsafe_allow_html=True)
     st.dataframe(
-        df,
+        filtered_df,
         width='stretch',
         height=400,
         hide_index=True
@@ -569,4 +599,4 @@ def display_packet_table(packets: List[Packet]):
         render_ip_layer(pkt)
         render_transport_layer(pkt)
         render_application_layer(pkt)
-        render_hex_dump(pkt) 
+        render_hex_dump(pkt)

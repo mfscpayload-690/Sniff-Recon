@@ -6,7 +6,7 @@ Returns data as a pandas DataFrame.
 from scapy.all import rdpcap
 from scapy.layers.inet import IP, TCP, UDP
 import pandas as pd
-from utils.helpers import get_protocol_name
+from src.utils.helpers import get_protocol_name
 
 def parse_pcap(file_path: str) -> pd.DataFrame:
     """

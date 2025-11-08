@@ -1,8 +1,15 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import os
+import sys
 import json
 import tempfile
 import pandas as pd
+import base64
+from dataclasses import asdict, is_dataclass
+
+# Add parent directory to path to enable absolute imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 from src.parsers.pcap_parser import parse_pcap
 from src.parsers.csv_parser import parse_csv
@@ -17,12 +24,25 @@ class CustomJSONEncoder(json.JSONEncoder):
         # Handle EDecimal serialization by converting to float
         if o.__class__.__name__ == "EDecimal":
             return float(o)
+        # Handle dataclasses (like AIResponse)
+        if is_dataclass(o) and not isinstance(o, type):
+            return asdict(o)
         return super().default(o)
 
 
 def save_summary(summary):
     with open("output/summary.json", "w") as f:
         json.dump(summary, f, indent=4, cls=CustomJSONEncoder)
+
+
+def get_video_base64():
+    """Load and encode video file as base64"""
+    video_path = os.path.join(os.path.dirname(__file__), '..', '..', 'assets', 'matrix.mp4')
+    if os.path.exists(video_path):
+        with open(video_path, 'rb') as f:
+            video_bytes = f.read()
+        return base64.b64encode(video_bytes).decode()
+    return None
 
 
 def inject_modern_css():
@@ -32,46 +52,107 @@ def inject_modern_css():
         /* Fonts */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@600;700;800&display=swap');
 
-        /* ==================== ANIMATED BACKGROUND ==================== */
+        /* Pure black background with STARFIELD */
+        .stApp {
+            background-color: #000000 !important;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Floating particles - Layer 1 moving horizontally right */
+        .stApp::before {
+            content: '' !important;
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            width: 3px !important;
+            height: 3px !important;
+            border-radius: 50% !important;
+            background: #00ffff !important;
+            box-shadow: 
+                0 0 6px 2px #00ffff,
+                -350px -200px 0 0 #00ffff,
+                200px 150px 0 0 #00e6ff,
+                -100px 300px 0 0 #4ad3b0,
+                450px -100px 0 0 #00ffff,
+                -500px 50px 0 0 #06b6d4,
+                100px -350px 0 0 #00e6ff,
+                -300px -450px 0 0 #00ffff,
+                600px 200px 0 0 #4ad3b0,
+                -200px 500px 0 0 #00ffff !important;
+            z-index: 1 !important;
+            pointer-events: none !important;
+            animation: moveHorizontal 15s linear infinite !important;
+        }
+        
+        /* Floating particles - Layer 2 moving vertically down */
+        .stApp::after {
+            content: '' !important;
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            width: 3px !important;
+            height: 3px !important;
+            border-radius: 50% !important;
+            background: #00e6ff !important;
+            box-shadow: 
+                0 0 6px 2px #00e6ff,
+                550px -300px 0 0 #06b6d4,
+                -400px 400px 0 0 #00ffff,
+                250px 100px 0 0 #00e6ff,
+                -250px 250px 0 0 #4ad3b0,
+                500px -50px 0 0 #00ffff,
+                -100px -300px 0 0 #06b6d4,
+                300px 300px 0 0 #00e6ff,
+                -600px 100px 0 0 #00ffff,
+                50px -400px 0 0 #4ad3b0 !important;
+            z-index: 1 !important;
+            pointer-events: none !important;
+            animation: moveVertical 12s linear infinite !important;
+        }
+        
+        /* Particle animations - moderate pixel-based flow (restored) */
+        @keyframes moveHorizontal {
+            0% { transform: translate(-100px, 0); }
+            100% { transform: translate(100px, 0); }
+        }
+        
+        @keyframes moveVertical {
+            0% { transform: translate(0, -100px); }
+            100% { transform: translate(0, 100px); }
+        }
+
+        
         .main {
             font-family: 'Inter', sans-serif;
             position: relative;
-            overflow: hidden;
-            /* Deep gradient base */
-            background: radial-gradient(ellipse at top left, #0a0f16, #101823);
+            background: transparent !important;
             color: #e0e0e0;
             padding: 2rem;
+            z-index: 100 !important;
         }
         
-        /* Vignette effect */
-        .main::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%);
-            pointer-events: none;
-            z-index: -10;
+        /* Ensure sidebar is visible */
+        [data-testid="stSidebar"] {
+            z-index: 200 !important;
+            position: relative !important;
         }
         
-        /* Digital mesh texture overlay */
-        .main::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                repeating-linear-gradient(0deg, rgba(0,255,255,0.03) 0px, transparent 1px, transparent 2px, rgba(0,255,255,0.03) 3px),
-                repeating-linear-gradient(90deg, rgba(0,255,255,0.03) 0px, transparent 1px, transparent 2px, rgba(0,255,255,0.03) 3px);
-            background-size: 80px 80px;
-            opacity: 0.15;
-            pointer-events: none;
-            z-index: -9;
-            animation: gridPulse 8s ease-in-out infinite;
+        /* Make all content above particles */
+        .main > div {
+            position: relative;
+            z-index: 100 !important;
+        }
+        
+        /* Ensure header is visible */
+        header[data-testid="stHeader"] {
+            z-index: 200 !important;
+        }
+        
+        /* All interactive elements above stars */
+        .stApp > div {
+            position: relative;
+            z-index: 50 !important;
         }
         
         @keyframes gridPulse {
@@ -517,8 +598,6 @@ def main():
 
     inject_modern_css()
 
-    # NO CANVAS/DIV INJECTION - Keep layout clean
-
     # Additional styles for locked sidebar and bright content
     st.markdown('''
         <style>
@@ -603,85 +682,207 @@ def main():
         f'<p class="subtitle fade-in-up" style="margin-bottom: 2rem;">{tagline_text}</p>',
         unsafe_allow_html=True
     )
-
-    # Show selected section content (ABOVE file uploader)
-    show_section = st.session_state.get("show_section")
     
+    # Initialize show_section in session state if not exists
+    if "show_section" not in st.session_state:
+        st.session_state["show_section"] = None
+    
+    # Initialize button click tracker
+    if "button_clicked" not in st.session_state:
+        st.session_state["button_clicked"] = False
+    
+    # Define callback function for button clicks
+    def set_section(section_name):
+        """Callback to set the active section"""
+        current = st.session_state.get("show_section")
+        if current == section_name:
+            st.session_state["show_section"] = None  # Toggle off
+        else:
+            st.session_state["show_section"] = section_name
+
+    # Show contextual content FIRST so it appears above and pushes the uploader down
+    # NOW display the selected section content (AFTER buttons have been processed by sidebar)
+    show_section = st.session_state.get("show_section")
+
     # Display help content if a topic is selected
-    if show_section:
-        if show_section == "about":
-            st.markdown('''
+    if show_section == "about":
+        st.markdown('''
+            <div class="answer-box fade-in-up">
+                <h4>📖 About Sniff Recon</h4>
+                <p>Sniff Recon is a powerful Streamlit-based network packet analyzer that supports PCAP, PCAPNG, CSV, and TXT file formats.</p>
+                <p>It provides comprehensive packet analysis with optional multi-provider AI assistance, memory-aware parsing, and clear visualizations to help you investigate network traffic quickly and safely.</p>
+                <p>Built with modern cybersecurity professionals in mind, it combines ease of use with powerful analysis capabilities.</p>
+            </div>
+        ''', unsafe_allow_html=True)
+    elif show_section == "quick_start":
+        st.markdown('<div class="answer-box fade-in-up">', unsafe_allow_html=True)
+        st.markdown('<h4>🚀 Quick Start Guide</h4>', unsafe_allow_html=True)
+        
+        st.markdown("**Step 1: Upload Your File**")
+        st.write('Click "Browse files" or drag & drop a packet capture file (PCAP, PCAPNG, CSV, or TXT format, max 200MB).')
+        
+        st.markdown("**Step 2: Analyze Packets**")
+        st.write('Navigate to the "📊 Packet Analysis" tab to view detailed packet information with advanced filtering options (IP, protocol, port, time range).')
+        
+        st.markdown("**Step 3: Use AI Analysis**")
+        st.write('Go to the "🧠 AI Analysis" tab, select your preferred AI provider (Groq, OpenAI, Anthropic, or Gemini), and ask natural language questions about your traffic.')
+        
+        st.markdown("**Step 4: Export Results**")
+        st.write('Visit the "📤 Export Results" tab to download your analysis as JSON or PDF. You can also export your entire session for later review.')
+        
+        st.markdown("**💡 Pro Tip:** Use the suggested queries in AI Analysis for instant insights, or import a previous session to continue where you left off!")
+        st.markdown('</div>', unsafe_allow_html=True)
+    elif show_section == "documentation":
+        st.markdown('<div class="answer-box fade-in-up">', unsafe_allow_html=True)
+        st.markdown('<h4>📚 Documentation & Resources</h4>', unsafe_allow_html=True)
+        
+        st.markdown("**🔰 GitHub Repository:**")
+        st.markdown('[https://github.com/mfscpayload-690/Sniff-Recon](https://github.com/mfscpayload-690/Sniff-Recon)')
+        
+        st.markdown("**🔰 Documentation:**")
+        st.write("• **Setup Guide:** Installation and configuration instructions")
+        st.write("• **Docker Deployment:** Containerized deployment options")
+        st.write("• **API Integration:** Configure AI providers (Groq, OpenAI, Anthropic, Gemini)")
+        st.write("• **Troubleshooting:** Common issues and solutions")
+        
+        st.markdown("**🔰 Contributing:**")
+        st.write("Contributions are welcome! Check out CONTRIBUTING.md in the repository for guidelines on submitting issues, feature requests, or pull requests.")
+        
+        st.markdown("**License:** Open source under the MIT License")
+        st.markdown('</div>', unsafe_allow_html=True)
+    elif show_section == "settings":
+        st.markdown('<div class="answer-box fade-in-up">', unsafe_allow_html=True)
+        st.markdown('<h4>🔧 Settings & Preferences</h4>', unsafe_allow_html=True)
+        
+        st.markdown("**AI Provider Configuration:**")
+        st.write("Configure your API keys in the `.env` file in the project root:")
+        st.write("• `GROQ_API_KEY` - Groq API key")
+        st.write("• `OPENAI_API_KEY` - OpenAI API key")
+        st.write("• `ANTHROPIC_API_KEY` - Anthropic API key")
+        st.write("• `GOOGLE_API_KEY` - Google Gemini API key")
+        
+        st.markdown("**Weighted Load Balancing:**")
+        st.write("Adjust provider weights in `.env`:")
+        st.write("• `GROQ_WEIGHT=30`")
+        st.write("• `OPENAI_WEIGHT=30`")
+        st.write("• `ANTHROPIC_WEIGHT=30`")
+        st.write("• `GEMINI_WEIGHT=35`")
+        
+        st.markdown("**Clear Cache:**")
+        st.write("To clear analysis cache, delete the `output/summary.json` file or restart the application.")
+        
+        st.markdown("**Memory Settings:**")
+        st.write("Current file size limit: 200MB (adjustable in gui.py)")
+        st.markdown('</div>', unsafe_allow_html=True)
+    elif show_section and show_section.startswith("help_"):
+        help_answers = {
+            "help_why": ("🔹 Why use Sniff Recon?", "Quickly parse network captures and highlight patterns, anomalies, and potential security threats with AI-assisted summaries. Get instant insights without complex command-line tools."),
+            "help_files": ("🔹 Supported File Formats", "PCAP, PCAPNG, CSV, and TXT files are supported. CSV column names are automatically mapped when possible to ensure compatibility with various export formats."),
+            "help_ai": ("🔹 AI Requirement", "No, AI is NOT required! The tool provides local statistical analysis that works perfectly without any API keys. AI features are optional enhancements."),
+            "help_size": ("🔹 File Size Limits", "Maximum file size is 200MB to protect system memory. For larger captures, prefer trimming or filtering the capture file before analysis."),
+            "help_data": ("🔹 Data Handling", "Summaries are saved to output/summary.json. All packet data is processed via temporary files and automatically cleaned up after analysis. Your data stays local and secure.")
+        }
+        if show_section in help_answers:
+            title, answer = help_answers[show_section]
+            st.markdown(f'''
                 <div class="answer-box fade-in-up">
-                    <h4>📖 About Sniff Recon</h4>
-                    <p>Sniff Recon is a powerful Streamlit-based network packet analyzer that supports PCAP, PCAPNG, CSV, and TXT file formats.</p>
-                    <p>It provides comprehensive packet analysis with optional multi-provider AI assistance, memory-aware parsing, and clear visualizations to help you investigate network traffic quickly and safely.</p>
-                    <p>Built with modern cybersecurity professionals in mind, it combines ease of use with powerful analysis capabilities.</p>
+                    <h4>{title}</h4>
+                    <p>{answer}</p>
                 </div>
             ''', unsafe_allow_html=True)
-        
-        elif show_section and show_section.startswith("help_"):
-            help_answers = {
-                "help_why": ("🔹 Why use Sniff Recon?", "Quickly parse network captures and highlight patterns, anomalies, and potential security threats with AI-assisted summaries. Get instant insights without complex command-line tools."),
-                "help_files": ("🔹 Supported File Formats", "PCAP, PCAPNG, CSV, and TXT files are supported. CSV column names are automatically mapped when possible to ensure compatibility with various export formats."),
-                "help_ai": ("🔹 AI Requirement", "No, AI is NOT required! The tool provides local statistical analysis that works perfectly without any API keys. AI features are optional enhancements."),
-                "help_size": ("🔹 File Size Limits", "Maximum file size is 200MB to protect system memory. For larger captures, prefer trimming or filtering the capture file before analysis."),
-                "help_data": ("🔹 Data Handling", "Summaries are saved to output/summary.json. All packet data is processed via temporary files and automatically cleaned up after analysis. Your data stays local and secure.")
-            }
-            
-            if show_section in help_answers:
-                title, answer = help_answers[show_section]
-                st.markdown(f'''
-                    <div class="answer-box fade-in-up">
-                        <h4>{title}</h4>
-                        <p>{answer}</p>
-                    </div>
-                ''', unsafe_allow_html=True)
 
-    # File uploader (moved after help content display)
-    st.markdown('<div class="fade-in-up">', unsafe_allow_html=True)
+    # File uploader BELOW the contextual content; add adaptive spacing when content is visible
+    top_margin = "1.25rem" if st.session_state.get("show_section") else "0rem"
+    st.markdown(f'<div class="fade-in-up uploader-wrapper" style="margin-top:{top_margin};">', unsafe_allow_html=True)
+    st.markdown('<div class="section-heading" style="margin-bottom:1.2rem;">\U0001F4C1 Upload Packet Capture File</div>', unsafe_allow_html=True)
+    st.caption("Quickly start your analysis by uploading a packet capture file. Supported formats: PCAP, PCAPNG, CSV, TXT (max 200MB).")
     uploaded_file = st.file_uploader(
-        label="📁 Upload Packet Capture File",
+        label="",
         type=["pcap", "pcapng", "csv", "txt"],
-        help="Supported formats: .pcap, .pcapng, .csv, .txt (Max: 200MB)",
+        help="Limit 200MB per file • PCAP, PCAPNG, CSV, TXT",
         key="fileUploader",
     )
     st.markdown('</div>', unsafe_allow_html=True)
 
     # Sidebar - only show if no file is uploaded
     if uploaded_file is None:
+        # --- Import Session Shortcut (Intro Page) ---
+        st.markdown('<div class="section-heading" style="margin-top:2.5rem;">RESUME PREVIOUS SESSION</div>', unsafe_allow_html=True)
+        # Removed soft-edged box for import session shortcut
+        st.caption("Quickly resume a previous analysis session. Upload a session JSON file exported from Sniff Recon.")
+        uploaded_session_intro = st.file_uploader("", type=["json"], key="importSessionIntro")
+        if uploaded_session_intro is not None:
+            try:
+                imported_data = json.load(uploaded_session_intro)
+                st.session_state["ai_responses"] = imported_data.get("ai_responses", [])
+                st.session_state["user_query"] = imported_data.get("user_query", "")
+                st.session_state["selected_packets"] = imported_data.get("selected_packets", [])
+                st.success("✅ Session imported successfully! UI will refresh to show restored session.")
+                st.rerun()
+            except Exception as e:
+                st.error(f"❌ Error importing session: {str(e)}")
         with st.sidebar:
             st.markdown('<h3 style="color:#00ffff; margin-bottom:1.2rem; font-family: Orbitron,sans-serif; text-align: center; text-shadow: 0 0 12px rgba(0,255,255,0.6); font-size: 1.4rem;">Quick Access</h3>', unsafe_allow_html=True)
             
-            # About button with TOGGLE
+            # About button
             if st.button("📖 About Sniff Recon", key="aboutBtn", use_container_width=True):
-                # Toggle: if already showing about, hide it; otherwise show it
                 current = st.session_state.get("show_section")
-                if current == "about":
-                    st.session_state["show_section"] = None  # Hide
-                else:
-                    st.session_state["show_section"] = "about"  # Show
+                st.session_state["show_section"] = None if current == "about" else "about"
+                st.rerun()
+            
+            # Quick Start Guide button
+            if st.button("🚀 Quick Start Guide", key="quick_start_btn", use_container_width=True):
+                current = st.session_state.get("show_section")
+                st.session_state["show_section"] = None if current == "quick_start" else "quick_start"
+                st.rerun()
+            
+            # Documentation button
+            if st.button("📚 Documentation & GitHub", key="documentation_btn", use_container_width=True):
+                current = st.session_state.get("show_section")
+                st.session_state["show_section"] = None if current == "documentation" else "documentation"
+                st.rerun()
+            
+            # Settings button
+            if st.button("🔧 Settings & Preferences", key="settings_btn", use_container_width=True):
+                current = st.session_state.get("show_section")
+                st.session_state["show_section"] = None if current == "settings" else "settings"
+                st.rerun()
             
             # Help section with questions
             st.markdown('<div style="margin-top: 1.5rem; padding-top: 1rem;"></div>', unsafe_allow_html=True)
             st.markdown('<h4 style="color:#00ffff; margin-bottom:0.8rem; font-family: Orbitron,sans-serif; font-size: 1.1rem;">❓ Help Topics</h4>', unsafe_allow_html=True)
             
-            help_questions = [
-                ("🔹 Why use Sniff Recon?", "why"),
-                ("🔹 What files are supported?", "files"),
-                ("🔹 Is AI required?", "ai"),
-                ("🔹 File size limits?", "size"),
-                ("🔹 How is data handled?", "data")
-            ]
+            if st.button("🔹 Why use Sniff Recon?", key="help_why", use_container_width=True):
+                current = st.session_state.get("show_section")
+                section_key = "help_why"
+                st.session_state["show_section"] = None if current == section_key else section_key
+                st.rerun()
             
-            for question, key in help_questions:
-                if st.button(question, key=f"help_{key}", use_container_width=True):
-                    # Toggle for help questions too
-                    current = st.session_state.get("show_section")
-                    section_key = f"help_{key}"
-                    if current == section_key:
-                        st.session_state["show_section"] = None  # Hide
-                    else:
-                        st.session_state["show_section"] = section_key  # Show
+            if st.button("🔹 What files are supported?", key="help_files", use_container_width=True):
+                current = st.session_state.get("show_section")
+                section_key = "help_files"
+                st.session_state["show_section"] = None if current == section_key else section_key
+                st.rerun()
+            
+            if st.button("🔹 Is AI required?", key="help_ai", use_container_width=True):
+                current = st.session_state.get("show_section")
+                section_key = "help_ai"
+                st.session_state["show_section"] = None if current == section_key else section_key
+                st.rerun()
+            
+            if st.button("🔹 File size limits?", key="help_size", use_container_width=True):
+                current = st.session_state.get("show_section")
+                section_key = "help_size"
+                st.session_state["show_section"] = None if current == section_key else section_key
+                st.rerun()
+            
+            if st.button("🔹 How is data handled?", key="help_data", use_container_width=True):
+                current = st.session_state.get("show_section")
+                section_key = "help_data"
+                st.session_state["show_section"] = None if current == section_key else section_key
+                st.rerun()
+
+    # (Content moved above uploader; removed duplicate rendering here)
 
     # Process uploaded file
     if uploaded_file is not None:
@@ -784,8 +985,8 @@ def main():
             with tab3:
                 st.markdown('<div class="section-heading">EXPORT ANALYSIS RESULTS</div>', unsafe_allow_html=True)
                 save_summary(summary.to_dict(orient="records"))
-                st.markdown('<div class=\"success-message\">✅ Analysis complete! Summary saved to output/summary.json</div>', unsafe_allow_html=True)
-                col1, col2 = st.columns(2)
+                st.markdown('<div class="success-message">✅ Analysis complete! Summary saved to output/summary.json</div>', unsafe_allow_html=True)
+                col1, col2, col3 = st.columns(3)
                 with open("output/summary.json", "r") as f:
                     json_data = f.read()
                 with col1:
@@ -800,6 +1001,52 @@ def main():
                 with col2:
                     if st.button("👁️ View Raw JSON"):
                         st.json(json.loads(json_data))
+
+                # --- Session Export/Import ---
+                st.markdown('<div class="section-heading">SESSION EXPORT / IMPORT</div>', unsafe_allow_html=True)
+                try:
+                    # Convert ai_responses to serializable format
+                    ai_responses_serializable = []
+                    for response_entry in st.session_state.get("ai_responses", []):
+                        serializable_entry = {}
+                        for key, value in response_entry.items():
+                            # Convert AIResponse dataclass to dict if needed
+                            if is_dataclass(value) and not isinstance(value, type):
+                                serializable_entry[key] = asdict(value)
+                            else:
+                                serializable_entry[key] = value
+                        ai_responses_serializable.append(serializable_entry)
+                    
+                    session_data = {
+                        "ai_responses": ai_responses_serializable,
+                        "user_query": st.session_state.get("user_query", ""),
+                        # Selected packets are not stored in session state, so this is a placeholder
+                        "selected_packets": st.session_state.get("selected_packets", [])
+                    }
+                    session_json = json.dumps(session_data, indent=4, cls=CustomJSONEncoder)
+                    st.download_button(
+                        label="💾 Export Session (JSON)",
+                        data=session_json,
+                        file_name="sniff_recon_session.json",
+                        mime="application/json",
+                        key="downloadSessionJson",
+                        help="Download your entire analysis session for sharing or later review",
+                    )
+                except Exception as e:
+                    st.error(f"❌ Error creating session export: {str(e)}")
+                    st.caption("This may happen if the session contains non-serializable data. Try clearing the session and starting fresh.")
+
+                uploaded_session = st.file_uploader("📤 Import Session (JSON)", type=["json"], key="importSessionJson")
+                if uploaded_session is not None:
+                    try:
+                        imported_data = json.load(uploaded_session)
+                        st.session_state["ai_responses"] = imported_data.get("ai_responses", [])
+                        st.session_state["user_query"] = imported_data.get("user_query", "")
+                        st.session_state["selected_packets"] = imported_data.get("selected_packets", [])
+                        st.success("✅ Session imported successfully! UI will refresh to show restored session.")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"❌ Error importing session: {str(e)}")
             
             # Tab 4: Advanced Settings
             with tab4:

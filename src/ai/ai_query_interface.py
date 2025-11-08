@@ -10,6 +10,8 @@ from src.ai.ai_module import ai_engine, PacketSummary
 from scapy.packet import Packet
 import time
 import pandas as pd
+from datetime import datetime
+import os
 
 def inject_ai_interface_css():
     """Inject CSS for the AI query interface"""
@@ -18,22 +20,28 @@ def inject_ai_interface_css():
         <style>
         /* AI Query Interface Styling */
         .ai-query-container {
-            background: linear-gradient(145deg, rgba(30, 30, 30, 0.9), rgba(20, 20, 20, 0.9));
-            border: 2px solid rgba(0, 255, 255, 0.3);
-            border-radius: 16px;
-            padding: 2rem;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            padding: 0;
             margin: 1rem 0;
-            box-shadow: 0 8px 32px rgba(0, 255, 255, 0.1);
+            box-shadow: none;
         }
         
         .ai-query-header {
             font-size: 1.5rem;
             font-weight: 600;
             color: #00ffff;
-            margin-bottom: 1rem;
-            display: flex;
+            margin-bottom: 2rem;
+            display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: rgba(0, 20, 30, 0.8);
+            border: 2px solid rgba(0, 255, 255, 0.6);
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
         }
         
         .ai-query-header::before {
@@ -42,10 +50,10 @@ def inject_ai_interface_css():
         }
         
         .query-input-container {
-            background: rgba(15, 15, 15, 0.5);
-            border-radius: 12px;
-            padding: 1rem;
-            border: 1px solid rgba(0, 255, 255, 0.2);
+            background: transparent;
+            border-radius: 0;
+            padding: 0;
+            border: none;
             margin-bottom: 1rem;
         }
         
@@ -193,7 +201,30 @@ def render_ai_query_interface(packets: List[Packet]):
     # AI Query Section
     st.markdown('<div class="ai-query-container">', unsafe_allow_html=True)
     st.markdown('<div class="ai-query-header">AI-Powered Packet Analysis</div>', unsafe_allow_html=True)
-    
+
+    # --- AI Provider Selection ---
+    from src.ai.multi_agent_ai import get_active_providers
+    provider_list = ["Groq", "OpenAI", "Anthropic", "Gemini"]
+    active_providers = get_active_providers()
+    provider_status = {p: ("🟢" if p in active_providers else "🔴") for p in provider_list}
+
+    if "selected_provider" not in st.session_state:
+        # Default to first active provider
+        st.session_state.selected_provider = active_providers[0] if active_providers else provider_list[0]
+
+    st.markdown("**AI Provider Selection:**")
+    provider_options = [f"{provider_status[p]} {p}" for p in provider_list]
+    selected_idx = provider_list.index(st.session_state.selected_provider) if st.session_state.selected_provider in provider_list else 0
+    selected = st.selectbox(
+        "Choose AI provider:",
+        provider_options,
+        index=selected_idx,
+        key="ai_provider_select"
+    )
+    # Extract provider name from selection
+    st.session_state.selected_provider = [p for p in provider_list if p in selected][0]
+    st.caption("🟢 = active, 🔴 = unavailable | Gemini support is experimental")
+
     # Check API key status and show notification
     if not ai_engine.api_key_valid:
         st.warning(
@@ -202,31 +233,47 @@ def render_ai_query_interface(packets: List[Packet]):
             "please update your `HUGGINGFACE_API_KEY` in the `.env` file. "
             "Get a free API key from [Hugging Face](https://huggingface.co/settings/tokens)."
         )
-    
+
     st.markdown(
         "Ask questions about your network traffic in natural language. The AI will analyze the packet data and provide insights."
     )
-    
+
     # Query input
     st.markdown('<div class="query-input-container">', unsafe_allow_html=True)
-    
+
     # Get suggested queries
     suggested_queries = ai_engine.get_suggested_queries()
-    
+
     # Display suggested queries as clickable chips
     st.markdown("**💡 Suggested Questions:**")
     st.markdown('<div class="suggested-queries">', unsafe_allow_html=True)
-    
+
     cols = st.columns(2)
     for i, query in enumerate(suggested_queries):
         col_idx = i % 2
         with cols[col_idx]:
             if st.button(query, key=f"suggested_{i}", help="Click to use this query"):
-                st.session_state.user_query = query
-                st.rerun()
-    
+                # Auto-submit the query with AI analysis
+                with st.spinner("🤖 AI is analyzing your network traffic..."):
+                    suspicious = ai_engine.filter_suspicious_packets(packets)
+                    provider = st.session_state.selected_provider
+                    if not suspicious or len(suspicious) == 0:
+                        st.info("ℹ️ No suspicious patterns detected. Analyzing all packets...")
+                        ai_result = ai_engine.query_ai_with_packets(query, packets, provider_name=provider)
+                    else:
+                        st.success(f"🔍 Found {len(suspicious)} suspicious packets. Analyzing focused dataset...")
+                        ai_result = ai_engine.query_ai_with_packets(query, suspicious, provider_name=provider)
+                    response_entry = {
+                        "query": query,
+                        "result": ai_result,
+                        "timestamp": time.time(),
+                        "provider": provider
+                    }
+                    st.session_state.ai_responses.append(response_entry)
+                    st.rerun()
+
     st.markdown('</div>', unsafe_allow_html=True)
-    
+
     # Query input field
     user_query = st.text_input(
         "🤖 Ask a question about your network traffic:",
@@ -234,9 +281,9 @@ def render_ai_query_interface(packets: List[Packet]):
         placeholder="e.g., What are the top 5 source IP addresses?",
         key="ai_query_input"
     )
-    
+
     st.markdown('</div>', unsafe_allow_html=True)
-    
+
     # Query button
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
@@ -246,7 +293,7 @@ def render_ai_query_interface(packets: List[Packet]):
             width='stretch',
             help="Send your question to the AI for analysis"
         )
-    
+
     st.markdown('</div>', unsafe_allow_html=True)
     
     # Handle AI query
@@ -254,25 +301,24 @@ def render_ai_query_interface(packets: List[Packet]):
         with st.spinner("🤖 AI is analyzing your network traffic..."):
             # Layered Filtering: Get suspicious, cluster, summarize
             suspicious = ai_engine.filter_suspicious_packets(packets)
-            
+            provider = st.session_state.selected_provider
             # If no suspicious packets found, analyze ALL packets instead
             if not suspicious or len(suspicious) == 0:
                 st.info("ℹ️ No suspicious patterns detected. Analyzing all packets...")
                 # Pass actual packets to AI (for multi-agent system)
-                ai_result = ai_engine.query_ai_with_packets(user_query, packets)
+                ai_result = ai_engine.query_ai_with_packets(user_query, packets, provider_name=provider)
             else:
                 st.success(f"🔍 Found {len(suspicious)} suspicious packets. Analyzing focused dataset...")
                 # Pass suspicious packets to AI
-                ai_result = ai_engine.query_ai_with_packets(user_query, suspicious)
-            
+                ai_result = ai_engine.query_ai_with_packets(user_query, suspicious, provider_name=provider)
             # Store response in session state
             response_entry = {
                 "query": user_query,
                 "result": ai_result,
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "provider": provider
             }
             st.session_state.ai_responses.append(response_entry)
-            
             # Clear the input
             st.session_state.user_query = ""
             st.rerun()
@@ -309,6 +355,52 @@ def render_ai_query_interface(packets: List[Packet]):
                     """,
                     unsafe_allow_html=True
                 )
+                
+                # Add PDF Export button for this response
+                col1, col2, col3 = st.columns([1, 2, 1])
+                with col2:
+                    if st.button(f"📄 Export as PDF", key=f"export_pdf_{i}", use_container_width=True, help="Download this analysis as a professional PDF report"):
+                        try:
+                            # Import PDF exporter
+                            from src.utils.pdf_exporter import export_ai_response_to_pdf
+                            
+                            # Generate PDF
+                            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                            filename = f"sniff_recon_analysis_{timestamp}.pdf"
+                            
+                            # Prepare metadata
+                            metadata = {
+                                'ai_provider': result.get('provider', 'Local Analysis' if result.get('fallback') else 'AI'),
+                                'timestamp': datetime.now().strftime("%B %d, %Y at %I:%M %p")
+                            }
+                            
+                            # Generate PDF
+                            pdf_path = export_ai_response_to_pdf(
+                                query=query,
+                                response=result["response"],
+                                filename=filename,
+                                metadata=metadata
+                            )
+                            
+                            # Read PDF and offer download
+                            with open(pdf_path, "rb") as pdf_file:
+                                pdf_bytes = pdf_file.read()
+                                st.download_button(
+                                    label="💾 Download PDF Report",
+                                    data=pdf_bytes,
+                                    file_name=filename,
+                                    mime="application/pdf",
+                                    key=f"download_pdf_{i}",
+                                    use_container_width=True
+                                )
+                            
+                            st.success(f"✅ PDF generated successfully: {filename}")
+                        
+                        except ImportError:
+                            st.error("❌ PDF export requires 'reportlab' package. Install it with: `pip install reportlab`")
+                        except Exception as e:
+                            st.error(f"❌ Error generating PDF: {str(e)}")
+
             else:
                 # Error response
                 st.markdown(
