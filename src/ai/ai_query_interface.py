@@ -18,22 +18,28 @@ def inject_ai_interface_css():
         <style>
         /* AI Query Interface Styling */
         .ai-query-container {
-            background: linear-gradient(145deg, rgba(30, 30, 30, 0.9), rgba(20, 20, 20, 0.9));
-            border: 2px solid rgba(0, 255, 255, 0.3);
-            border-radius: 16px;
-            padding: 2rem;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            padding: 0;
             margin: 1rem 0;
-            box-shadow: 0 8px 32px rgba(0, 255, 255, 0.1);
+            box-shadow: none;
         }
         
         .ai-query-header {
             font-size: 1.5rem;
             font-weight: 600;
             color: #00ffff;
-            margin-bottom: 1rem;
-            display: flex;
+            margin-bottom: 2rem;
+            display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: rgba(0, 20, 30, 0.8);
+            border: 2px solid rgba(0, 255, 255, 0.6);
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
         }
         
         .ai-query-header::before {
@@ -42,10 +48,10 @@ def inject_ai_interface_css():
         }
         
         .query-input-container {
-            background: rgba(15, 15, 15, 0.5);
-            border-radius: 12px;
-            padding: 1rem;
-            border: 1px solid rgba(0, 255, 255, 0.2);
+            background: transparent;
+            border-radius: 0;
+            padding: 0;
+            border: none;
             margin-bottom: 1rem;
         }
         
@@ -222,8 +228,29 @@ def render_ai_query_interface(packets: List[Packet]):
         col_idx = i % 2
         with cols[col_idx]:
             if st.button(query, key=f"suggested_{i}", help="Click to use this query"):
-                st.session_state.user_query = query
-                st.rerun()
+                # Auto-submit the query with AI analysis
+                with st.spinner("🤖 AI is analyzing your network traffic..."):
+                    # Layered Filtering: Get suspicious, cluster, summarize
+                    suspicious = ai_engine.filter_suspicious_packets(packets)
+                    
+                    # If no suspicious packets found, analyze ALL packets instead
+                    if not suspicious or len(suspicious) == 0:
+                        st.info("ℹ️ No suspicious patterns detected. Analyzing all packets...")
+                        # Pass actual packets to AI (for multi-agent system)
+                        ai_result = ai_engine.query_ai_with_packets(query, packets)
+                    else:
+                        st.success(f"🔍 Found {len(suspicious)} suspicious packets. Analyzing focused dataset...")
+                        # Pass suspicious packets to AI
+                        ai_result = ai_engine.query_ai_with_packets(query, suspicious)
+                    
+                    # Store response in session state
+                    response_entry = {
+                        "query": query,
+                        "result": ai_result,
+                        "timestamp": time.time()
+                    }
+                    st.session_state.ai_responses.append(response_entry)
+                    st.rerun()
     
     st.markdown('</div>', unsafe_allow_html=True)
     

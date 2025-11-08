@@ -34,47 +34,45 @@ def inject_modern_css():
         
         /* Protocol layer cards */
         .protocol-card {
-            background: linear-gradient(145deg, rgba(30, 30, 30, 0.9), rgba(20, 20, 20, 0.9));
-            border: 2px solid rgba(0, 255, 255, 0.3);
-            border-radius: 16px;
-            padding: 1.5rem;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            padding: 1.5rem 0;
             margin: 1rem 0;
-            box-shadow: 0 4px 20px rgba(0, 255, 255, 0.1);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: none;
+            transition: none;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
         }
         
         .protocol-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #00ffff, #00b3b3, #00ffff);
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
+            display: none;
         }
         
         .protocol-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 40px rgba(0, 255, 255, 0.2);
-            border-color: rgba(0, 255, 255, 0.6);
+            transform: none;
+            box-shadow: none;
+            border-color: transparent;
         }
         
         .protocol-card:hover::before {
-            transform: scaleX(1);
+            transform: none;
         }
         
         .protocol-header {
             font-size: 1.25rem;
             font-weight: 600;
             color: #00ffff;
-            margin-bottom: 1rem;
-            display: flex;
+            margin-bottom: 1.5rem;
+            display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: rgba(0, 20, 30, 0.8);
+            border: 2px solid rgba(0, 255, 255, 0.6);
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
         }
         
         .protocol-header::before {
@@ -137,12 +135,12 @@ def inject_modern_css():
         
         /* Packet summary styling */
         .packet-summary {
-            background: linear-gradient(145deg, rgba(30, 30, 30, 0.9), rgba(20, 20, 20, 0.9));
-            border: 2px solid rgba(0, 255, 255, 0.3);
-            border-radius: 16px;
-            padding: 1.5rem;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            padding: 1.5rem 0;
             margin: 1rem 0;
-            box-shadow: 0 4px 20px rgba(0, 255, 255, 0.1);
+            box-shadow: none;
         }
         
         .summary-grid {
