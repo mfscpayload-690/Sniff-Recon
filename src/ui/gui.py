@@ -6,6 +6,7 @@ import json
 import tempfile
 import pandas as pd
 import base64
+from dataclasses import asdict, is_dataclass
 
 # Add parent directory to path to enable absolute imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
@@ -23,6 +24,9 @@ class CustomJSONEncoder(json.JSONEncoder):
         # Handle EDecimal serialization by converting to float
         if o.__class__.__name__ == "EDecimal":
             return float(o)
+        # Handle dataclasses (like AIResponse)
+        if is_dataclass(o):
+            return asdict(o)
         return super().default(o)
 
 
@@ -905,21 +909,37 @@ def main():
 
                 # --- Session Export/Import ---
                 st.markdown('<div class="section-heading">SESSION EXPORT / IMPORT</div>', unsafe_allow_html=True)
-                session_data = {
-                    "ai_responses": st.session_state.get("ai_responses", []),
-                    "user_query": st.session_state.get("user_query", ""),
-                    # Selected packets are not stored in session state, so this is a placeholder
-                    "selected_packets": st.session_state.get("selected_packets", [])
-                }
-                session_json = json.dumps(session_data, indent=4, cls=CustomJSONEncoder)
-                st.download_button(
-                    label="💾 Export Session (JSON)",
-                    data=session_json,
-                    file_name="sniff_recon_session.json",
-                    mime="application/json",
-                    key="downloadSessionJson",
-                    help="Download your entire analysis session for sharing or later review",
-                )
+                try:
+                    # Convert ai_responses to serializable format
+                    ai_responses_serializable = []
+                    for response_entry in st.session_state.get("ai_responses", []):
+                        serializable_entry = {}
+                        for key, value in response_entry.items():
+                            # Convert AIResponse dataclass to dict if needed
+                            if is_dataclass(value) and not isinstance(value, type):
+                                serializable_entry[key] = asdict(value)
+                            else:
+                                serializable_entry[key] = value
+                        ai_responses_serializable.append(serializable_entry)
+                    
+                    session_data = {
+                        "ai_responses": ai_responses_serializable,
+                        "user_query": st.session_state.get("user_query", ""),
+                        # Selected packets are not stored in session state, so this is a placeholder
+                        "selected_packets": st.session_state.get("selected_packets", [])
+                    }
+                    session_json = json.dumps(session_data, indent=4, cls=CustomJSONEncoder)
+                    st.download_button(
+                        label="💾 Export Session (JSON)",
+                        data=session_json,
+                        file_name="sniff_recon_session.json",
+                        mime="application/json",
+                        key="downloadSessionJson",
+                        help="Download your entire analysis session for sharing or later review",
+                    )
+                except Exception as e:
+                    st.error(f"❌ Error creating session export: {str(e)}")
+                    st.caption("This may happen if the session contains non-serializable data. Try clearing the session and starting fresh.")
 
                 uploaded_session = st.file_uploader("📤 Import Session (JSON)", type=["json"], key="importSessionJson")
                 if uploaded_session is not None:
