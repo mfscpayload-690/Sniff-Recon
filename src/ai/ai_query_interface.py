@@ -201,7 +201,30 @@ def render_ai_query_interface(packets: List[Packet]):
     # AI Query Section
     st.markdown('<div class="ai-query-container">', unsafe_allow_html=True)
     st.markdown('<div class="ai-query-header">AI-Powered Packet Analysis</div>', unsafe_allow_html=True)
-    
+
+    # --- AI Provider Selection ---
+    from src.ai.multi_agent_ai import get_active_providers
+    provider_list = ["Groq", "OpenAI", "Anthropic"]
+    active_providers = get_active_providers()
+    provider_status = {p: ("🟢" if p in active_providers else "🔴") for p in provider_list}
+
+    if "selected_provider" not in st.session_state:
+        # Default to first active provider
+        st.session_state.selected_provider = active_providers[0] if active_providers else provider_list[0]
+
+    st.markdown("**AI Provider Selection:**")
+    provider_options = [f"{provider_status[p]} {p}" for p in provider_list]
+    selected_idx = provider_list.index(st.session_state.selected_provider) if st.session_state.selected_provider in provider_list else 0
+    selected = st.selectbox(
+        "Choose AI provider:",
+        provider_options,
+        index=selected_idx,
+        key="ai_provider_select"
+    )
+    # Extract provider name from selection
+    st.session_state.selected_provider = [p for p in provider_list if p in selected][0]
+    st.caption("🟢 = active, 🔴 = unavailable")
+
     # Check API key status and show notification
     if not ai_engine.api_key_valid:
         st.warning(
@@ -210,21 +233,21 @@ def render_ai_query_interface(packets: List[Packet]):
             "please update your `HUGGINGFACE_API_KEY` in the `.env` file. "
             "Get a free API key from [Hugging Face](https://huggingface.co/settings/tokens)."
         )
-    
+
     st.markdown(
         "Ask questions about your network traffic in natural language. The AI will analyze the packet data and provide insights."
     )
-    
+
     # Query input
     st.markdown('<div class="query-input-container">', unsafe_allow_html=True)
-    
+
     # Get suggested queries
     suggested_queries = ai_engine.get_suggested_queries()
-    
+
     # Display suggested queries as clickable chips
     st.markdown("**💡 Suggested Questions:**")
     st.markdown('<div class="suggested-queries">', unsafe_allow_html=True)
-    
+
     cols = st.columns(2)
     for i, query in enumerate(suggested_queries):
         col_idx = i % 2
@@ -232,30 +255,25 @@ def render_ai_query_interface(packets: List[Packet]):
             if st.button(query, key=f"suggested_{i}", help="Click to use this query"):
                 # Auto-submit the query with AI analysis
                 with st.spinner("🤖 AI is analyzing your network traffic..."):
-                    # Layered Filtering: Get suspicious, cluster, summarize
                     suspicious = ai_engine.filter_suspicious_packets(packets)
-                    
-                    # If no suspicious packets found, analyze ALL packets instead
+                    provider = st.session_state.selected_provider
                     if not suspicious or len(suspicious) == 0:
                         st.info("ℹ️ No suspicious patterns detected. Analyzing all packets...")
-                        # Pass actual packets to AI (for multi-agent system)
-                        ai_result = ai_engine.query_ai_with_packets(query, packets)
+                        ai_result = ai_engine.query_ai_with_packets(query, packets, provider_name=provider)
                     else:
                         st.success(f"🔍 Found {len(suspicious)} suspicious packets. Analyzing focused dataset...")
-                        # Pass suspicious packets to AI
-                        ai_result = ai_engine.query_ai_with_packets(query, suspicious)
-                    
-                    # Store response in session state
+                        ai_result = ai_engine.query_ai_with_packets(query, suspicious, provider_name=provider)
                     response_entry = {
                         "query": query,
                         "result": ai_result,
-                        "timestamp": time.time()
+                        "timestamp": time.time(),
+                        "provider": provider
                     }
                     st.session_state.ai_responses.append(response_entry)
                     st.rerun()
-    
+
     st.markdown('</div>', unsafe_allow_html=True)
-    
+
     # Query input field
     user_query = st.text_input(
         "🤖 Ask a question about your network traffic:",
@@ -263,9 +281,9 @@ def render_ai_query_interface(packets: List[Packet]):
         placeholder="e.g., What are the top 5 source IP addresses?",
         key="ai_query_input"
     )
-    
+
     st.markdown('</div>', unsafe_allow_html=True)
-    
+
     # Query button
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
@@ -275,7 +293,7 @@ def render_ai_query_interface(packets: List[Packet]):
             width='stretch',
             help="Send your question to the AI for analysis"
         )
-    
+
     st.markdown('</div>', unsafe_allow_html=True)
     
     # Handle AI query
@@ -283,25 +301,24 @@ def render_ai_query_interface(packets: List[Packet]):
         with st.spinner("🤖 AI is analyzing your network traffic..."):
             # Layered Filtering: Get suspicious, cluster, summarize
             suspicious = ai_engine.filter_suspicious_packets(packets)
-            
+            provider = st.session_state.selected_provider
             # If no suspicious packets found, analyze ALL packets instead
             if not suspicious or len(suspicious) == 0:
                 st.info("ℹ️ No suspicious patterns detected. Analyzing all packets...")
                 # Pass actual packets to AI (for multi-agent system)
-                ai_result = ai_engine.query_ai_with_packets(user_query, packets)
+                ai_result = ai_engine.query_ai_with_packets(user_query, packets, provider_name=provider)
             else:
                 st.success(f"🔍 Found {len(suspicious)} suspicious packets. Analyzing focused dataset...")
                 # Pass suspicious packets to AI
-                ai_result = ai_engine.query_ai_with_packets(user_query, suspicious)
-            
+                ai_result = ai_engine.query_ai_with_packets(user_query, suspicious, provider_name=provider)
             # Store response in session state
             response_entry = {
                 "query": user_query,
                 "result": ai_result,
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "provider": provider
             }
             st.session_state.ai_responses.append(response_entry)
-            
             # Clear the input
             st.session_state.user_query = ""
             st.rerun()

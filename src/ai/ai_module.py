@@ -318,7 +318,7 @@ Suspicious Patterns Detected:
 """
         return data_str
     
-    def query_ai_with_packets(self, user_query: str, packets: List[Packet]) -> Dict[str, Any]:
+    def query_ai_with_packets(self, user_query: str, packets: List[Packet], provider_name: Optional[str] = None) -> Dict[str, Any]:
         """
         Send query to AI system with actual packet data (for multi-agent system)
         """
@@ -329,7 +329,8 @@ Suspicious Patterns Detected:
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
                 try:
-                    result = loop.run_until_complete(query_ai_async(user_query, packets))  # type: ignore[possibly-unbound]
+                    # Pass provider_name to multi-agent query
+                    result = loop.run_until_complete(query_ai_async(user_query, packets, provider_name=provider_name))  # type: ignore[possibly-unbound]
                     if result.get('success'):
                         return result
                     else:

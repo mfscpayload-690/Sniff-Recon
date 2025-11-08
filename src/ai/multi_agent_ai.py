@@ -877,11 +877,21 @@ Protocol Distribution:
 multi_agent = MultiAgentAI()
 
 # Convenience functions for backward compatibility
-async def query_ai_async(prompt: str, packets: List[Packet]) -> Dict[str, Any]:
-    """Async query function"""
-    responses = await multi_agent.query(prompt, packets)
+async def query_ai_async(prompt: str, packets: List[Packet], provider_name: Optional[str] = None) -> Dict[str, Any]:
+    """Async query function with provider selection"""
+    if provider_name:
+        # Filter to only the selected provider
+        selected = [p for p in multi_agent.active_providers if p.name == provider_name]
+        if selected:
+            original = multi_agent.active_providers
+            multi_agent.active_providers = selected
+            responses = await multi_agent.query(prompt, packets)
+            multi_agent.active_providers = original
+        else:
+            responses = await multi_agent.query(prompt, packets)
+    else:
+        responses = await multi_agent.query(prompt, packets)
     combined_response = multi_agent.combine_responses(responses)
-    
     return {
         "success": any(r.success for r in responses),
         "response": combined_response,

@@ -5,6 +5,7 @@ from scapy.packet import Packet
 from scapy.layers.inet import IP, TCP, UDP, ICMP
 from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 from typing import List, Optional
+from datetime import datetime
 
 def inject_modern_css():
     """Inject modern CSS for beautiful packet viewer UI"""
@@ -211,6 +212,8 @@ def extract_packet_summary(packets: List[Packet]) -> pd.DataFrame:
         dst_ip = "-"
         protocol = "-"
         info = ""
+        src_port: Optional[int] = None
+        dst_port: Optional[int] = None
 
         if IP in pkt:
             ip_layer = pkt[IP]
@@ -233,6 +236,8 @@ def extract_packet_summary(packets: List[Packet]) -> pd.DataFrame:
             tcp_layer = pkt[TCP]
             flags = tcp_layer.sprintf("%flags%")
             info = flags if flags else ""
+            src_port = int(tcp_layer.sport)
+            dst_port = int(tcp_layer.dport)
             # Check for HTTP layer (simple heuristic)
             if pkt.haslayer("Raw"):
                 raw_payload = pkt["Raw"].load
@@ -252,25 +257,34 @@ def extract_packet_summary(packets: List[Packet]) -> pd.DataFrame:
                     info = "DNS Response"
             else:
                 info = "UDP Packet"
+            udp_layer = pkt[UDP]
+            src_port = int(udp_layer.sport)
+            dst_port = int(udp_layer.dport)
         elif protocol == "ICMP" and ICMP in pkt:
             icmp_layer = pkt[ICMP]
-            info = icmp_layer.type
+            info = str(icmp_layer.type)
 
         # Format timestamp nicely
         try:
-            import datetime
             ts_float = float(timestamp)
-            timestamp_str = datetime.datetime.fromtimestamp(ts_float).strftime("%Y-%m-%d %H:%M:%S.%f")
+            timestamp_str = datetime.fromtimestamp(ts_float).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         except Exception:
             timestamp_str = str(timestamp)
+            try:
+                ts_float = float(timestamp_str)
+            except Exception:
+                ts_float = None
 
         rows.append({
             "No.": i,
             "Timestamp": timestamp_str,
+            "Epoch": ts_float,
             "Source IP": src_ip,
             "Destination IP": dst_ip,
             "Protocol": protocol,
             "Length": length,
+            "Source Port": src_port,
+            "Destination Port": dst_port,
             "Info": info,
         })
 
@@ -364,6 +378,90 @@ def display_packet_table(packets: List[Packet]):
 
     df = extract_packet_summary(packets)
 
+    # --- Filters & Search UI ---
+    with st.expander("🔎 Filters & Search", expanded=True):
+        search_query = st.text_input(
+            "Quick search",
+            value="",
+            placeholder="Search IP, protocol, port, or text...",
+            key="filter_search"
+        )
+
+        c1, c2, c3 = st.columns([1, 1, 1])
+        with c1:
+            ip_filter = st.text_input("IP filter (src/dst)", value="", placeholder="e.g., 192.168.1.10", key="filter_ip")
+        with c2:
+            protocols = [p for p in sorted(df["Protocol"].dropna().unique().tolist()) if p != "-"] if not df.empty else []
+            protocol_filter = st.multiselect("Protocol", options=protocols, default=[], key="filter_protocol")
+        with c3:
+            port_filter = st.text_input("Port filter (src/dst)", value="", placeholder="e.g., 80", key="filter_port")
+
+        epoch_series = df["Epoch"].dropna() if "Epoch" in df.columns else pd.Series([], dtype=float)
+        if not epoch_series.empty:
+            min_dt = datetime.fromtimestamp(float(epoch_series.min()))
+            max_dt = datetime.fromtimestamp(float(epoch_series.max()))
+            time_start, time_end = st.slider(
+                "Time range",
+                min_value=min_dt,
+                max_value=max_dt,
+                value=(min_dt, max_dt),
+                help="Filter packets within this time window",
+                key="filter_time"
+            )
+        else:
+            time_start = time_end = None
+
+        # Clear filters button
+        if st.button("🧹 Clear filters"):
+            # Reset inputs by rerunning with defaults via session state clears
+            for key in [
+                "filter_search", "filter_ip", "filter_protocol", "filter_port", "filter_time"
+            ]:
+                if key in st.session_state:
+                    del st.session_state[key]
+            st.rerun()
+
+        filtered_df = df.copy()
+        if search_query:
+            q = search_query.strip()
+            if q:
+                cols_to_search = ["Source IP", "Destination IP", "Protocol", "Info", "Source Port", "Destination Port"]
+                cols_present = [c for c in cols_to_search if c in filtered_df.columns]
+                mask = pd.Series(False, index=filtered_df.index)
+                for col in cols_present:
+                    mask |= filtered_df[col].astype(str).str.contains(q, case=False, na=False)
+                filtered_df = filtered_df[mask]
+
+        if ip_filter:
+            ip_q = ip_filter.strip()
+            if ip_q:
+                mask_ip = (
+                    filtered_df["Source IP"].astype(str).str.contains(ip_q, na=False)
+                    | filtered_df["Destination IP"].astype(str).str.contains(ip_q, na=False)
+                )
+                filtered_df = filtered_df[mask_ip]
+
+        if protocol_filter:
+            filtered_df = filtered_df[filtered_df["Protocol"].isin(protocol_filter)]
+
+        if port_filter:
+            port_q = port_filter.strip()
+            if port_q.isdigit():
+                port_num = int(port_q)
+                mask_port = (
+                    (filtered_df["Source Port"].fillna(-1).astype(int) == port_num)
+                    | (filtered_df["Destination Port"].fillna(-1).astype(int) == port_num)
+                )
+                filtered_df = filtered_df[mask_port]
+
+        if time_start and time_end:
+            start_epoch = time_start.timestamp()
+            end_epoch = time_end.timestamp()
+            if "Epoch" in filtered_df.columns:
+                filtered_df = filtered_df[(filtered_df["Epoch"].fillna(-1) >= start_epoch) & (filtered_df["Epoch"].fillna(-1) <= end_epoch)]
+
+    st.caption(f"Showing {len(filtered_df)} of {len(df)} packets")
+
     # Configure AgGrid options for sorting, filtering, single row selection
     gb = GridOptionsBuilder.from_dataframe(df)
     gb.configure_pagination(paginationAutoPageSize=True)
@@ -374,7 +472,7 @@ def display_packet_table(packets: List[Packet]):
     # Display the table with modern styling
     st.markdown('<div class="packet-table-container">', unsafe_allow_html=True)
     grid_response = AgGrid(
-        df,
+        filtered_df,
         gridOptions=grid_options,
         height=300,
         width="100%",

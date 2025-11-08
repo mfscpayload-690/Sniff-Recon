@@ -886,8 +886,8 @@ def main():
             with tab3:
                 st.markdown('<div class="section-heading">EXPORT ANALYSIS RESULTS</div>', unsafe_allow_html=True)
                 save_summary(summary.to_dict(orient="records"))
-                st.markdown('<div class=\"success-message\">✅ Analysis complete! Summary saved to output/summary.json</div>', unsafe_allow_html=True)
-                col1, col2 = st.columns(2)
+                st.markdown('<div class="success-message">✅ Analysis complete! Summary saved to output/summary.json</div>', unsafe_allow_html=True)
+                col1, col2, col3 = st.columns(3)
                 with open("output/summary.json", "r") as f:
                     json_data = f.read()
                 with col1:
@@ -902,6 +902,36 @@ def main():
                 with col2:
                     if st.button("👁️ View Raw JSON"):
                         st.json(json.loads(json_data))
+
+                # --- Session Export/Import ---
+                st.markdown('<div class="section-heading">SESSION EXPORT / IMPORT</div>', unsafe_allow_html=True)
+                session_data = {
+                    "ai_responses": st.session_state.get("ai_responses", []),
+                    "user_query": st.session_state.get("user_query", ""),
+                    # Selected packets are not stored in session state, so this is a placeholder
+                    "selected_packets": st.session_state.get("selected_packets", [])
+                }
+                session_json = json.dumps(session_data, indent=4, cls=CustomJSONEncoder)
+                st.download_button(
+                    label="💾 Export Session (JSON)",
+                    data=session_json,
+                    file_name="sniff_recon_session.json",
+                    mime="application/json",
+                    key="downloadSessionJson",
+                    help="Download your entire analysis session for sharing or later review",
+                )
+
+                uploaded_session = st.file_uploader("📤 Import Session (JSON)", type=["json"], key="importSessionJson")
+                if uploaded_session is not None:
+                    try:
+                        imported_data = json.load(uploaded_session)
+                        st.session_state["ai_responses"] = imported_data.get("ai_responses", [])
+                        st.session_state["user_query"] = imported_data.get("user_query", "")
+                        st.session_state["selected_packets"] = imported_data.get("selected_packets", [])
+                        st.success("✅ Session imported successfully! UI will refresh to show restored session.")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"❌ Error importing session: {str(e)}")
             
             # Tab 4: Advanced Settings
             with tab4:

@@ -505,10 +505,42 @@ def display_packet_table(packets: List[Packet]):
     
     df = extract_packet_summary(packets)
     
-    # Display the table using Streamlit's dataframe (no PyArrow needed)
+    # --- Advanced Filtering & Search Controls ---
+    st.markdown('<div class="section-heading">FILTER & SEARCH</div>', unsafe_allow_html=True)
+    col1, col2, col3, col4, col5 = st.columns(5)
+    with col1:
+        src_ip_filter = st.text_input("Source IP", "", key="filter_src_ip")
+    with col2:
+        dst_ip_filter = st.text_input("Destination IP", "", key="filter_dst_ip")
+    with col3:
+        protocol_filter = st.selectbox("Protocol", ["Any"] + sorted(df["Protocol"].unique()), key="filter_protocol")
+    with col4:
+        port_filter = st.text_input("Port (src/dst)", "", key="filter_port")
+    with col5:
+        time_range = st.slider("Time Range", 1, len(df), (1, len(df)), key="filter_time")
+
+    search_text = st.text_input("🔍 Search Info", "", key="search_info")
+
+    # --- Filtering Logic ---
+    filtered_df = df.copy()
+    if src_ip_filter:
+        filtered_df = filtered_df[filtered_df["Source IP"].str.contains(src_ip_filter, na=False)]
+    if dst_ip_filter:
+        filtered_df = filtered_df[filtered_df["Destination IP"].str.contains(dst_ip_filter, na=False)]
+    if protocol_filter and protocol_filter != "Any":
+        filtered_df = filtered_df[filtered_df["Protocol"] == protocol_filter]
+    if port_filter:
+        filtered_df = filtered_df[filtered_df["Info"].str.contains(port_filter, na=False)]
+    # Time range filter (by packet number)
+    filtered_df = filtered_df[(filtered_df["No."] >= time_range[0]) & (filtered_df["No."] <= time_range[1])]
+    if search_text:
+        mask = filtered_df.apply(lambda row: search_text.lower() in str(row["Info"]).lower() or search_text.lower() in str(row["Source IP"]).lower() or search_text.lower() in str(row["Destination IP"]).lower(), axis=1)
+        filtered_df = filtered_df[mask]
+
+    # Display the filtered table
     st.markdown('<div class="packet-table-container">', unsafe_allow_html=True)
     st.dataframe(
-        df,
+        filtered_df,
         width='stretch',
         height=400,
         hide_index=True
@@ -567,4 +599,4 @@ def display_packet_table(packets: List[Packet]):
         render_ip_layer(pkt)
         render_transport_layer(pkt)
         render_application_layer(pkt)
-        render_hex_dump(pkt) 
+        render_hex_dump(pkt)
