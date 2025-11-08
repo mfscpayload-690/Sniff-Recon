@@ -11,7 +11,7 @@ We actively support the following versions of Sniff Recon with security updates:
 | < 1.0   | :x:                | No longer supported        |
 
 **Current stable release:** v1.0.0 (August 10, 2024)  
-**Development version:** v2.0.0 (in progress - see [ROADMAP.md](ROADMAP.md))
+**Development version:** v2.0.0 (in progress - see [ROADMAP.md](docs/ROADMAP.md))
 
 ## Reporting a Vulnerability
 
