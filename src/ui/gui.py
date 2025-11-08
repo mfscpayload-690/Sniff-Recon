@@ -734,16 +734,33 @@ def main():
     # File uploader BELOW the contextual content; add adaptive spacing when content is visible
     top_margin = "1.25rem" if st.session_state.get("show_section") else "0rem"
     st.markdown(f'<div class="fade-in-up uploader-wrapper" style="margin-top:{top_margin};">', unsafe_allow_html=True)
+    st.markdown('<div class="section-heading" style="margin-bottom:1.2rem;">\U0001F4C1 Upload Packet Capture File</div>', unsafe_allow_html=True)
+    st.caption("Quickly start your analysis by uploading a packet capture file. Supported formats: PCAP, PCAPNG, CSV, TXT (max 200MB).")
     uploaded_file = st.file_uploader(
-        label="📁 Upload Packet Capture File",
+        label="",
         type=["pcap", "pcapng", "csv", "txt"],
-        help="Supported formats: .pcap, .pcapng, .csv, .txt (Max: 200MB)",
+        help="Limit 200MB per file • PCAP, PCAPNG, CSV, TXT",
         key="fileUploader",
     )
     st.markdown('</div>', unsafe_allow_html=True)
 
     # Sidebar - only show if no file is uploaded
     if uploaded_file is None:
+        # --- Import Session Shortcut (Intro Page) ---
+        st.markdown('<div class="section-heading" style="margin-top:2.5rem;">RESUME PREVIOUS SESSION</div>', unsafe_allow_html=True)
+        # Removed soft-edged box for import session shortcut
+        st.caption("Quickly resume a previous analysis session. Upload a session JSON file exported from Sniff Recon.")
+        uploaded_session_intro = st.file_uploader("", type=["json"], key="importSessionIntro")
+        if uploaded_session_intro is not None:
+            try:
+                imported_data = json.load(uploaded_session_intro)
+                st.session_state["ai_responses"] = imported_data.get("ai_responses", [])
+                st.session_state["user_query"] = imported_data.get("user_query", "")
+                st.session_state["selected_packets"] = imported_data.get("selected_packets", [])
+                st.success("✅ Session imported successfully! UI will refresh to show restored session.")
+                st.rerun()
+            except Exception as e:
+                st.error(f"❌ Error importing session: {str(e)}")
         with st.sidebar:
             st.markdown('<h3 style="color:#00ffff; margin-bottom:1.2rem; font-family: Orbitron,sans-serif; text-align: center; text-shadow: 0 0 12px rgba(0,255,255,0.6); font-size: 1.4rem;">Quick Access</h3>', unsafe_allow_html=True)
             
