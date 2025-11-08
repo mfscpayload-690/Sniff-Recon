@@ -25,7 +25,7 @@ class CustomJSONEncoder(json.JSONEncoder):
         if o.__class__.__name__ == "EDecimal":
             return float(o)
         # Handle dataclasses (like AIResponse)
-        if is_dataclass(o):
+        if is_dataclass(o) and not isinstance(o, type):
             return asdict(o)
         return super().default(o)
 
