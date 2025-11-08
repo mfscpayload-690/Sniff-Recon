@@ -714,6 +714,66 @@ def main():
                 <p>Built with modern cybersecurity professionals in mind, it combines ease of use with powerful analysis capabilities.</p>
             </div>
         ''', unsafe_allow_html=True)
+    elif show_section == "quick_start":
+        st.markdown('<div class="answer-box fade-in-up">', unsafe_allow_html=True)
+        st.markdown('<h4>🚀 Quick Start Guide</h4>', unsafe_allow_html=True)
+        
+        st.markdown("**Step 1: Upload Your File**")
+        st.write('Click "Browse files" or drag & drop a packet capture file (PCAP, PCAPNG, CSV, or TXT format, max 200MB).')
+        
+        st.markdown("**Step 2: Analyze Packets**")
+        st.write('Navigate to the "📊 Packet Analysis" tab to view detailed packet information with advanced filtering options (IP, protocol, port, time range).')
+        
+        st.markdown("**Step 3: Use AI Analysis**")
+        st.write('Go to the "🧠 AI Analysis" tab, select your preferred AI provider (Groq, OpenAI, Anthropic, or Gemini), and ask natural language questions about your traffic.')
+        
+        st.markdown("**Step 4: Export Results**")
+        st.write('Visit the "📤 Export Results" tab to download your analysis as JSON or PDF. You can also export your entire session for later review.')
+        
+        st.markdown("**💡 Pro Tip:** Use the suggested queries in AI Analysis for instant insights, or import a previous session to continue where you left off!")
+        st.markdown('</div>', unsafe_allow_html=True)
+    elif show_section == "documentation":
+        st.markdown('<div class="answer-box fade-in-up">', unsafe_allow_html=True)
+        st.markdown('<h4>📚 Documentation & Resources</h4>', unsafe_allow_html=True)
+        
+        st.markdown("**🔰 GitHub Repository:**")
+        st.markdown('[https://github.com/mfscpayload-690/Sniff-Recon](https://github.com/mfscpayload-690/Sniff-Recon)')
+        
+        st.markdown("**🔰 Documentation:**")
+        st.write("• **Setup Guide:** Installation and configuration instructions")
+        st.write("• **Docker Deployment:** Containerized deployment options")
+        st.write("• **API Integration:** Configure AI providers (Groq, OpenAI, Anthropic, Gemini)")
+        st.write("• **Troubleshooting:** Common issues and solutions")
+        
+        st.markdown("**🔰 Contributing:**")
+        st.write("Contributions are welcome! Check out CONTRIBUTING.md in the repository for guidelines on submitting issues, feature requests, or pull requests.")
+        
+        st.markdown("**License:** Open source under the MIT License")
+        st.markdown('</div>', unsafe_allow_html=True)
+    elif show_section == "settings":
+        st.markdown('<div class="answer-box fade-in-up">', unsafe_allow_html=True)
+        st.markdown('<h4>🔧 Settings & Preferences</h4>', unsafe_allow_html=True)
+        
+        st.markdown("**AI Provider Configuration:**")
+        st.write("Configure your API keys in the `.env` file in the project root:")
+        st.write("• `GROQ_API_KEY` - Groq API key")
+        st.write("• `OPENAI_API_KEY` - OpenAI API key")
+        st.write("• `ANTHROPIC_API_KEY` - Anthropic API key")
+        st.write("• `GOOGLE_API_KEY` - Google Gemini API key")
+        
+        st.markdown("**Weighted Load Balancing:**")
+        st.write("Adjust provider weights in `.env`:")
+        st.write("• `GROQ_WEIGHT=30`")
+        st.write("• `OPENAI_WEIGHT=30`")
+        st.write("• `ANTHROPIC_WEIGHT=30`")
+        st.write("• `GEMINI_WEIGHT=35`")
+        
+        st.markdown("**Clear Cache:**")
+        st.write("To clear analysis cache, delete the `output/summary.json` file or restart the application.")
+        
+        st.markdown("**Memory Settings:**")
+        st.write("Current file size limit: 200MB (adjustable in gui.py)")
+        st.markdown('</div>', unsafe_allow_html=True)
     elif show_section and show_section.startswith("help_"):
         help_answers = {
             "help_why": ("🔹 Why use Sniff Recon?", "Quickly parse network captures and highlight patterns, anomalies, and potential security threats with AI-assisted summaries. Get instant insights without complex command-line tools."),
@@ -768,6 +828,24 @@ def main():
             if st.button("📖 About Sniff Recon", key="aboutBtn", use_container_width=True):
                 current = st.session_state.get("show_section")
                 st.session_state["show_section"] = None if current == "about" else "about"
+                st.rerun()
+            
+            # Quick Start Guide button
+            if st.button("🚀 Quick Start Guide", key="quick_start_btn", use_container_width=True):
+                current = st.session_state.get("show_section")
+                st.session_state["show_section"] = None if current == "quick_start" else "quick_start"
+                st.rerun()
+            
+            # Documentation button
+            if st.button("📚 Documentation & GitHub", key="documentation_btn", use_container_width=True):
+                current = st.session_state.get("show_section")
+                st.session_state["show_section"] = None if current == "documentation" else "documentation"
+                st.rerun()
+            
+            # Settings button
+            if st.button("🔧 Settings & Preferences", key="settings_btn", use_container_width=True):
+                current = st.session_state.get("show_section")
+                st.session_state["show_section"] = None if current == "settings" else "settings"
                 st.rerun()
             
             # Help section with questions
