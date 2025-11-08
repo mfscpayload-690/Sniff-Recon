@@ -10,6 +10,8 @@ from src.ai.ai_module import ai_engine, PacketSummary
 from scapy.packet import Packet
 import time
 import pandas as pd
+from datetime import datetime
+import os
 
 def inject_ai_interface_css():
     """Inject CSS for the AI query interface"""
@@ -336,6 +338,52 @@ def render_ai_query_interface(packets: List[Packet]):
                     """,
                     unsafe_allow_html=True
                 )
+                
+                # Add PDF Export button for this response
+                col1, col2, col3 = st.columns([1, 2, 1])
+                with col2:
+                    if st.button(f"📄 Export as PDF", key=f"export_pdf_{i}", use_container_width=True, help="Download this analysis as a professional PDF report"):
+                        try:
+                            # Import PDF exporter
+                            from src.utils.pdf_exporter import export_ai_response_to_pdf
+                            
+                            # Generate PDF
+                            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                            filename = f"sniff_recon_analysis_{timestamp}.pdf"
+                            
+                            # Prepare metadata
+                            metadata = {
+                                'ai_provider': result.get('provider', 'Local Analysis' if result.get('fallback') else 'AI'),
+                                'timestamp': datetime.now().strftime("%B %d, %Y at %I:%M %p")
+                            }
+                            
+                            # Generate PDF
+                            pdf_path = export_ai_response_to_pdf(
+                                query=query,
+                                response=result["response"],
+                                filename=filename,
+                                metadata=metadata
+                            )
+                            
+                            # Read PDF and offer download
+                            with open(pdf_path, "rb") as pdf_file:
+                                pdf_bytes = pdf_file.read()
+                                st.download_button(
+                                    label="💾 Download PDF Report",
+                                    data=pdf_bytes,
+                                    file_name=filename,
+                                    mime="application/pdf",
+                                    key=f"download_pdf_{i}",
+                                    use_container_width=True
+                                )
+                            
+                            st.success(f"✅ PDF generated successfully: {filename}")
+                        
+                        except ImportError:
+                            st.error("❌ PDF export requires 'reportlab' package. Install it with: `pip install reportlab`")
+                        except Exception as e:
+                            st.error(f"❌ Error generating PDF: {str(e)}")
+
             else:
                 # Error response
                 st.markdown(
