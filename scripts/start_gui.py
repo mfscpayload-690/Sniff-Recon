@@ -27,8 +27,8 @@ def main():
     print("=" * 50)
     
     # Check if we're in the right directory
-    if not os.path.exists("sniff_recon_gui.py"):
-        print("❌ Error: sniff_recon_gui.py not found!")
+    if not os.path.exists("src/ui/gui.py"):
+        print("❌ Error: src/ui/gui.py not found!")
         print("Make sure you're in the Sniff-Recon directory.")
         sys.exit(1)
     
@@ -45,7 +45,7 @@ def main():
     
     try:
         subprocess.run([
-            sys.executable, "-m", "streamlit", "run", "sniff_recon_gui.py",
+            sys.executable, "-m", "streamlit", "run", "src/ui/gui.py",
             "--server.headless", "true",
             "--browser.gatherUsageStats", "false"
         ])
@@ -53,7 +53,7 @@ def main():
         print("\n👋 Sniff Recon GUI stopped. Goodbye!")
     except Exception as e:
         print(f"\n❌ Error starting GUI: {e}")
-        print("Try running manually: streamlit run sniff_recon_gui.py")
+        print("Try running manually: streamlit run src/ui/gui.py")
 
 if __name__ == "__main__":
     main()

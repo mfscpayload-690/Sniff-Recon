@@ -6,7 +6,7 @@ Basic parser logic or placeholder for future expansion.
 """
 
 import re
-from utils.helpers import get_protocol_name
+from src.utils.helpers import get_protocol_name
 
 def parse_txt(file_path):
     """

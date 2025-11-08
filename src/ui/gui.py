@@ -1,8 +1,13 @@
 import streamlit as st
 import os
+import sys
 import json
 import tempfile
 import pandas as pd
+import base64
+
+# Add parent directory to path to enable absolute imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 from src.parsers.pcap_parser import parse_pcap
 from src.parsers.csv_parser import parse_csv
@@ -25,6 +30,16 @@ def save_summary(summary):
         json.dump(summary, f, indent=4, cls=CustomJSONEncoder)
 
 
+def get_video_base64():
+    """Load and encode video file as base64"""
+    video_path = os.path.join(os.path.dirname(__file__), '..', '..', 'assets', 'matrix.mp4')
+    if os.path.exists(video_path):
+        with open(video_path, 'rb') as f:
+            video_bytes = f.read()
+        return base64.b64encode(video_bytes).decode()
+    return None
+
+
 def inject_modern_css():
     st.markdown(
         """
@@ -32,18 +47,32 @@ def inject_modern_css():
         /* Fonts */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@600;700;800&display=swap');
 
-        /* ==================== ANIMATED BACKGROUND ==================== */
+        /* ==================== ANIMATED MATRIX BACKGROUND ==================== */
+        @keyframes matrix-rain {
+            0% { transform: translateY(-100%); opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+        
+        @keyframes scan-line {
+            0% { top: -10%; }
+            100% { top: 110%; }
+        }
+        
+        /* Force black background */
+        .stApp {
+            background-color: #000000 !important;
+        }
+        
         .main {
             font-family: 'Inter', sans-serif;
             position: relative;
             overflow: hidden;
-            /* Deep gradient base */
-            background: radial-gradient(ellipse at top left, #0a0f16, #101823);
+            background: #000000 !important;
             color: #e0e0e0;
             padding: 2rem;
         }
         
-        /* Vignette effect */
+        /* Animated cyan grid lines */
         .main::before {
             content: '';
             position: fixed;
@@ -51,27 +80,41 @@ def inject_modern_css():
             left: 0;
             right: 0;
             bottom: 0;
-            background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%);
+            background: 
+                repeating-linear-gradient(0deg, 
+                    transparent 0px, 
+                    rgba(0,255,255,0.1) 1px, 
+                    transparent 2px, 
+                    transparent 50px),
+                repeating-linear-gradient(90deg, 
+                    transparent 0px, 
+                    rgba(0,255,255,0.1) 1px, 
+                    transparent 2px, 
+                    transparent 50px);
+            animation: matrix-rain 15s linear infinite;
+            opacity: 0.6;
             pointer-events: none;
-            z-index: -10;
+            z-index: 1;
         }
         
-        /* Digital mesh texture overlay */
+        /* Scanning line effect */
         .main::after {
             content: '';
             position: fixed;
-            top: 0;
             left: 0;
             right: 0;
-            bottom: 0;
-            background-image: 
-                repeating-linear-gradient(0deg, rgba(0,255,255,0.03) 0px, transparent 1px, transparent 2px, rgba(0,255,255,0.03) 3px),
-                repeating-linear-gradient(90deg, rgba(0,255,255,0.03) 0px, transparent 1px, transparent 2px, rgba(0,255,255,0.03) 3px);
-            background-size: 80px 80px;
-            opacity: 0.15;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(0,255,255,0.8), transparent);
+            box-shadow: 0 0 20px rgba(0,255,255,0.6);
+            animation: scan-line 4s linear infinite;
             pointer-events: none;
-            z-index: -9;
-            animation: gridPulse 8s ease-in-out infinite;
+            z-index: 1;
+        }
+        
+        /* Make all content above background */
+        .main > div {
+            position: relative;
+            z-index: 2;
         }
         
         @keyframes gridPulse {
@@ -603,41 +646,25 @@ def main():
         f'<p class="subtitle fade-in-up" style="margin-bottom: 2rem;">{tagline_text}</p>',
         unsafe_allow_html=True
     )
-
-    # Show selected section content (ABOVE file uploader)
-    show_section = st.session_state.get("show_section")
     
-    # Display help content if a topic is selected
-    if show_section:
-        if show_section == "about":
-            st.markdown('''
-                <div class="answer-box fade-in-up">
-                    <h4>📖 About Sniff Recon</h4>
-                    <p>Sniff Recon is a powerful Streamlit-based network packet analyzer that supports PCAP, PCAPNG, CSV, and TXT file formats.</p>
-                    <p>It provides comprehensive packet analysis with optional multi-provider AI assistance, memory-aware parsing, and clear visualizations to help you investigate network traffic quickly and safely.</p>
-                    <p>Built with modern cybersecurity professionals in mind, it combines ease of use with powerful analysis capabilities.</p>
-                </div>
-            ''', unsafe_allow_html=True)
-        
-        elif show_section and show_section.startswith("help_"):
-            help_answers = {
-                "help_why": ("🔹 Why use Sniff Recon?", "Quickly parse network captures and highlight patterns, anomalies, and potential security threats with AI-assisted summaries. Get instant insights without complex command-line tools."),
-                "help_files": ("🔹 Supported File Formats", "PCAP, PCAPNG, CSV, and TXT files are supported. CSV column names are automatically mapped when possible to ensure compatibility with various export formats."),
-                "help_ai": ("🔹 AI Requirement", "No, AI is NOT required! The tool provides local statistical analysis that works perfectly without any API keys. AI features are optional enhancements."),
-                "help_size": ("🔹 File Size Limits", "Maximum file size is 200MB to protect system memory. For larger captures, prefer trimming or filtering the capture file before analysis."),
-                "help_data": ("🔹 Data Handling", "Summaries are saved to output/summary.json. All packet data is processed via temporary files and automatically cleaned up after analysis. Your data stays local and secure.")
-            }
-            
-            if show_section in help_answers:
-                title, answer = help_answers[show_section]
-                st.markdown(f'''
-                    <div class="answer-box fade-in-up">
-                        <h4>{title}</h4>
-                        <p>{answer}</p>
-                    </div>
-                ''', unsafe_allow_html=True)
+    # Initialize show_section in session state if not exists
+    if "show_section" not in st.session_state:
+        st.session_state["show_section"] = None
+    
+    # Initialize button click tracker
+    if "button_clicked" not in st.session_state:
+        st.session_state["button_clicked"] = False
+    
+    # Define callback function for button clicks
+    def set_section(section_name):
+        """Callback to set the active section"""
+        current = st.session_state.get("show_section")
+        if current == section_name:
+            st.session_state["show_section"] = None  # Toggle off
+        else:
+            st.session_state["show_section"] = section_name
 
-    # File uploader (moved after help content display)
+    # File uploader FIRST (we need to check if file is uploaded before creating sidebar)
     st.markdown('<div class="fade-in-up">', unsafe_allow_html=True)
     uploaded_file = st.file_uploader(
         label="📁 Upload Packet Capture File",
@@ -652,36 +679,61 @@ def main():
         with st.sidebar:
             st.markdown('<h3 style="color:#00ffff; margin-bottom:1.2rem; font-family: Orbitron,sans-serif; text-align: center; text-shadow: 0 0 12px rgba(0,255,255,0.6); font-size: 1.4rem;">Quick Access</h3>', unsafe_allow_html=True)
             
-            # About button with TOGGLE
-            if st.button("📖 About Sniff Recon", key="aboutBtn", use_container_width=True):
-                # Toggle: if already showing about, hide it; otherwise show it
-                current = st.session_state.get("show_section")
-                if current == "about":
-                    st.session_state["show_section"] = None  # Hide
-                else:
-                    st.session_state["show_section"] = "about"  # Show
+            # Use selectbox for topic selection - GUARANTEED to work on first click
+            topic_options = {
+                "Select a topic...": None,
+                "📖 About Sniff Recon": "about",
+                "🔹 Why use Sniff Recon?": "help_why",
+                "🔹 What files are supported?": "help_files",
+                "🔹 Is AI required?": "help_ai",
+                "🔹 File size limits?": "help_size",
+                "🔹 How is data handled?": "help_data"
+            }
             
-            # Help section with questions
-            st.markdown('<div style="margin-top: 1.5rem; padding-top: 1rem;"></div>', unsafe_allow_html=True)
-            st.markdown('<h4 style="color:#00ffff; margin-bottom:0.8rem; font-family: Orbitron,sans-serif; font-size: 1.1rem;">❓ Help Topics</h4>', unsafe_allow_html=True)
+            selected_topic = st.selectbox(
+                "Choose a help topic:",
+                options=list(topic_options.keys()),
+                key="topic_select",
+                label_visibility="collapsed"
+            )
             
-            help_questions = [
-                ("🔹 Why use Sniff Recon?", "why"),
-                ("🔹 What files are supported?", "files"),
-                ("🔹 Is AI required?", "ai"),
-                ("🔹 File size limits?", "size"),
-                ("🔹 How is data handled?", "data")
-            ]
-            
-            for question, key in help_questions:
-                if st.button(question, key=f"help_{key}", use_container_width=True):
-                    # Toggle for help questions too
-                    current = st.session_state.get("show_section")
-                    section_key = f"help_{key}"
-                    if current == section_key:
-                        st.session_state["show_section"] = None  # Hide
-                    else:
-                        st.session_state["show_section"] = section_key  # Show
+            # Update session state based on selection
+            st.session_state["show_section"] = topic_options[selected_topic]
+
+    # NOW display the selected section content (AFTER buttons have been processed)
+    show_section = st.session_state.get("show_section")
+    
+    # Display help content if a topic is selected
+    if show_section == "about":
+        st.markdown('''
+            <div class="answer-box fade-in-up">
+                <h4>📖 About Sniff Recon</h4>
+                <p>Sniff Recon is a powerful Streamlit-based network packet analyzer that supports PCAP, PCAPNG, CSV, and TXT file formats.</p>
+                <p>It provides comprehensive packet analysis with optional multi-provider AI assistance, memory-aware parsing, and clear visualizations to help you investigate network traffic quickly and safely.</p>
+                <p>Built with modern cybersecurity professionals in mind, it combines ease of use with powerful analysis capabilities.</p>
+            </div>
+        ''', unsafe_allow_html=True)
+    
+    elif show_section and show_section.startswith("help_"):
+        help_answers = {
+            "help_why": ("🔹 Why use Sniff Recon?", "Quickly parse network captures and highlight patterns, anomalies, and potential security threats with AI-assisted summaries. Get instant insights without complex command-line tools."),
+            "help_files": ("🔹 Supported File Formats", "PCAP, PCAPNG, CSV, and TXT files are supported. CSV column names are automatically mapped when possible to ensure compatibility with various export formats."),
+            "help_ai": ("🔹 AI Requirement", "No, AI is NOT required! The tool provides local statistical analysis that works perfectly without any API keys. AI features are optional enhancements."),
+            "help_size": ("🔹 File Size Limits", "Maximum file size is 200MB to protect system memory. For larger captures, prefer trimming or filtering the capture file before analysis."),
+            "help_data": ("🔹 Data Handling", "Summaries are saved to output/summary.json. All packet data is processed via temporary files and automatically cleaned up after analysis. Your data stays local and secure.")
+        }
+        
+        if show_section in help_answers:
+            title, answer = help_answers[show_section]
+            st.markdown(f'''
+                <div class="answer-box fade-in-up">
+                    <h4>{title}</h4>
+                    <p>{answer}</p>
+                </div>
+            ''', unsafe_allow_html=True)
+        else:
+            # DEBUG: Show if key not found
+            st.error(f"DEBUG: Section '{show_section}' not found in help_answers. Available keys: {list(help_answers.keys())}")
 
     # Process uploaded file
     if uploaded_file is not None:
