@@ -754,24 +754,24 @@ def main():
         st.markdown('<div class="answer-box fade-in-up">', unsafe_allow_html=True)
         st.markdown('<h4>🔧 Settings & Preferences</h4>', unsafe_allow_html=True)
         
-        st.markdown("**AI Provider Configuration:**")
+        st.markdown("**🔰 AI Provider Configuration:**")
         st.write("Configure your API keys in the `.env` file in the project root:")
         st.write("• `GROQ_API_KEY` - Groq API key")
         st.write("• `OPENAI_API_KEY` - OpenAI API key")
         st.write("• `ANTHROPIC_API_KEY` - Anthropic API key")
         st.write("• `GOOGLE_API_KEY` - Google Gemini API key")
         
-        st.markdown("**Weighted Load Balancing:**")
+        st.markdown("**🔰 Weighted Load Balancing:**")
         st.write("Adjust provider weights in `.env`:")
         st.write("• `GROQ_WEIGHT=30`")
         st.write("• `OPENAI_WEIGHT=30`")
         st.write("• `ANTHROPIC_WEIGHT=30`")
         st.write("• `GEMINI_WEIGHT=35`")
         
-        st.markdown("**Clear Cache:**")
+        st.markdown("**🔰 Clear Cache:**")
         st.write("To clear analysis cache, delete the `output/summary.json` file or restart the application.")
         
-        st.markdown("**Memory Settings:**")
+        st.markdown("**🔰 Memory Settings:**")
         st.write("Current file size limit: 200MB (adjustable in gui.py)")
         st.markdown('</div>', unsafe_allow_html=True)
     elif show_section and show_section.startswith("help_"):
