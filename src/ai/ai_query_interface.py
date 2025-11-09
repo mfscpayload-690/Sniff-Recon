@@ -204,7 +204,14 @@ def render_ai_query_interface(packets: List[Packet]):
 
     # --- AI Provider Selection ---
     from src.ai.multi_agent_ai import get_active_providers
-    provider_list = ["Groq", "OpenAI", "Anthropic", "Gemini"]
+    # Map display names to actual provider names returned by multi_agent_ai
+    provider_display_map = {
+        "Groq": "Groq",
+        "OpenAI": "OpenAI",
+        "Anthropic": "Anthropic",
+        "Google Gemini": "Google Gemini"
+    }
+    provider_list = list(provider_display_map.keys())
     active_providers = get_active_providers()
     provider_status = {p: ("🟢" if p in active_providers else "🔴") for p in provider_list}
 
@@ -223,7 +230,7 @@ def render_ai_query_interface(packets: List[Packet]):
     )
     # Extract provider name from selection
     st.session_state.selected_provider = [p for p in provider_list if p in selected][0]
-    st.caption("🟢 = active, 🔴 = unavailable | Gemini support is experimental")
+    st.caption("🟢 = active, 🔴 = unavailable")
 
     # Check API key status and show notification
     if not ai_engine.api_key_valid:

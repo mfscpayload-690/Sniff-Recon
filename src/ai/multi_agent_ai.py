@@ -343,7 +343,7 @@ class AnthropicProvider(AIProvider):
 class GoogleGeminiProvider(AIProvider):
     """Google Gemini AI Provider"""
     
-    def __init__(self, api_key: str, model_name: str = "gemini-1.5-flash"):
+    def __init__(self, api_key: str, model_name: str = "gemini-2.0-flash"):
         self.api_key = api_key
         self.model_name = model_name
         self.api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
@@ -361,19 +361,66 @@ class GoogleGeminiProvider(AIProvider):
     
     def test_connection(self) -> bool:
         try:
-            # Test with a minimal request
-            test_url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model_name}:generateContent?key={self.api_key}"
+            # First, list models to verify API key validity and available models
+            list_url = f"https://generativelanguage.googleapis.com/v1beta/models?key={self.api_key}"
+            list_resp = requests.get(list_url, timeout=10)
+            if list_resp.status_code != 200:
+                logger.warning(f"Google Gemini ListModels failed: HTTP {list_resp.status_code} {list_resp.text[:200]}")
+                return False
+
+            data = list_resp.json() or {}
+            models = data.get("models", [])
+
+            # See if configured model exists and supports generateContent
+            def supports_generate(model: dict) -> bool:
+                methods = model.get("supportedGenerationMethods", [])
+                return any(m.lower() == "generatecontent" for m in methods)
+
+            configured = next((m for m in models if m.get("name", "").endswith(self.model_name)), None)
+            if not (configured and supports_generate(configured)):
+                # Try fallback preferred models in order
+                preferred = [
+                    "gemini-2.0-flash",
+                    "gemini-2.5-flash",
+                    "gemini-2.5-pro-preview-03-25",
+                ]
+                selected = None
+                for name in preferred:
+                    m = next((mm for mm in models if mm.get("name", "").endswith(name) and supports_generate(mm)), None)
+                    if m:
+                        selected = name
+                        break
+                if selected:
+                    if selected != self.model_name:
+                        logger.info(f"Google Gemini model '{self.model_name}' not available; falling back to '{selected}'")
+                    self.model_name = selected
+                    self.api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model_name}:generateContent"
+                else:
+                    # As a last resort, pick the first model that supports generateContent
+                    any_model = next((mm for mm in models if supports_generate(mm)), None)
+                    if any_model:
+                        # names come as 'models/<name>'
+                        name = any_model.get("name", "models/gemini-2.0-flash").split("/")[-1]
+                        logger.info(f"Google Gemini selecting available model '{name}'")
+                        self.model_name = name
+                        self.api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model_name}:generateContent"
+                    else:
+                        logger.warning("Google Gemini: no models supporting generateContent available for this API key")
+                        return False
+
+            # Now test a tiny generateContent call
+            test_url = f"{self.api_url}?key={self.api_key}"
             payload = {
                 "contents": [{"parts": [{"text": "Hello"}]}],
-                "generationConfig": {"maxOutputTokens": 10}
+                "generationConfig": {"maxOutputTokens": 8}
             }
-            response = requests.post(
-                test_url,
-                headers=self.headers,
-                json=payload,
-                timeout=10
-            )
-            return response.status_code == 200
+            response = requests.post(test_url, headers=self.headers, json=payload, timeout=10)
+            if response.status_code == 200:
+                return True
+            else:
+                # Log a concise reason for diagnostics
+                logger.warning(f"Google Gemini generateContent failed (model={self.model_name}): HTTP {response.status_code} {response.text[:200]}")
+                return False
         except Exception as e:
             logger.error(f"Google Gemini connection test failed: {e}")
             return False
@@ -498,7 +545,8 @@ class MultiAgentAI:
         # Google Gemini
         google_key = os.getenv("GOOGLE_API_KEY")
         if google_key and google_key != "your_google_api_key_here":
-            google_model = os.getenv("GOOGLE_MODEL", "gemini-1.5-flash")
+            # Prefer a widely available model by default; 2.0-flash works with v1beta generateContent
+            google_model = os.getenv("GOOGLE_MODEL", "gemini-2.0-flash")
             self.providers.append(GoogleGeminiProvider(google_key, google_model))
     
     def _test_providers(self):
