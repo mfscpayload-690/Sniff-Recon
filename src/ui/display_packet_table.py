@@ -592,9 +592,24 @@ def display_packet_table(packets: List[Packet]):
         # Protocol layers section
         st.markdown('<div class="section-heading">PROTOCOL LAYER ANALYSIS</div>', unsafe_allow_html=True)
         
-        # Render each protocol layer
-        render_ethernet_layer(pkt)
-        render_ip_layer(pkt)
-        render_transport_layer(pkt)
-        render_application_layer(pkt)
-        render_hex_dump(pkt)
+        # Render protocol layers as responsive grid of cards (2 per row)
+        def render_protocol_layer_cards(packet: Packet):
+            renderers = [
+                render_ethernet_layer,
+                render_ip_layer,
+                render_transport_layer,
+                render_application_layer,
+                render_hex_dump,
+            ]
+            cols_per_row = 2
+            for i in range(0, len(renderers), cols_per_row):
+                row_renderers = renderers[i:i+cols_per_row]
+                cols = st.columns(len(row_renderers))
+                for col, renderer in zip(cols, row_renderers):
+                    with col:
+                        try:
+                            renderer(packet)
+                        except Exception as e:
+                            st.markdown(f'<div class="error-message">Error rendering layer: {str(e)}</div>', unsafe_allow_html=True)
+
+        render_protocol_layer_cards(pkt)
