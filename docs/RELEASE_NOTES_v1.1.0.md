@@ -4,7 +4,7 @@
 
 **Release Date**: November 9, 2025  
 **Commits Since v1.0.0**: 70+ commits  
-**Contributors**: Aravind Lal, Devu Krishna
+**Contributors**: [Aravind Lal](https://github.com/mfscpayload-690), [Devu Krishna](https://github.com/krizzdev7)
 
 ---
 
