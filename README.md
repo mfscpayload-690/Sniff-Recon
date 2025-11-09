@@ -232,12 +232,6 @@ pytest --cov=. --cov-report=html
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Acknowledgments 🙏
-
-- Built with [Streamlit](https://streamlit.io/) for the web interface
-- Powered by [Scapy](https://scapy.net/) for packet analysis
-- AI capabilities via [Groq](https://groq.com/), [OpenAI](https://openai.com/), and [Anthropic](https://anthropic.com/)
-
 ---
 
 **Happy Network Analysis! 🔍📊**
