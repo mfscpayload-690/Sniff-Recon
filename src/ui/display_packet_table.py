@@ -562,7 +562,6 @@ def display_packet_table(packets: List[Packet]):
         packet_row = df.iloc[selected_index]
         
         # Packet summary section
-        st.markdown('<div class="section-heading">SELECTED PACKET ANALYSIS</div>', unsafe_allow_html=True)
         st.markdown('<div class="packet-summary">', unsafe_allow_html=True)
         st.markdown('<div class="summary-grid">', unsafe_allow_html=True)
         
