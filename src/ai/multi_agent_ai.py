@@ -494,6 +494,106 @@ class GoogleGeminiProvider(AIProvider):
                 provider=self.name
             )
 
+class xAIProvider(AIProvider):
+    """xAI (Grok) Provider"""
+    
+    def __init__(self, api_key: str, model_name: str = "grok-beta"):
+        self.api_key = api_key
+        self.model_name = model_name
+        self.api_url = "https://api.x.ai/v1/chat/completions"
+        self.headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+    
+    @property
+    def name(self) -> str:
+        return "xAI"
+    
+    @property
+    def max_tokens(self) -> int:
+        return 131072  # Grok supports 128K context window
+    
+    def test_connection(self) -> bool:
+        try:
+            # Test with a minimal request
+            payload = {
+                "model": self.model_name,
+                "messages": [{"role": "user", "content": "Hello"}],
+                "max_tokens": 10,
+                "temperature": 0
+            }
+            response = requests.post(
+                self.api_url,
+                headers=self.headers,
+                json=payload,
+                timeout=10
+            )
+            if response.status_code == 200:
+                return True
+            else:
+                logger.warning(f"xAI connection test failed: HTTP {response.status_code} {response.text[:200]}")
+                return False
+        except Exception as e:
+            logger.error(f"xAI connection test failed: {e}")
+            return False
+    
+    async def query(self, prompt: str, context: Optional[str] = None) -> AIResponse:
+        start_time = time.time()
+        
+        messages = [
+            {"role": "system", "content": "You are a network security expert analyzing packet capture data. Provide detailed, actionable insights."}
+        ]
+        
+        if context:
+            messages.append({"role": "user", "content": f"Context:\n{context}"})
+        
+        messages.append({"role": "user", "content": prompt})
+        
+        payload = {
+            "model": self.model_name,
+            "messages": messages,
+            "max_tokens": 4000,
+            "temperature": 0.1,
+            "stream": False
+        }
+        
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    self.api_url,
+                    headers=self.headers,
+                    json=payload,
+                    timeout=aiohttp.ClientTimeout(total=60)
+                ) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        response_time = time.time() - start_time
+                        
+                        return AIResponse(
+                            success=True,
+                            response=data["choices"][0]["message"]["content"],
+                            provider=self.name,
+                            tokens_used=data.get("usage", {}).get("total_tokens"),
+                            response_time=response_time
+                        )
+                    else:
+                        error_text = await response.text()
+                        return AIResponse(
+                            success=False,
+                            response="",
+                            error=f"HTTP {response.status}: {error_text}",
+                            provider=self.name
+                        )
+        
+        except Exception as e:
+            return AIResponse(
+                success=False,
+                response="",
+                error=str(e),
+                provider=self.name
+            )
+
 class MultiAgentAI:
     """Multi-Agent AI System with load balancing and chunking"""
     
@@ -506,10 +606,11 @@ class MultiAgentAI:
         # Weighted load balancing configuration
         self.use_weighted_balancing = os.getenv("USE_WEIGHTED_BALANCING", "true").lower() == "true"
         self.provider_weights = {
-            "Groq": float(os.getenv("GROQ_WEIGHT", "30")),
-            "OpenAI": float(os.getenv("OPENAI_WEIGHT", "35")),
-            "Google Gemini": float(os.getenv("GEMINI_WEIGHT", "35")),
-            "Anthropic": float(os.getenv("ANTHROPIC_WEIGHT", "30"))
+            "Groq": float(os.getenv("GROQ_WEIGHT", "25")),
+            "OpenAI": float(os.getenv("OPENAI_WEIGHT", "25")),
+            "Google Gemini": float(os.getenv("GEMINI_WEIGHT", "25")),
+            "Anthropic": float(os.getenv("ANTHROPIC_WEIGHT", "20")),
+            "xAI": float(os.getenv("XAI_WEIGHT", "25"))
         }
         self.provider_usage_count = {}  # Track actual usage for self-balancing
         
@@ -548,6 +649,12 @@ class MultiAgentAI:
             # Prefer a widely available model by default; 2.0-flash works with v1beta generateContent
             google_model = os.getenv("GOOGLE_MODEL", "gemini-2.0-flash")
             self.providers.append(GoogleGeminiProvider(google_key, google_model))
+        
+        # xAI (Grok)
+        xai_key = os.getenv("XAI_API_KEY")
+        if xai_key and xai_key != "your_xai_api_key_here":
+            xai_model = os.getenv("XAI_MODEL", "grok-beta")
+            self.providers.append(xAIProvider(xai_key, xai_model))
     
     def _test_providers(self):
         """Test provider connections and populate active providers"""

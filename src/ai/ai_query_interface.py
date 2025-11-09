@@ -209,7 +209,8 @@ def render_ai_query_interface(packets: List[Packet]):
         "Groq": "Groq",
         "OpenAI": "OpenAI",
         "Anthropic": "Anthropic",
-        "Google Gemini": "Google Gemini"
+        "Google Gemini": "Google Gemini",
+        "xAI": "xAI"
     }
     provider_list = list(provider_display_map.keys())
     active_providers = get_active_providers()
@@ -483,4 +484,4 @@ def render_ai_quick_analysis(packets: List[Packet]):
             list(packet_summary.top_src_ips.items())[:5],
             columns=["IP Address", "Packet Count"]
         )
-        st.dataframe(top_src_df, width='stretch') 
+        st.dataframe(top_src_df, width='stretch')
