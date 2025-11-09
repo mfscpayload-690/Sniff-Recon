@@ -35,14 +35,6 @@ def save_summary(summary):
         json.dump(summary, f, indent=4, cls=CustomJSONEncoder)
 
 
-def get_video_base64():
-    """Load and encode video file as base64"""
-    video_path = os.path.join(os.path.dirname(__file__), '..', '..', 'assets', 'matrix.mp4')
-    if os.path.exists(video_path):
-        with open(video_path, 'rb') as f:
-            video_bytes = f.read()
-        return base64.b64encode(video_bytes).decode()
-    return None
 
 
 def inject_modern_css():
