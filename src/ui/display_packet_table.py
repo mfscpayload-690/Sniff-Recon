@@ -32,59 +32,76 @@ def inject_modern_css():
             overflow: hidden;
         }
         
-        /* Protocol layer cards */
+        /* Protocol layer cards - Enhanced with neon borders and hover effects */
         .protocol-card {
-            background: transparent;
-            border: none;
-            border-radius: 0;
-            padding: 1.5rem 0;
-            margin: 1rem 0;
-            box-shadow: none;
-            transition: none;
+            background: linear-gradient(145deg, #121822 0%, #0f1419 100%);
+            border: 1px solid rgba(0, 255, 255, 0.25);
+            border-radius: 12px;
+            box-shadow: 0 0 12px rgba(0, 255, 255, 0.15);
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease-in-out;
+            transform: scale(1);
             position: relative;
-            overflow: visible;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease forwards;
         }
         
         .protocol-card::before {
-            display: none;
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at top right, rgba(0, 255, 255, 0.03), transparent 70%);
+            pointer-events: none;
+            z-index: 0;
         }
         
         .protocol-card:hover {
-            transform: none;
-            box-shadow: none;
-            border-color: transparent;
+            transform: scale(1.03);
+            box-shadow: 0 0 18px rgba(0, 255, 255, 0.5), 0 4px 20px rgba(0, 255, 255, 0.2);
+            border-color: rgba(0, 255, 255, 0.8);
+            background: linear-gradient(145deg, #151d28 0%, #121722 100%);
         }
         
         .protocol-card:hover::before {
-            transform: none;
+            background: radial-gradient(circle at top right, rgba(0, 255, 255, 0.08), transparent 70%);
         }
         
         .protocol-header {
-            font-size: 1.25rem;
-            font-weight: 600;
+            font-size: 1.2rem;
+            font-weight: 700;
             color: #00ffff;
-            margin-bottom: 1.5rem;
-            display: inline-flex;
+            margin-bottom: 1rem;
+            display: flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.75rem 1.5rem;
-            background: rgba(0, 20, 30, 0.8);
-            border: 2px solid rgba(0, 255, 255, 0.6);
-            border-radius: 12px;
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.2);
-            backdrop-filter: blur(5px);
+            padding: 0;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+            backdrop-filter: none;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
         }
         
         .protocol-header::before {
-            content: '🔍';
+            content: '🧩';
             font-size: 1.1rem;
+            filter: drop-shadow(0 0 4px rgba(0, 255, 255, 0.8));
         }
         
         .protocol-content {
-            background: rgba(15, 15, 15, 0.5);
-            border-radius: 12px;
+            background: rgba(10, 15, 20, 0.5);
+            border-radius: 8px;
             padding: 1rem;
             border: 1px solid rgba(0, 255, 255, 0.1);
+            position: relative;
+            z-index: 1;
         }
         
         .field-row {
@@ -92,15 +109,16 @@ def inject_modern_css():
             justify-content: space-between;
             align-items: center;
             padding: 0.5rem 0;
-            border-bottom: 1px solid rgba(0, 255, 255, 0.1);
-            transition: background-color 0.2s ease;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.08);
+            transition: all 0.2s ease;
         }
         
         .field-row:hover {
-            background: rgba(0, 255, 255, 0.05);
-            border-radius: 8px;
+            background: rgba(0, 255, 255, 0.08);
+            border-radius: 6px;
             padding-left: 0.5rem;
             padding-right: 0.5rem;
+            border-bottom-color: rgba(0, 255, 255, 0.15);
         }
         
         .field-row:last-child {
@@ -109,28 +127,36 @@ def inject_modern_css():
         
         .field-label {
             font-weight: 500;
-            color: #00b3b3;
-            min-width: 120px;
+            color: #a0c8d8;
+            min-width: 140px;
+            font-size: 0.9rem;
         }
         
         .field-value {
-            color: #e0e0e0;
+            color: #e8f4ff;
             font-family: 'Courier New', monospace;
             text-align: right;
             word-break: break-all;
+            font-size: 0.95rem;
         }
         
-        /* Hex dump styling */
+        /* Hex dump styling - Enhanced monospace panel */
         .hex-dump-container {
-            background: rgba(15, 15, 15, 0.8);
-            border-radius: 12px;
+            background: #0a0f14;
+            border-radius: 10px;
             padding: 1rem;
-            border: 1px solid rgba(0, 255, 255, 0.2);
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-            line-height: 1.4;
+            border: 1px solid rgba(0, 255, 255, 0.15);
+            font-family: 'Courier New', 'Consolas', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
             max-height: 400px;
             overflow-y: auto;
+            color: #b8eaff;
+        }
+        
+        .hex-dump-container code {
+            color: #b8eaff !important;
+            background: transparent !important;
         }
         
         /* Packet summary styling */
@@ -192,27 +218,23 @@ def inject_modern_css():
             }
         }
         
-        /* Animation for cards */
+        /* Animation for cards - Enhanced entry animation */
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(30px) scale(0.98);
             }
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0) scale(1);
             }
         }
         
-        .protocol-card {
-            animation: fadeInUp 0.6s ease forwards;
-        }
-        
-        .protocol-card:nth-child(1) { animation-delay: 0.1s; }
-        .protocol-card:nth-child(2) { animation-delay: 0.2s; }
-        .protocol-card:nth-child(3) { animation-delay: 0.3s; }
-        .protocol-card:nth-child(4) { animation-delay: 0.4s; }
-        .protocol-card:nth-child(5) { animation-delay: 0.5s; }
+        .protocol-card:nth-child(1) { animation-delay: 0.05s; }
+        .protocol-card:nth-child(2) { animation-delay: 0.1s; }
+        .protocol-card:nth-child(3) { animation-delay: 0.15s; }
+        .protocol-card:nth-child(4) { animation-delay: 0.2s; }
+        .protocol-card:nth-child(5) { animation-delay: 0.25s; }
         
         /* Custom scrollbar */
         ::-webkit-scrollbar {
