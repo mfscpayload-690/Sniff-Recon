@@ -343,7 +343,7 @@ class AnthropicProvider(AIProvider):
 class GoogleGeminiProvider(AIProvider):
     """Google Gemini AI Provider"""
     
-    def __init__(self, api_key: str, model_name: str = "gemini-2.5-flash"):
+    def __init__(self, api_key: str, model_name: str = "gemini-1.5-flash"):
         self.api_key = api_key
         self.model_name = model_name
         self.api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
@@ -498,7 +498,7 @@ class MultiAgentAI:
         # Google Gemini
         google_key = os.getenv("GOOGLE_API_KEY")
         if google_key and google_key != "your_google_api_key_here":
-            google_model = os.getenv("GOOGLE_MODEL", "gemini-2.5-flash")
+            google_model = os.getenv("GOOGLE_MODEL", "gemini-1.5-flash")
             self.providers.append(GoogleGeminiProvider(google_key, google_model))
     
     def _test_providers(self):
