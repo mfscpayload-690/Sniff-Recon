@@ -506,7 +506,6 @@ def display_packet_table(packets: List[Packet]):
     df = extract_packet_summary(packets)
     
     # --- Advanced Filtering & Search Controls ---
-    st.markdown('<div class="section-heading">FILTER & SEARCH</div>', unsafe_allow_html=True)
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
         src_ip_filter = st.text_input("Source IP", "", key="filter_src_ip")

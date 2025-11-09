@@ -944,7 +944,6 @@ def main():
 
             # Tab 1: Packet analysis  
             with tab1:
-                st.markdown('<div class="section-heading">PACKET ANALYSIS</div>', unsafe_allow_html=True)
                 from src.ui.display_packet_table import display_packet_table
                 import scapy.all as scapy
                 try:
