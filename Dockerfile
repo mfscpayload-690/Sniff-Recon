@@ -23,9 +23,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application files
 COPY . .
 
-# Add src to PYTHONPATH
-# Add /app (which contains src/) to PYTHONPATH so Streamlit/app.py can import from src.*
-ENV PYTHONPATH="/app:${PYTHONPATH}"
+# Add /app to PYTHONPATH so Python can import from src/
+# No need to append to existing PYTHONPATH since base image doesn't set it
+ENV PYTHONPATH="/app"
 
 # Create output directory
 RUN mkdir -p output
