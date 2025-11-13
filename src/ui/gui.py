@@ -588,28 +588,49 @@ def inject_modern_css():
 
 
 def main():
-    # Set page config - LOCK sidebar open
+    # Set page config - sidebar auto-collapses when file uploaded
     st.set_page_config(
         page_title="Sniff Recon - Network Packet Analyzer",
         page_icon="🔍",
         layout="wide",
-        initial_sidebar_state="expanded",
+        initial_sidebar_state="auto",
     )
 
     inject_modern_css()
 
-    # Additional styles for locked sidebar and bright content
+    # Additional styles for sidebar with smooth transitions
     st.markdown('''
         <style>
-        /* LOCK SIDEBAR - Remove collapse button */
+        /* Hide collapse button - sidebar disappears on file upload instead */
         [data-testid="stSidebarCollapseButton"] {
             display: none !important;
         }
+        
+        /* Sidebar with smooth slide-in animation */
         [data-testid="stSidebar"] {
             background: linear-gradient(180deg, rgba(15,15,30,0.98) 0%, rgba(10,10,20,0.98) 100%);
-            border-right: none;
+            border-right: 2px solid rgba(0,255,255,0.2);
             min-width: 280px !important;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease !important;
         }
+        
+        /* Sidebar slide-in animation on load */
+        [data-testid="stSidebar"] {
+            animation: slideInFromLeft 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        @keyframes slideInFromLeft {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Sidebar buttons */
         [data-testid="stSidebar"] button {
             background: linear-gradient(135deg, rgba(0,180,180,0.4), rgba(0,120,120,0.4)) !important;
             border: 2px solid rgba(0,255,255,0.5) !important;
@@ -804,23 +825,9 @@ def main():
     )
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Sidebar - only show if no file is uploaded
+    # Landing page content - only show if no file is uploaded
     if uploaded_file is None:
-        # --- Import Session Shortcut (Intro Page) ---
-        st.markdown('<div class="section-heading" style="margin-top:2.5rem;">RESUME PREVIOUS SESSION</div>', unsafe_allow_html=True)
-        # Removed soft-edged box for import session shortcut
-        st.caption("Quickly resume a previous analysis session. Upload a session JSON file exported from Sniff Recon.")
-        uploaded_session_intro = st.file_uploader("", type=["json"], key="importSessionIntro")
-        if uploaded_session_intro is not None:
-            try:
-                imported_data = json.load(uploaded_session_intro)
-                st.session_state["ai_responses"] = imported_data.get("ai_responses", [])
-                st.session_state["user_query"] = imported_data.get("user_query", "")
-                st.session_state["selected_packets"] = imported_data.get("selected_packets", [])
-                st.success("✅ Session imported successfully! UI will refresh to show restored session.")
-                st.rerun()
-            except Exception as e:
-                st.error(f"❌ Error importing session: {str(e)}")
+        # Sidebar - ONLY VISIBLE ON LANDING PAGE (with smooth slide-in animation)
         with st.sidebar:
             st.markdown('<h3 style="color:#00ffff; margin-bottom:1.2rem; font-family: Orbitron,sans-serif; text-align: center; text-shadow: 0 0 12px rgba(0,255,255,0.6); font-size: 1.4rem;">Quick Access</h3>', unsafe_allow_html=True)
             
@@ -907,6 +914,22 @@ def main():
                     )
             except Exception:
                 pass
+        
+        # --- Import Session Shortcut (Intro Page) ---
+        st.markdown('<div class="section-heading" style="margin-top:2.5rem;">RESUME PREVIOUS SESSION</div>', unsafe_allow_html=True)
+        # Removed soft-edged box for import session shortcut
+        st.caption("Quickly resume a previous analysis session. Upload a session JSON file exported from Sniff Recon.")
+        uploaded_session_intro = st.file_uploader("", type=["json"], key="importSessionIntro")
+        if uploaded_session_intro is not None:
+            try:
+                imported_data = json.load(uploaded_session_intro)
+                st.session_state["ai_responses"] = imported_data.get("ai_responses", [])
+                st.session_state["user_query"] = imported_data.get("user_query", "")
+                st.session_state["selected_packets"] = imported_data.get("selected_packets", [])
+                st.success("✅ Session imported successfully! UI will refresh to show restored session.")
+                st.rerun()
+            except Exception as e:
+                st.error(f"❌ Error importing session: {str(e)}")
 
     # (Content moved above uploader; removed duplicate rendering here)
 
