@@ -598,7 +598,7 @@ def main():
 
     inject_modern_css()
 
-    # Additional styles for locked sidebar and bright content
+    # Additional styles for locked sidebar and bright content + MOBILE RESPONSIVE
     st.markdown('''
         <style>
         /* LOCK SIDEBAR - Remove collapse button */
@@ -668,6 +668,97 @@ def main():
             border-left-color: #00ffff;
             box-shadow: 0 0 10px rgba(0,255,255,0.3);
             transform: translateX(5px);
+        }
+        
+        /* ========== MOBILE RESPONSIVE FIXES ========== */
+        @media screen and (max-width: 768px) {
+            /* Sidebar: smaller width, scrollable, better spacing */
+            [data-testid="stSidebar"] {
+                min-width: 240px !important;
+                max-width: 280px !important;
+                overflow-y: auto !important;
+                padding: 0.5rem !important;
+            }
+            
+            /* Sidebar heading: smaller font */
+            [data-testid="stSidebar"] h3 {
+                font-size: 1.1rem !important;
+                margin-bottom: 0.8rem !important;
+            }
+            
+            /* Sidebar buttons: smaller, better touch targets */
+            [data-testid="stSidebar"] button {
+                padding: 0.5rem 0.7rem !important;
+                font-size: 0.85rem !important;
+                margin: 0.3rem 0 !important;
+                white-space: normal !important;
+                line-height: 1.3 !important;
+            }
+            
+            /* Buy Me a Coffee button: scale down */
+            [data-testid="stSidebar"] img[alt="Buy Me A Coffee"] {
+                height: 36px !important;
+                width: 130px !important;
+            }
+            
+            /* Main title: smaller on mobile */
+            .main-title {
+                font-size: 2rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+            
+            /* Subtitle: smaller */
+            .subtitle {
+                font-size: 0.95rem !important;
+                margin-bottom: 1rem !important;
+            }
+            
+            /* Section headings: compact */
+            .section-heading {
+                font-size: 1.3rem !important;
+                margin: 1rem 0 0.8rem 0 !important;
+            }
+            
+            /* Answer boxes: less padding */
+            .answer-box {
+                padding: 1rem !important;
+                font-size: 0.95rem !important;
+            }
+            
+            .answer-box h4 {
+                font-size: 1.1rem !important;
+            }
+            
+            /* File uploader: compact */
+            .stFileUploader {
+                padding: 1rem !important;
+            }
+            
+            /* Tabs: smaller pills, stack on small screens */
+            .stTabs [data-baseweb="tab"] {
+                padding: 0.5rem 1rem !important;
+                font-size: 0.85rem !important;
+            }
+        }
+        
+        /* Extra small phones (< 480px) */
+        @media screen and (max-width: 480px) {
+            [data-testid="stSidebar"] {
+                min-width: 200px !important;
+            }
+            
+            .main-title {
+                font-size: 1.5rem !important;
+            }
+            
+            .subtitle {
+                font-size: 0.85rem !important;
+            }
+            
+            [data-testid="stSidebar"] button {
+                font-size: 0.8rem !important;
+                padding: 0.4rem 0.6rem !important;
+            }
         }
         </style>
     ''', unsafe_allow_html=True)
