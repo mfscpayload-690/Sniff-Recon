@@ -2,6 +2,12 @@
 
 **AI-Powered Network Packet Analyzer**
 
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?logo=docker&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-GUI-FF4B4B?logo=streamlit&logoColor=white)
+![PyShark](https://img.shields.io/badge/PyShark-Packet%20Analysis-00A4EF?logo=wireshark&logoColor=white)
+![tshark](https://img.shields.io/badge/tshark-Network%20Analysis-1679A7?logo=wireshark&logoColor=white)
+
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support-yellow?logo=buymeacoffee)](https://buymeacoffee.com/mfscpayload690)
 
 Sniff Recon is a modern, multi-agent network packet analyzer with a beautiful Streamlit GUI. It supports PCAP, CSV, and TXT files, and provides natural language AI analysis using Groq, OpenAI, Google Gemini, xAI (Grok), and Anthropic.
