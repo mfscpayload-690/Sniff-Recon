@@ -7,6 +7,7 @@ import tempfile
 import pandas as pd
 import base64
 from dataclasses import asdict, is_dataclass
+from dotenv import load_dotenv
 
 # Add parent directory to path to enable absolute imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
@@ -17,6 +18,13 @@ from src.parsers.txt_parser import parse_txt
 
 # Ensure output directory exists
 os.makedirs("output", exist_ok=True)
+
+# Load environment variables (local and Docker paths)
+try:
+    load_dotenv()  # Local dev
+    load_dotenv('/app/.env')  # Docker path (mounted)
+except Exception:
+    pass
 
 
 class CustomJSONEncoder(json.JSONEncoder):
@@ -873,6 +881,32 @@ def main():
                 section_key = "help_data"
                 st.session_state["show_section"] = None if current == section_key else section_key
                 st.rerun()
+            
+            # Support / Buy Me a Coffee button at bottom of sidebar
+            st.markdown('<div style="margin-top: 2rem; padding-top: 1.5rem;"></div>', unsafe_allow_html=True)
+            st.markdown('<hr style="border: 1px solid rgba(0,255,255,0.2); margin: 1rem 0;">', unsafe_allow_html=True)
+            
+            try:
+                support_url = "https://buymeacoffee.com/mfscpayload690"
+                support_url = os.getenv("BUYMEACOFFEE_URL") or os.getenv("BMAC_URL") or support_url
+                
+                if support_url:
+                    st.markdown(
+                        '<div style="text-align:center; font-family: Inter, sans-serif; color:#cce6ff; font-size: 0.95rem; margin-bottom: 0.8rem;">Support Development</div>', 
+                        unsafe_allow_html=True
+                    )
+                    st.markdown(
+                        f'<div style="text-align:center;"><a href="{support_url}" target="_blank">'
+                        f'<img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" '
+                        f'style="height:42px;width:152px;border-radius:8px;box-shadow:0 0 10px rgba(255,255,0,0.3);display:inline-block;"/></a></div>',
+                        unsafe_allow_html=True,
+                    )
+                    st.markdown(
+                        '<div style="text-align:center; color:#99ccff; font-size: 0.85rem; margin-top: 0.6rem;">Thanks for your support ✨</div>',
+                        unsafe_allow_html=True
+                    )
+            except Exception:
+                pass
 
     # (Content moved above uploader; removed duplicate rendering here)
 

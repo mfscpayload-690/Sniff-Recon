@@ -2,6 +2,8 @@
 
 **AI-Powered Network Packet Analyzer**
 
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support-yellow?logo=buymeacoffee)](https://buymeacoffee.com/mfscpayload690)
+
 Sniff Recon is a modern, multi-agent network packet analyzer with a beautiful Streamlit GUI. It supports PCAP, CSV, and TXT files, and provides natural language AI analysis using Groq, OpenAI, Google Gemini, xAI (Grok), and Anthropic.
 
 ## Features
@@ -31,6 +33,8 @@ cd Sniff-Recon
 # GOOGLE_API_KEY=...
 # XAI_API_KEY=...
 # ANTHROPIC_API_KEY=...
+# Optional: show donation button in the app sidebar
+# BUYMEACOFFEE_URL=https://buymeacoffee.com/your-handle
 
 docker-compose up -d
 # Or: .\docker-start.ps1 (Windows)
@@ -126,3 +130,12 @@ MIT License. See [LICENSE](LICENSE).
 ---
 
 Made with ❤️ by the Sniff Recon Team
+
+## Support the Project
+
+If you find Sniff Recon useful, you can support ongoing development:
+
+- Set BUYMEACOFFEE_URL in your `.env` to display a donation button in the app sidebar.
+- Replace the badge link at the top of this README with your actual Buy Me a Coffee URL.
+
+Thank you for your support!

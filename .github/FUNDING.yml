@@ -1,0 +1,11 @@
+# GitHub funding configuration
+# Set your donation URL below to enable the Sponsor button on GitHub
+# Supported: GitHub Sponsors, Patreon, OpenCollective, Ko-fi, Tidelift, Community Bridge, Liberapay, IssueHunt, Otechie, Custom URLs
+# Docs: https://docs.github.com/en/sponsors/getting-started-with-github-sponsors/setting-up-your-sponsors-profile#about-funding-links
+
+# Example: github: mfscpayload-690
+# github:
+
+# Example: custom donation link (e.g., Buy Me a Coffee)
+custom:
+  - https://buymeacoffee.com/mfscpayload690
