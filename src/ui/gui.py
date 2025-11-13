@@ -712,6 +712,10 @@ def main():
     if "button_clicked" not in st.session_state:
         st.session_state["button_clicked"] = False
     
+    # Hide developer-only settings in hosted/web deployments by default.
+    # Toggle by setting environment variable SHOW_DEV_SETTINGS=true
+    show_dev_settings = str(os.getenv("SHOW_DEV_SETTINGS", "false")).lower() in ("1", "true", "yes", "on")
+    
     # Define callback function for button clicks
     def set_section(section_name):
         """Callback to set the active section"""
@@ -757,9 +761,8 @@ def main():
         st.markdown('<div class="answer-box fade-in-up">', unsafe_allow_html=True)
         st.markdown('<h4>📚 Documentation & Resources</h4>', unsafe_allow_html=True)
         
-        st.markdown("**🔰 GitHub Repository:**")
-        st.markdown('[https://github.com/mfscpayload-690/Sniff-Recon](https://github.com/mfscpayload-690/Sniff-Recon)')
-        
+        st.markdown("**🔰 GitHub Repository:** [https://github.com/mfscpayload-690/Sniff-Recon](https://github.com/mfscpayload-690/Sniff-Recon)")
+
         st.markdown("**🔰 Documentation:**")
         st.write("• **Setup Guide:** Installation and configuration instructions")
         st.write("• **Docker Deployment:** Containerized deployment options")
@@ -771,7 +774,7 @@ def main():
         
         st.markdown("**License:** Open source under the MIT License")
         st.markdown('</div>', unsafe_allow_html=True)
-    elif show_section == "settings":
+    elif show_section == "settings" and show_dev_settings:
         st.markdown('<div class="answer-box fade-in-up">', unsafe_allow_html=True)
         st.markdown('<h4>🔧 Settings & Preferences</h4>', unsafe_allow_html=True)
         
@@ -849,11 +852,12 @@ def main():
                 st.session_state["show_section"] = None if current == "documentation" else "documentation"
                 st.rerun()
             
-            # Settings button
-            if st.button("🔧 Settings & Preferences", key="settings_btn", use_container_width=True):
-                current = st.session_state.get("show_section")
-                st.session_state["show_section"] = None if current == "settings" else "settings"
-                st.rerun()
+            # Settings button (hidden by default in hosted/web deployments)
+            if show_dev_settings:
+                if st.button("🔧 Settings & Preferences", key="settings_btn", use_container_width=True):
+                    current = st.session_state.get("show_section")
+                    st.session_state["show_section"] = None if current == "settings" else "settings"
+                    st.rerun()
             
             # Help section with questions
             st.markdown('<div style="margin-top: 1.5rem; padding-top: 1rem;"></div>', unsafe_allow_html=True)
