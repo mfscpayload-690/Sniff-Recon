@@ -158,11 +158,4 @@ MIT License. See [LICENSE](LICENSE).
 
 Made with ❤️ by the Sniff Recon Team
 
-## Support the Project
-
-If you find Sniff Recon useful, you can support ongoing development:
-
-- Set BUYMEACOFFEE_URL in your `.env` to display a donation button in the app sidebar.
-- Replace the badge link at the top of this README with your actual Buy Me a Coffee URL.
-
 Thank you for your support!
