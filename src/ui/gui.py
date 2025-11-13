@@ -772,7 +772,7 @@ def main():
         st.markdown("**🔰 Contributing:**")
         st.write("Contributions are welcome! Check out CONTRIBUTING.md in the repository for guidelines on submitting issues, feature requests, or pull requests.")
         
-        st.markdown("**License:** Open source under the MIT License")
+        st.markdown("**🔰 License:** Open source under the MIT License")
         st.markdown('</div>', unsafe_allow_html=True)
     elif show_section == "settings" and show_dev_settings:
         st.markdown('<div class="answer-box fade-in-up">', unsafe_allow_html=True)

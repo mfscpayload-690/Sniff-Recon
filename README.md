@@ -27,7 +27,17 @@ Sniff Recon is a modern, multi-agent network packet analyzer with a beautiful St
 
 ## Quick Start
 
-### Docker (Recommended)
+### 🌐 Live Web App (Easiest)
+
+**Try it instantly - no installation required:**
+
+👉 **[https://sniff-recon.up.railway.app](https://sniff-recon.up.railway.app)**
+
+Simply upload your PCAP, CSV, or TXT file and start analyzing! The web app is fully functional with AI-powered analysis.
+
+---
+
+### 🐳 Docker (Self-Hosted)
 
 ```bash
 git clone https://github.com/mfscpayload-690/Sniff-Recon.git
@@ -39,8 +49,6 @@ cd Sniff-Recon
 # GOOGLE_API_KEY=...
 # XAI_API_KEY=...
 # ANTHROPIC_API_KEY=...
-# Optional: show donation button in the app sidebar
-# BUYMEACOFFEE_URL=https://buymeacoffee.com/your-handle
 
 docker-compose up -d
 # Or: .\docker-start.ps1 (Windows)
@@ -57,14 +65,27 @@ docker-compose restart              # Restart the container
 docker-compose up -d --build        # Rebuild after code changes
 ```
 
-### Local Development
+---
+
+### 💻 Local Development
 
 ```bash
+git clone https://github.com/mfscpayload-690/Sniff-Recon.git
+cd Sniff-Recon
+
+# Create virtual environment
 python -m venv .venv
 .venv\Scripts\activate  # Windows
 # or: source .venv/bin/activate  # Linux/Mac
+
+# Install dependencies
 pip install -r requirements.txt
+
+# Run the app
 python start_gui.py
+# Or: streamlit run app.py
+
+# Access at http://localhost:8501
 ```
 
 ## Usage
