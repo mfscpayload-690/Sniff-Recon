@@ -31,9 +31,9 @@ docker-compose up --build -d
 
 ### 1️⃣ Make Your UI Changes
 Edit any of these files:
-- `sniff_recon_gui.py` - Main UI and CSS
-- `display_packet_table.py` - Packet table styling
-- `ai_query_interface.py` - AI interface styling
+- `src/ui/gui.py` - Main UI and CSS
+- `src/ui/display_packet_table.py` - Packet table styling
+- `src/ui/ui_packet_viewer.py` - Packet inspection interface
 
 ### 2️⃣ Test in Docker
 ```powershell

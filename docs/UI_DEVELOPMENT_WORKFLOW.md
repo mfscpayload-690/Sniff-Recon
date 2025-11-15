@@ -34,20 +34,20 @@ git merge origin/main  # Merge main into your branch
 
 ### 2. Make Your UI Changes
 Work on any of these UI files:
-- `sniff_recon_gui.py` - Main GUI layout and styling
-- `display_packet_table.py` - Packet table UI components
-- `ai_query_interface.py` - AI chat interface
+- `src/ui/gui.py` - Main GUI layout and styling
+- `src/ui/display_packet_table.py` - Packet table UI components
+- `src/ui/ui_packet_viewer.py` - Packet inspection interface
 - CSS in any `inject_*_css()` functions
 
 ### 3. Test Your Changes Locally
 ```powershell
-# Option 1: Run with Python
-python start_gui.py
+# Option 1: Run with Python (recommended)
+python scripts/start_gui.py
 
 # Option 2: Run with Streamlit directly
-streamlit run sniff_recon_gui.py
+streamlit run app.py
 
-# Option 3: Test in Docker
+# Option 3: Test in Docker (production-like environment)
 docker-compose up --build
 ```
 

@@ -24,13 +24,14 @@
 ```bash
 # Setup virtual environment
 python3 -m venv venv_gui
-source venv_gui/bin/activate
+source venv_gui/bin/activate  # Linux/Mac
+# or: venv_gui\Scripts\activate  # Windows
 pip install -r requirements.txt
 
 # Launch GUI
-./run_gui.sh
+python scripts/start_gui.py
 # or
-python start_gui.py
+streamlit run app.py
 ```
 
 ### 📋 What You Get

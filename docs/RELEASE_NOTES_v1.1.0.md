@@ -170,7 +170,7 @@ pip install -r requirements.txt
 # Launch GUI
 python scripts/start_gui.py
 # or
-streamlit run src/ui/gui.py
+streamlit run app.py
 ```
 
 ---

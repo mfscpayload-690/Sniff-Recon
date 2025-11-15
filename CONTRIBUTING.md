@@ -66,7 +66,7 @@ We welcome code contributions! Areas where help is especially appreciated:
    git checkout -b feature/your-awesome-feature
    ```
 3. **Make your changes** following our coding standards (see below)
-4. **Test your changes** locally (use `start_gui.py` or Docker)
+4. **Test your changes** locally (use `python scripts/start_gui.py` or Docker)
 5. **Commit your changes** with descriptive messages (see commit guidelines)
 6. **Push to your fork** and create a Pull Request
 7. **Respond to review feedback** - we'll work together to get it merged!
@@ -139,7 +139,7 @@ We welcome code contributions! Areas where help is especially appreciated:
 - **AI modules**: `src/ai/` (multi-agent system, query functions)
 - **UI components**: `src/ui/` (Streamlit pages, display functions)
 - **Utilities**: `src/utils/` (shared helpers)
-- **Scripts**: `scripts/` (Docker helpers, dev tools)
+- **Scripts**: `scripts/` (Docker helpers, dev tools, start_gui.py)
 - **Tests**: `tests/` (pytest test files)
 
 ## Commit Message Guidelines
@@ -195,7 +195,7 @@ git commit -m "updated files"
 - [ ] Code follows PEP 8 and project conventions
 - [ ] Type hints added for all functions
 - [ ] Scapy layer checks used (if working with packets)
-- [ ] Tested locally (both `start_gui.py` and Docker)
+- [ ] Tested locally (both `python scripts/start_gui.py` and Docker)
 - [ ] Documentation updated (if needed)
 - [ ] Commit messages follow Conventional Commits
 - [ ] No merge conflicts with `main`
@@ -218,7 +218,7 @@ python -m venv .venv
 pip install -r requirements.txt
 
 # Run the app
-python start_gui.py
+python scripts/start_gui.py
 # or: streamlit run app.py
 ```
 
