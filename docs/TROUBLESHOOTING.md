@@ -76,7 +76,11 @@ This guide helps resolve common issues with Sniff Recon's GUI application.
 
 3. Restart the application:
    ```bash
-   streamlit run sniff_recon_gui.py
+   # Using the launcher script
+   python scripts/start_gui.py
+   
+   # Or directly with Streamlit
+   streamlit run app.py
    ```
 
 ### 3. Import Errors
@@ -127,7 +131,7 @@ This guide helps resolve common issues with Sniff Recon's GUI application.
    ```
 2. Try a different port:
    ```bash
-   streamlit run sniff_recon_gui.py --server.port 8502
+   streamlit run app.py --server.port 8502
    ```
 3. Clear browser cache and cookies
 4. Try accessing directly: `http://localhost:8501`

@@ -35,7 +35,11 @@ This guide will help you set up the AI-powered packet analysis features in Sniff
 
 ### Launch the GUI
 ```bash
-streamlit run sniff_recon_gui.py
+# Using the launcher script (recommended)
+python scripts/start_gui.py
+
+# Or run directly with Streamlit
+streamlit run app.py
 ```
 
 The application will open at `http://localhost:8501` in your web browser.
@@ -55,7 +59,7 @@ The application will open at `http://localhost:8501` in your web browser.
 ### GUI Loading Issues
 - Ensure Streamlit is installed: `pip install streamlit`
 - Check if port 8501 is available
-- Try running with a specific port: `streamlit run sniff_recon_gui.py --server.port 8502`
+- Try running with a specific port: `streamlit run app.py --server.port 8502`
 
 ### File Upload Issues
 - Supports `.pcap`, `.pcapng`, `.csv`, and `.txt` files

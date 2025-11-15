@@ -82,7 +82,7 @@ python -m venv .venv
 pip install -r requirements.txt
 
 # Run the app
-python start_gui.py
+python scripts/start_gui.py
 # Or: streamlit run app.py
 
 # Access at http://localhost:8501
@@ -119,22 +119,30 @@ Streamlit GUI → Parser Layer → Multi-Agent AI → Scapy Packet Analysis
 - AI not working: Verify API keys in `.env`
 - Docker issues: `docker-compose logs -f`
 
-See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for more.
+See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for more.
 
 ## Project Structure
 
 ```
 Sniff-Recon/
-├── sniff_recon_gui.py          # Main Streamlit app
-├── src/ai/multi_agent_ai.py    # Multi-provider AI system
-├── src/ai/ai_module.py         # Fallback AI + packet filtering
-├── src/ui/display_packet_table.py # AgGrid tables
-├── src/ai/ai_query_interface.py   # AI chat interface
-├── parsers/                    # Format-specific parsers
-├── utils/                      # Helper functions
+├── app.py                      # Main application entry point
+├── src/
+│   ├── ui/
+│   │   ├── gui.py              # Main Streamlit GUI
+│   │   ├── display_packet_table.py # AgGrid tables
+│   │   └── ui_packet_viewer.py # Packet inspection UI
+│   ├── ai/
+│   │   ├── multi_agent_ai.py   # Multi-provider AI system
+│   │   └── ai_module.py        # Fallback AI + packet filtering
+│   ├── parsers/                # Format-specific parsers
+│   └── utils/                  # Helper functions
+├── scripts/
+│   ├── start_gui.py            # GUI launcher script
+│   ├── docker-start.ps1        # Docker start helper
+│   └── docker-stop.ps1         # Docker stop helper
 ├── Dockerfile                  # Container image
 ├── docker-compose.yml          # Orchestration
-├── requirements.txt            # Python dependencies
+└── requirements.txt            # Python dependencies
 ```
 
 ## Security

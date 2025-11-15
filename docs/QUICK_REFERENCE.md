@@ -15,7 +15,7 @@ git push origin front-end-test      # ⚠️ ALWAYS push to front-end-test!
 
 ## � Docker-First Workflow (4 Steps)
 
-1. **Make UI changes** → Edit CSS/layout in `sniff_recon_gui.py`, `display_packet_table.py`, etc.
+1. **Make UI changes** → Edit CSS/layout in `src/ui/gui.py`, `src/ui/display_packet_table.py`, etc.
 2. **Test in Docker** → `docker-compose up --build -d` (rebuilds with your changes)
 3. **Verify** → Open http://localhost:8501 and test your UI changes
 4. **Commit & Push** → `git add .` → `git commit -m "UI: description"` → `git push origin front-end-test`
@@ -43,9 +43,10 @@ docker ps                       # Check if container is running
 
 | File | What It Does |
 |------|-------------|
-| `sniff_recon_gui.py` | Main UI, CSS, file uploader, tabs |
-| `display_packet_table.py` | Packet table styling, protocol cards |
-| `ai_query_interface.py` | AI chat interface styling |
+| `src/ui/gui.py` | Main UI, CSS, file uploader, tabs |
+| `src/ui/display_packet_table.py` | Packet table styling, protocol cards |
+| `src/ui/ui_packet_viewer.py` | Packet inspection interface |
+| `app.py` | Application entry point |
 
 ## 🎨 Current Color Scheme
 

@@ -32,10 +32,10 @@ The following CLI files have been removed:
 pip install -r requirements.txt
 
 # Launch the GUI (recommended)
-python start_gui.py
+python scripts/start_gui.py
 
 # Or start directly with Streamlit
-streamlit run sniff_recon_gui.py
+streamlit run app.py
 ```
 
 ### Access the Application
