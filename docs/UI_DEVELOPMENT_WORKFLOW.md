@@ -200,21 +200,21 @@ git reset --hard HEAD~1
 
 ### Files You'll Primarily Work On
 
-1. **`sniff_recon_gui.py`** (Lines 26-220)
+1. **`src/ui/gui.py`** (Main GUI file)
    - Main CSS injection function `inject_modern_css()`
    - Global styles, color schemes, animations
    - File uploader styling
    - Tab styling
 
-2. **`display_packet_table.py`** (Lines 10-100)
+2. **`src/ui/display_packet_table.py`**
    - Packet table CSS
    - Protocol card styling
    - Interactive elements
 
-3. **`ai_query_interface.py`** (Lines 10-100)
-   - AI chat interface CSS
-   - Query input styling
-   - Response containers
+3. **`src/ui/ui_packet_viewer.py`**
+   - Packet inspection interface
+   - Layer-by-layer display
+   - Protocol-specific rendering
 
 ### Design System (Current Theme)
 ```css
