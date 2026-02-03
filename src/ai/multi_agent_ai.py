@@ -594,6 +594,169 @@ class xAIProvider(AIProvider):
                 provider=self.name
             )
 
+class OllamaProvider(AIProvider):
+    """Ollama Local LLM Provider - Fully Offline AI Analysis"""
+    
+    def __init__(self, api_key: str = "", model_name: str = "qwen2.5-coder:7b", base_url: str = "http://localhost:11434"):
+        """
+        Initialize Ollama provider for local LLM inference.
+        
+        Args:
+            api_key: Ignored (for interface compatibility), Ollama runs locally
+            model_name: Model to use (e.g., qwen2.5-coder:7b, llama3:8b, codellama:13b)
+            base_url: Ollama API endpoint (default: http://localhost:11434)
+        """
+        self.api_key = api_key  # Stored but not used (local access only)
+        self.model_name = model_name
+        self.base_url = base_url.rstrip('/')
+        self.api_url = f"{self.base_url}/api/chat"
+        self.headers = {
+            "Content-Type": "application/json"
+        }
+    
+    @property
+    def name(self) -> str:
+        return "Ollama (Local)"
+    
+    @property
+    def max_tokens(self) -> int:
+        # Conservative default for local models
+        # Can be overridden based on model size
+        return 4096
+    
+    def test_connection(self) -> bool:
+        """Test if Ollama daemon is running and model is available"""
+        try:
+            # First, check if Ollama is running
+            tags_url = f"{self.base_url}/api/tags"
+            response = requests.get(tags_url, timeout=5)
+            
+            if response.status_code != 200:
+                logger.warning(f"Ollama daemon not responding: HTTP {response.status_code}")
+                return False
+            
+            # Check if configured model exists
+            data = response.json()
+            models = data.get("models", [])
+            
+            # Model names in Ollama API response have format "name:tag"
+            model_exists = any(
+                m.get("name", "").startswith(self.model_name.split(':')[0])
+                for m in models
+            )
+            
+            if not model_exists:
+                logger.warning(
+                    f"Ollama model '{self.model_name}' not found. "
+                    f"Available models: {[m.get('name') for m in models]}"
+                )
+                logger.info(f"To install: ollama pull {self.model_name}")
+                return False
+            
+            logger.info(f"✅ Ollama provider ready with model '{self.model_name}'")
+            return True
+            
+        except requests.exceptions.ConnectionError:
+            logger.warning(
+                "Ollama daemon not running. Start with: ollama serve"
+            )
+            return False
+        except Exception as e:
+            logger.error(f"Ollama connection test failed: {e}")
+            return False
+    
+    async def query(self, prompt: str, context: Optional[str] = None) -> AIResponse:
+        """Query Ollama local LLM with packet analysis context"""
+        start_time = time.time()
+        
+        # Build messages in OpenAI-compatible format (Ollama supports this)
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a network security expert analyzing packet capture data. Provide detailed, actionable insights."
+            }
+        ]
+        
+        if context:
+            messages.append({"role": "user", "content": f"Context:\n{context}"})
+        
+        messages.append({"role": "user", "content": prompt})
+        
+        payload = {
+            "model": self.model_name,
+            "messages": messages,
+            "stream": False,  # Non-streaming for simplicity
+            "options": {
+                "temperature": 0.1,
+                "num_predict": 4000  # Ollama equivalent of max_tokens
+            }
+        }
+        
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    self.api_url,
+                    headers=self.headers,
+                    json=payload,
+                    timeout=aiohttp.ClientTimeout(total=120)  # Local LLM may be slower
+                ) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        response_time = time.time() - start_time
+                        
+                        # Extract response from Ollama format
+                        response_text = data.get("message", {}).get("content", "")
+                        
+                        # Estimate token usage (Ollama doesn't report exact tokens)
+                        eval_count = data.get("eval_count", 0)
+                        prompt_eval_count = data.get("prompt_eval_count", 0)
+                        tokens_used = eval_count + prompt_eval_count if eval_count else len(response_text) // 4
+                        
+                        return AIResponse(
+                            success=True,
+                            response=response_text,
+                            provider=self.name,
+                            tokens_used=tokens_used,
+                            response_time=response_time
+                        )
+                    else:
+                        error_text = await response.text()
+                        
+                        # Parse Ollama-specific errors
+                        if "model" in error_text.lower() and "not found" in error_text.lower():
+                            error_msg = f"Model '{self.model_name}' not found. Run: ollama pull {self.model_name}"
+                        else:
+                            error_msg = f"HTTP {response.status}: {error_text[:200]}"
+                        
+                        return AIResponse(
+                            success=False,
+                            response="",
+                            error=error_msg,
+                            provider=self.name
+                        )
+        
+        except asyncio.TimeoutError:
+            return AIResponse(
+                success=False,
+                response="",
+                error="Ollama request timed out (>120s). Model may be too large or system overloaded.",
+                provider=self.name
+            )
+        except aiohttp.ClientConnectorError:
+            return AIResponse(
+                success=False,
+                response="",
+                error="Cannot connect to Ollama. Ensure Ollama is running: ollama serve",
+                provider=self.name
+            )
+        except Exception as e:
+            return AIResponse(
+                success=False,
+                response="",
+                error=str(e),
+                provider=self.name
+            )
+
 class MultiAgentAI:
     """Multi-Agent AI System with load balancing and chunking"""
     
@@ -655,6 +818,14 @@ class MultiAgentAI:
         if xai_key and xai_key != "your_xai_api_key_here":
             xai_model = os.getenv("XAI_MODEL", "grok-beta")
             self.providers.append(xAIProvider(xai_key, xai_model))
+        
+        # Ollama (Local LLM) - No API key required
+        ollama_enabled = os.getenv("OLLAMA_ENABLED", "false").lower() == "true"
+        if ollama_enabled:
+            ollama_model = os.getenv("OLLAMA_MODEL", "qwen2.5-coder:7b")
+            ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+            self.providers.append(OllamaProvider("", ollama_model, ollama_base_url))
+            logger.info(f"Ollama provider configured with model '{ollama_model}'")
     
     def _test_providers(self):
         """Test provider connections and populate active providers"""
@@ -993,6 +1164,91 @@ Protocol Distribution:
         
         return final_responses
     
+    async def query_with_explicit_provider(self, prompt: str, packets: List[Packet], provider_name: str) -> List[AIResponse]:
+        """
+        Query a specific AI provider explicitly, bypassing load balancing and failover.
+        Used when user explicitly selects a provider (e.g., "Local LLM Only" mode).
+        
+        Args:
+            prompt: User's analysis query
+            packets: List of packets to analyze
+            provider_name: Exact provider name to use (e.g., "Ollama (Local)", "Groq", "OpenAI")
+        
+        Returns:
+            List of AIResponse objects (one per chunk)
+        """
+        # Find the requested provider
+        selected_provider = None
+        for provider in self.active_providers:
+            if provider.name == provider_name:
+                selected_provider = provider
+                break
+        
+        if not selected_provider:
+            # Provider not active
+            available = [p.name for p in self.active_providers]
+            return [AIResponse(
+                success=False,
+                response="",
+                error=f"Provider '{provider_name}' is not active. Available providers: {', '.join(available)}"
+            )]
+        
+        logger.info(f"Explicit provider mode: Using only '{provider_name}'")
+        
+        # Split into chunks (same logic as normal query)
+        chunks = self.chunk_packets(packets)
+        
+        if not chunks:
+            return [AIResponse(
+                success=False,
+                response="",
+                error="No valid packet data to analyze"
+            )]
+        
+        logger.info(f"Processing {len(chunks)} chunks with explicit provider: {provider_name}")
+        
+        # Process all chunks with the selected provider (NO FAILOVER)
+        tasks = []
+        for chunk in chunks:
+            context = self._format_chunk_context(chunk)
+            
+            async def query_single_provider(p, pr, ctx, ch):
+                """Query single provider without failover"""
+                try:
+                    response = await p.query(pr, ctx)
+                    response.chunk_id = ch.chunk_id
+                    response.provider = response.provider or p.name
+                    return response
+                except Exception as e:
+                    return AIResponse(
+                        success=False,
+                        response="",
+                        error=str(e),
+                        provider=p.name,
+                        chunk_id=ch.chunk_id
+                    )
+            
+            tasks.append(query_single_provider(selected_provider, prompt, context, chunk))
+        
+        # Execute all queries
+        responses = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Handle exceptions
+        final_responses = []
+        for i, response in enumerate(responses):
+            if isinstance(response, Exception):
+                final_responses.append(AIResponse(
+                    success=False,
+                    response="",
+                    error=str(response),
+                    chunk_id=chunks[i].chunk_id if i < len(chunks) else None,
+                    provider=provider_name
+                ))
+            else:
+                final_responses.append(response)
+        
+        return final_responses
+    
     def combine_responses(self, responses: List[AIResponse]) -> str:
         """Combine multiple chunk responses into a coherent analysis"""
         successful_responses = [r for r in responses if r.success]
@@ -1033,19 +1289,26 @@ multi_agent = MultiAgentAI()
 
 # Convenience functions for backward compatibility
 async def query_ai_async(prompt: str, packets: List[Packet], provider_name: Optional[str] = None) -> Dict[str, Any]:
-    """Async query function with provider selection"""
-    if provider_name:
-        # Filter to only the selected provider
-        selected = [p for p in multi_agent.active_providers if p.name == provider_name]
-        if selected:
-            original = multi_agent.active_providers
-            multi_agent.active_providers = selected
-            responses = await multi_agent.query(prompt, packets)
-            multi_agent.active_providers = original
-        else:
-            responses = await multi_agent.query(prompt, packets)
+    """
+    Async query function with provider selection support
+    
+    Args:
+        prompt: User's analysis query
+        packets: List of packets to analyze
+        provider_name: Optional provider name for explicit routing (e.g., "Ollama (Local)", "Groq")
+                      If "Auto (Load Balanced)", uses regular load-balanced routing
+                      If specific provider name, uses explicit provider routing (no failover)
+    """
+    # Determine routing strategy based on provider_name
+    if provider_name and provider_name != "Auto (Load Balanced)":
+        # Explicit provider mode - route to specific provider only
+        logger.info(f"Using explicit provider routing: {provider_name}")
+        responses = await multi_agent.query_with_explicit_provider(prompt, packets, provider_name)
     else:
+        # Auto mode - use load balancing and failover
+        logger.info("Using auto load-balanced routing")
         responses = await multi_agent.query(prompt, packets)
+    
     combined_response = multi_agent.combine_responses(responses)
     return {
         "success": any(r.success for r in responses),
