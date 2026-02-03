@@ -62,9 +62,11 @@ We welcome code contributions! Areas where help is especially appreciated:
 
 1. **Fork the repository** and clone your fork locally
 2. **Create a feature branch** from `main`:
+
    ```bash
    git checkout -b feature/your-awesome-feature
    ```
+
 3. **Make your changes** following our coding standards (see below)
 4. **Test your changes** locally (use `python scripts/start_gui.py` or Docker)
 5. **Commit your changes** with descriptive messages (see commit guidelines)
@@ -77,6 +79,7 @@ We welcome code contributions! Areas where help is especially appreciated:
 
 - **PEP 8 compliant**: Use 4 spaces for indentation, 79-character line limit where reasonable
 - **Type hints**: Always use type hints for function parameters and return values
+
   ```python
   # Good ✅
   def parse_pcap(file_path: str) -> pd.DataFrame:
@@ -86,14 +89,18 @@ We welcome code contributions! Areas where help is especially appreciated:
   def parse_pcap(file_path):
       ...
   ```
+
 - **Optional types**: Use `Optional[Type]` for nullable parameters
+
   ```python
   from typing import Optional
   
   def query(prompt: str, context: Optional[str] = None) -> str:
       ...
   ```
+
 - **Docstrings**: Use Google-style docstrings for functions and classes
+
   ```python
   def filter_suspicious_packets(packets: list) -> list:
       """Filter packets based on suspicious patterns.
@@ -109,6 +116,7 @@ We welcome code contributions! Areas where help is especially appreciated:
 ### Project-Specific Patterns
 
 - **Scapy layer checks**: ALWAYS check layer presence before accessing
+
   ```python
   # Good ✅
   if IP in pkt:
@@ -119,6 +127,7 @@ We welcome code contributions! Areas where help is especially appreciated:
   ```
 
 - **Streamlit state management**: Clear temporary state before `st.rerun()`
+
   ```python
   # Good ✅
   st.session_state.user_query = query
@@ -147,6 +156,7 @@ We welcome code contributions! Areas where help is especially appreciated:
 We follow **Conventional Commits** for clear git history:
 
 ### Format
+
 ```
 <type>(<scope>): <subject>
 
@@ -156,6 +166,7 @@ We follow **Conventional Commits** for clear git history:
 ```
 
 ### Types
+
 - `feat`: New feature (e.g., `feat(ai): add Gemini provider support`)
 - `fix`: Bug fix (e.g., `fix(parser): handle empty CSV files`)
 - `docs`: Documentation only (e.g., `docs: update ROADMAP.md`)
@@ -165,6 +176,7 @@ We follow **Conventional Commits** for clear git history:
 - `chore`: Build/tooling changes (e.g., `chore: update Docker config`)
 
 ### Examples
+
 ```bash
 # Good ✅
 git commit -m "feat(parser): add support for pcapng format"
@@ -192,6 +204,7 @@ git commit -m "updated files"
 7. **Respond to feedback** - we'll iterate together until it's ready!
 
 ### PR Checklist
+
 - [ ] Code follows PEP 8 and project conventions
 - [ ] Type hints added for all functions
 - [ ] Scapy layer checks used (if working with packets)
@@ -238,13 +251,39 @@ docker-compose down
 ### AI Provider Setup (Optional)
 
 Create `.env` file in project root:
+
 ```bash
+# Cloud AI Providers (Optional)
 GROQ_API_KEY=your_key_here
 OPENAI_API_KEY=your_key_here
 ANTHROPIC_API_KEY=your_key_here
+GOOGLE_API_KEY=your_key_here
+XAI_API_KEY=your_key_here
+
+# Local LLM (Ollama - Offline Mode)
+OLLAMA_ENABLED=true
+OLLAMA_MODEL=qwen2.5-coder:7b
+OLLAMA_BASE_URL=http://localhost:11434
 ```
 
-The app works without AI providers (provides fallback statistical analysis).
+**For Offline Development with Ollama**:
+
+```bash
+# Install Ollama
+curl -fsSL https://ollama.ai/install.sh | sh  # Linux
+# or: brew install ollama  # macOS
+
+# Start Ollama daemon
+ollama serve &
+
+# Download recommended model
+ollama pull qwen2.5-coder:7b
+
+# Use automated setup script (Arch Linux)
+./dev-setup.sh
+```
+
+The app works without any AI providers (provides fallback statistical analysis).
 
 ### Verifying Your Setup
 
@@ -269,6 +308,7 @@ print(f"Active: {providers}")  # Should show connected providers
 ## Recognition
 
 Contributors will be:
+
 - Listed in project README.md credits
 - Mentioned in release notes for their contributions
 - Given credit in commit history (ensure your git config is set correctly!)
