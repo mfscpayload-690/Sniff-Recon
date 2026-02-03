@@ -204,34 +204,77 @@ def render_ai_query_interface(packets: List[Packet]):
 
     # --- AI Provider Selection ---
     from src.ai.multi_agent_ai import get_active_providers
-    # Map display names to actual provider names returned by multi_agent_ai
-    provider_display_map = {
-        "Groq": "Groq",
-        "OpenAI": "OpenAI",
-        "Anthropic": "Anthropic",
-        "Google Gemini": "Google Gemini",
-        "xAI": "xAI"
-    }
-    provider_list = list(provider_display_map.keys())
+    
+    # Initialize provider selection in session state
+    if 'selected_ai_provider' not in st.session_state:
+        st.session_state.selected_ai_provider = "Auto (Load Balanced)"
+    
+    # Get active providers
     active_providers = get_active_providers()
-    provider_status = {p: ("🟢" if p in active_providers else "🔴") for p in provider_list}
+    
+    # Build provider options list
+    provider_options = ["Auto (Load Balanced)"]
+    
+    # Add all active providers
+    for provider_name in active_providers:
+        provider_options.append(provider_name)
+    
+    # Create two columns for provider selection and badge
+    col_select, col_badge = st.columns([3, 1])
+    
+    with col_select:
+        selected_provider = st.selectbox(
+            "🎯 AI Provider",
+            options=provider_options,
+            index=provider_options.index(st.session_state.selected_ai_provider) if st.session_state.selected_ai_provider in provider_options else 0,
+            key="provider_selector",
+            help="Select which AI provider to use. 'Auto' distributes queries across all active providers. Selecting a specific provider routes all queries to that provider only."
+        )
+        
+        # Update session state
+        st.session_state.selected_ai_provider = selected_provider
+    
+    with col_badge:
+        # Show badge based on selection
+        if "Ollama" in selected_provider:
+            st.markdown(
+                '<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); '
+                'padding: 8px 12px; border-radius: 8px; text-align: center; margin-top: 28px;">' 
+                '<span style="font-size: 12px; font-weight: 600; color: white;">🔒 OFFLINE</span>'
+                '</div>',
+                unsafe_allow_html=True
+            )
+        elif selected_provider == "Auto (Load Balanced)":
+            st.markdown(
+                '<div style="background: linear-gradient(135deg, #3AB795 0%, #26D07C 100%); '
+                'padding: 8px 12px; border-radius: 8px; text-align: center; margin-top: 28px;">' 
+                '<span style="font-size: 12px; font-weight: 600; color: white;">⚡ AUTO</span>'
+                '</div>',
+                unsafe_allow_html=True
+            )
+        else:
+            st.markdown(
+                '<div style="background: linear-gradient(135deg, #F093FB 0%, #F5576C 100%); '
+                'padding: 8px 12px; border-radius: 8px; text-align: center; margin-top: 28px;">' 
+                '<span style="font-size: 12px; font-weight: 600; color: white;">🎯 DIRECT</span>'
+                '</div>',
+                unsafe_allow_html=True
+            )
+    
+    # Show info about selected provider
+    if "Ollama" in selected_provider:
+        st.info(
+            "🔒 **Local LLM Mode**: All AI analysis runs locally on your machine. "
+            "No packet data is sent to external services. Requires Ollama to be installed and running.",
+            icon="ℹ️"
+        )
+    elif selected_provider != "Auto (Load Balanced)":
+        st.info(
+            f"🎯 **Direct Mode**: All AI queries will be sent only to **{selected_provider}**. "
+            "Load balancing and failover are disabled.",
+            icon="ℹ️"
+        )
 
-    if "selected_provider" not in st.session_state:
-        # Default to first active provider
-        st.session_state.selected_provider = active_providers[0] if active_providers else provider_list[0]
-
-    st.markdown("**AI Provider Selection:**")
-    provider_options = [f"{provider_status[p]} {p}" for p in provider_list]
-    selected_idx = provider_list.index(st.session_state.selected_provider) if st.session_state.selected_provider in provider_list else 0
-    selected = st.selectbox(
-        "Choose AI provider:",
-        provider_options,
-        index=selected_idx,
-        key="ai_provider_select"
-    )
-    # Extract provider name from selection
-    st.session_state.selected_provider = [p for p in provider_list if p in selected][0]
-    st.caption("🟢 = active, 🔴 = unavailable")
 
     # Check API key status and show notification
     if not ai_engine.api_key_valid:
@@ -264,7 +307,7 @@ def render_ai_query_interface(packets: List[Packet]):
                 # Auto-submit the query with AI analysis
                 with st.spinner("🤖 AI is analyzing your network traffic..."):
                     suspicious = ai_engine.filter_suspicious_packets(packets)
-                    provider = st.session_state.selected_provider
+                    provider = st.session_state.selected_ai_provider
                     if not suspicious or len(suspicious) == 0:
                         st.info("ℹ️ No suspicious patterns detected. Analyzing all packets...")
                         ai_result = ai_engine.query_ai_with_packets(query, packets, provider_name=provider)
@@ -306,10 +349,10 @@ def render_ai_query_interface(packets: List[Packet]):
     
     # Handle AI query
     if query_button and user_query and packets:
-        with st.spinner("🤖 AI is analyzing your network traffic..."):
+         with st.spinner("🤖 AI is analyzing your network traffic..."):
             # Layered Filtering: Get suspicious, cluster, summarize
             suspicious = ai_engine.filter_suspicious_packets(packets)
-            provider = st.session_state.selected_provider
+            provider = st.session_state.selected_ai_provider
             # If no suspicious packets found, analyze ALL packets instead
             if not suspicious or len(suspicious) == 0:
                 st.info("ℹ️ No suspicious patterns detected. Analyzing all packets...")
