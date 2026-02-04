@@ -1,3 +1,10 @@
+"""
+Packet Table Display Module
+============================
+Display network packets in an interactive table with filtering and inspection.
+Uses shared CSS from styles.css for consistent styling.
+"""
+
 import streamlit as st
 from scapy.layers.inet import IP, TCP, UDP, ICMP
 from scapy.layers.l2 import Ether
@@ -5,633 +12,332 @@ from scapy.packet import Packet
 from typing import List, Optional
 import pandas as pd
 import binascii
-import datetime
+from src.ui.icons import icon
 
-def inject_modern_css():
-    """Inject modern CSS for beautiful packet analyzer UI"""
-    st.markdown(
-        """
-        <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        /* Global styles */
-        .main {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
-            color: #e0e0e0;
-        }
-        
-        /* Packet table styling */
-        .packet-table-container {
-            background: rgba(30, 30, 30, 0.8);
-            border-radius: 16px;
-            border: 1px solid rgba(0, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            margin: 1rem 0;
-            overflow: hidden;
-        }
-        
-        /* Protocol layer cards - Enhanced with neon borders and hover effects */
-        .protocol-card {
-            background: linear-gradient(145deg, #121822 0%, #0f1419 100%);
-            border: 1px solid rgba(0, 255, 255, 0.25);
-            border-radius: 12px;
-            box-shadow: 0 0 12px rgba(0, 255, 255, 0.15);
-            padding: 1rem 1.5rem;
-            margin-bottom: 1.5rem;
-            transition: all 0.3s ease-in-out;
-            transform: scale(1);
-            position: relative;
-            overflow: hidden;
-            animation: fadeInUp 0.6s ease forwards;
-        }
-        
-        .protocol-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at top right, rgba(0, 255, 255, 0.03), transparent 70%);
-            pointer-events: none;
-            z-index: 0;
-        }
-        
-        .protocol-card:hover {
-            transform: scale(1.03);
-            box-shadow: 0 0 18px rgba(0, 255, 255, 0.5), 0 4px 20px rgba(0, 255, 255, 0.2);
-            border-color: rgba(0, 255, 255, 0.8);
-            background: linear-gradient(145deg, #151d28 0%, #121722 100%);
-        }
-        
-        .protocol-card:hover::before {
-            background: radial-gradient(circle at top right, rgba(0, 255, 255, 0.08), transparent 70%);
-        }
-        
-        .protocol-header {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #00ffff;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0;
-            background: transparent;
-            border: none;
-            border-radius: 0;
-            box-shadow: none;
-            backdrop-filter: none;
-            position: relative;
-            z-index: 1;
-            text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
-        }
-        
-        .protocol-header::before {
-            content: '🧩';
-            font-size: 1.1rem;
-            filter: drop-shadow(0 0 4px rgba(0, 255, 255, 0.8));
-        }
-        
-        .protocol-content {
-            background: rgba(10, 15, 20, 0.5);
-            border-radius: 8px;
-            padding: 1rem;
-            border: 1px solid rgba(0, 255, 255, 0.1);
-            position: relative;
-            z-index: 1;
-        }
-        
-        .field-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid rgba(0, 255, 255, 0.08);
-            transition: all 0.2s ease;
-        }
-        
-        .field-row:hover {
-            background: rgba(0, 255, 255, 0.08);
-            border-radius: 6px;
-            padding-left: 0.5rem;
-            padding-right: 0.5rem;
-            border-bottom-color: rgba(0, 255, 255, 0.15);
-        }
-        
-        .field-row:last-child {
-            border-bottom: none;
-        }
-        
-        .field-label {
-            font-weight: 500;
-            color: #a0c8d8;
-            min-width: 140px;
-            font-size: 0.9rem;
-        }
-        
-        .field-value {
-            color: #e8f4ff;
-            font-family: 'Courier New', monospace;
-            text-align: right;
-            word-break: break-all;
-            font-size: 0.95rem;
-        }
-        
-        /* Hex dump styling - Enhanced monospace panel */
-        .hex-dump-container {
-            background: #0a0f14;
-            border-radius: 10px;
-            padding: 1rem;
-            border: 1px solid rgba(0, 255, 255, 0.15);
-            font-family: 'Courier New', 'Consolas', monospace;
-            font-size: 0.85rem;
-            line-height: 1.5;
-            max-height: 400px;
-            overflow-y: auto;
-            color: #b8eaff;
-        }
-        
-        .hex-dump-container code {
-            color: #b8eaff !important;
-            background: transparent !important;
-        }
-        
-        /* Packet summary styling */
-        .packet-summary {
-            background: transparent;
-            border: none;
-            border-radius: 0;
-            padding: 1.5rem 0;
-            margin: 1rem 0;
-            box-shadow: none;
-        }
-        
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-        
-        .summary-item {
-            background: rgba(15, 15, 15, 0.5);
-            border-radius: 8px;
-            padding: 1rem;
-            border: 1px solid rgba(0, 255, 255, 0.1);
-            text-align: center;
-        }
-        
-        .summary-label {
-            font-size: 0.9rem;
-            color: #00b3b3;
-            margin-bottom: 0.5rem;
-        }
-        
-        .summary-value {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #00ffff;
-        }
-        
-        /* Responsive design */
-        @media (max-width: 768px) {
-            .protocol-card {
-                padding: 1rem;
-                margin: 0.5rem 0;
-            }
-            
-            .field-row {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.25rem;
-            }
-            
-            .field-value {
-                text-align: left;
-            }
-            
-            .summary-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        /* Animation for cards - Enhanced entry animation */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px) scale(0.98);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-        
-        .protocol-card:nth-child(1) { animation-delay: 0.05s; }
-        .protocol-card:nth-child(2) { animation-delay: 0.1s; }
-        .protocol-card:nth-child(3) { animation-delay: 0.15s; }
-        .protocol-card:nth-child(4) { animation-delay: 0.2s; }
-        .protocol-card:nth-child(5) { animation-delay: 0.25s; }
-        
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: rgba(15, 15, 15, 0.5);
-            border-radius: 4px;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #00ffff, #00b3b3);
-            border-radius: 4px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, #00b3b3, #00ffff);
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
 
 def extract_packet_summary(packets: List[Packet]) -> pd.DataFrame:
-    """Extract summary information from packets to build a DataFrame."""
-    rows = []
-    for i, pkt in enumerate(packets, start=1):
-        timestamp = getattr(pkt, "time", "N/A")
-        length = len(pkt)
-
-        src_ip = "-"
-        dst_ip = "-"
-        protocol = "-"
-        info = ""
-
+    """Extract summary information from packets into a DataFrame."""
+    data = []
+    
+    for idx, pkt in enumerate(packets):
+        row = {
+            "id": idx + 1,
+            "time": float(pkt.time) if hasattr(pkt, 'time') else 0,
+            "src_ip": "",
+            "dst_ip": "",
+            "protocol": "Unknown",
+            "length": len(pkt),
+            "info": ""
+        }
+        
+        # Extract IP layer info
         if IP in pkt:
-            ip_layer = pkt[IP]
-            src_ip = ip_layer.src
-            dst_ip = ip_layer.dst
-            proto_num = ip_layer.proto
-            if proto_num == 6:
-                protocol = "TCP"
-            elif proto_num == 17:
-                protocol = "UDP"
-            elif proto_num == 1:
-                protocol = "ICMP"
-            else:
-                protocol = f"Protocol {proto_num}"
-        else:
-            protocol = pkt.lastlayer().name if pkt.lastlayer() else "-"
-
-        # Enhanced info field
-        if protocol == "TCP" and TCP in pkt:
-            tcp_layer = pkt[TCP]
+            row["src_ip"] = pkt[IP].src
+            row["dst_ip"] = pkt[IP].dst
+            row["protocol"] = get_protocol_name(pkt[IP].proto)
+        elif Ether in pkt:
+            row["src_ip"] = pkt[Ether].src
+            row["dst_ip"] = pkt[Ether].dst
+            row["protocol"] = "Ethernet"
+        
+        # Get transport layer info
+        if TCP in pkt:
+            row["protocol"] = "TCP"
+            row["info"] = f"Port {pkt[TCP].sport} → {pkt[TCP].dport}"
             flags = []
-            if tcp_layer.flags & 0x01: flags.append("FIN")
-            if tcp_layer.flags & 0x02: flags.append("SYN")
-            if tcp_layer.flags & 0x04: flags.append("RST")
-            if tcp_layer.flags & 0x08: flags.append("PSH")
-            if tcp_layer.flags & 0x10: flags.append("ACK")
-            if tcp_layer.flags & 0x20: flags.append("URG")
-            info = f"Port {tcp_layer.sport} → {tcp_layer.dport} [{', '.join(flags)}]"
-        elif protocol == "UDP" and UDP in pkt:
-            udp_layer = pkt[UDP]
-            info = f"Port {udp_layer.sport} → {udp_layer.dport}"
-        elif protocol == "ICMP" and ICMP in pkt:
-            icmp_layer = pkt[ICMP]
-            info = f"Type {icmp_layer.type}"
-
-        # Format timestamp
-        try:
-            ts_float = float(timestamp)
-            timestamp_str = datetime.datetime.fromtimestamp(ts_float).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-        except Exception:
-            timestamp_str = str(timestamp)
-
-        rows.append({
-            "No.": i,
-            "Timestamp": timestamp_str,
-            "Source IP": src_ip,
-            "Destination IP": dst_ip,
-            "Protocol": protocol,
-            "Length": length,
-            "Info": info,
-        })
-
-    return pd.DataFrame(rows)
-
-def render_field_row(label: str, value: str):
-    """Render a field row with hover effects"""
-    st.markdown(
-        f"""
-        <div class="field-row">
-            <span class="field-label">{label}</span>
-            <span class="field-value">{value}</span>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-def render_ethernet_layer(pkt: Packet):
-    """Render Ethernet layer in a beautiful card"""
-    st.markdown('<div class="protocol-card">', unsafe_allow_html=True)
-    st.markdown('<div class="protocol-header">Ethernet Layer</div>', unsafe_allow_html=True)
-    
-    if Ether in pkt:
-        eth_layer = pkt[Ether]
-        st.markdown('<div class="protocol-content">', unsafe_allow_html=True)
-        render_field_row("Source MAC", eth_layer.src)
-        render_field_row("Destination MAC", eth_layer.dst)
-        render_field_row("Type", f"0x{eth_layer.type:04x}")
-        st.markdown('</div>', unsafe_allow_html=True)
-    else:
-        st.markdown('<div class="protocol-content">', unsafe_allow_html=True)
-        st.markdown('<div class="field-row"><span class="field-value">Ethernet header not available</span></div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    st.markdown('</div>', unsafe_allow_html=True)
-
-def render_ip_layer(pkt: Packet):
-    """Render IP layer in a beautiful card"""
-    st.markdown('<div class="protocol-card">', unsafe_allow_html=True)
-    st.markdown('<div class="protocol-header">IP Layer</div>', unsafe_allow_html=True)
-    
-    if IP in pkt:
-        ip_layer = pkt[IP]
-        st.markdown('<div class="protocol-content">', unsafe_allow_html=True)
-        render_field_row("Version", str(ip_layer.version))
-        render_field_row("Header Length", f"{ip_layer.ihl * 4} bytes")
-        render_field_row("Type of Service", f"0x{ip_layer.tos:02x}")
-        render_field_row("Total Length", f"{ip_layer.len} bytes")
-        render_field_row("Identification", f"0x{ip_layer.id:04x}")
-        render_field_row("Flags", f"0x{int(ip_layer.flags):02x}")
-        render_field_row("Fragment Offset", str(ip_layer.frag))
-        render_field_row("Time to Live", str(ip_layer.ttl))
-        render_field_row("Protocol", f"{ip_layer.proto} ({get_protocol_name(ip_layer.proto)})")
-        render_field_row("Header Checksum", f"0x{ip_layer.chksum:04x}")
-        render_field_row("Source IP", ip_layer.src)
-        render_field_row("Destination IP", ip_layer.dst)
-        st.markdown('</div>', unsafe_allow_html=True)
-    else:
-        st.markdown('<div class="protocol-content">', unsafe_allow_html=True)
-        st.markdown('<div class="field-row"><span class="field-value">IP header not available</span></div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    st.markdown('</div>', unsafe_allow_html=True)
-
-def render_transport_layer(pkt: Packet):
-    """Render Transport layer (TCP/UDP) in a beautiful card"""
-    st.markdown('<div class="protocol-card">', unsafe_allow_html=True)
-    
-    if TCP in pkt:
-        tcp_layer = pkt[TCP]
-        st.markdown('<div class="protocol-header">TCP Layer</div>', unsafe_allow_html=True)
-        st.markdown('<div class="protocol-content">', unsafe_allow_html=True)
-        render_field_row("Source Port", str(tcp_layer.sport))
-        render_field_row("Destination Port", str(tcp_layer.dport))
-        render_field_row("Sequence Number", str(tcp_layer.seq))
-        render_field_row("Acknowledgment", str(tcp_layer.ack))
-        render_field_row("Data Offset", f"{tcp_layer.dataofs * 4} bytes")
-        render_field_row("Reserved", str(tcp_layer.reserved))
+            if pkt[TCP].flags.S: flags.append("SYN")
+            if pkt[TCP].flags.A: flags.append("ACK")
+            if pkt[TCP].flags.F: flags.append("FIN")
+            if pkt[TCP].flags.R: flags.append("RST")
+            if pkt[TCP].flags.P: flags.append("PSH")
+            if flags:
+                row["info"] += f" [{','.join(flags)}]"
+        elif UDP in pkt:
+            row["protocol"] = "UDP"
+            row["info"] = f"Port {pkt[UDP].sport} → {pkt[UDP].dport}"
+        elif ICMP in pkt:
+            row["protocol"] = "ICMP"
+            row["info"] = f"Type {pkt[ICMP].type}, Code {pkt[ICMP].code}"
         
-        # TCP Flags
-        flags = []
-        if tcp_layer.flags & 0x01: flags.append("FIN")
-        if tcp_layer.flags & 0x02: flags.append("SYN")
-        if tcp_layer.flags & 0x04: flags.append("RST")
-        if tcp_layer.flags & 0x08: flags.append("PSH")
-        if tcp_layer.flags & 0x10: flags.append("ACK")
-        if tcp_layer.flags & 0x20: flags.append("URG")
-        render_field_row("Flags", f"0x{int(tcp_layer.flags):02x} [{', '.join(flags)}]")
-        
-        render_field_row("Window Size", str(tcp_layer.window))
-        render_field_row("Checksum", f"0x{tcp_layer.chksum:04x}")
-        render_field_row("Urgent Pointer", str(tcp_layer.urgptr))
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-    elif UDP in pkt:
-        udp_layer = pkt[UDP]
-        st.markdown('<div class="protocol-header">UDP Layer</div>', unsafe_allow_html=True)
-        st.markdown('<div class="protocol-content">', unsafe_allow_html=True)
-        render_field_row("Source Port", str(udp_layer.sport))
-        render_field_row("Destination Port", str(udp_layer.dport))
-        render_field_row("Length", f"{udp_layer.len} bytes")
-        render_field_row("Checksum", f"0x{udp_layer.chksum:04x}")
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-    elif ICMP in pkt:
-        icmp_layer = pkt[ICMP]
-        st.markdown('<div class="protocol-header">ICMP Layer</div>', unsafe_allow_html=True)
-        st.markdown('<div class="protocol-content">', unsafe_allow_html=True)
-        render_field_row("Type", str(icmp_layer.type))
-        render_field_row("Code", str(icmp_layer.code))
-        render_field_row("Checksum", f"0x{icmp_layer.chksum:04x}")
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-    else:
-        st.markdown('<div class="protocol-header">Transport Layer</div>', unsafe_allow_html=True)
-        st.markdown('<div class="protocol-content">', unsafe_allow_html=True)
-        st.markdown('<div class="field-row"><span class="field-value">Transport layer header not available</span></div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        data.append(row)
     
-    st.markdown('</div>', unsafe_allow_html=True)
+    return pd.DataFrame(data)
 
-def render_application_layer(pkt: Packet):
-    """Render Application layer in a beautiful card"""
-    st.markdown('<div class="protocol-card">', unsafe_allow_html=True)
-    st.markdown('<div class="protocol-header">Application Layer</div>', unsafe_allow_html=True)
-    
-    st.markdown('<div class="protocol-content">', unsafe_allow_html=True)
-    
-    # Try to identify application layer protocols
-    if pkt.haslayer("Raw"):
-        raw_layer = pkt["Raw"]
-        raw_data = raw_layer.load
-        
-        # Try to decode as text
-        try:
-            text_data = raw_data.decode('utf-8', errors='ignore')
-            if text_data.strip():
-                st.markdown('<div class="field-row"><span class="field-label">Raw Data (Text)</span></div>', unsafe_allow_html=True)
-                st.code(text_data, language="text")
-        except:
-            pass
-        
-        # Show hex representation
-        if raw_data:
-            st.markdown('<div class="field-row"><span class="field-label">Raw Data (Hex)</span></div>', unsafe_allow_html=True)
-            hex_str = binascii.hexlify(raw_data).decode("utf-8")
-            formatted_hex = " ".join(hex_str[i:i+2] for i in range(0, len(hex_str), 2))
-            st.code(formatted_hex, language="plaintext")
-    else:
-        st.markdown('<div class="field-row"><span class="field-value">No application layer data available</span></div>', unsafe_allow_html=True)
-    
-    st.markdown('</div>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-def render_hex_dump(pkt: Packet):
-    """Render hex dump in a beautiful card"""
-    st.markdown('<div class="protocol-card">', unsafe_allow_html=True)
-    st.markdown('<div class="protocol-header">Hex Dump View</div>', unsafe_allow_html=True)
-    
-    raw_bytes = bytes(pkt)
-    if raw_bytes:
-        st.markdown('<div class="hex-dump-container">', unsafe_allow_html=True)
-        hex_dump = format_hex_dump(raw_bytes)
-        st.code(hex_dump, language="plaintext")
-        st.markdown('</div>', unsafe_allow_html=True)
-    else:
-        st.markdown('<div class="protocol-content">', unsafe_allow_html=True)
-        st.markdown('<div class="field-row"><span class="field-value">No raw data available</span></div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    st.markdown('</div>', unsafe_allow_html=True)
-
-def format_hex_dump(data: bytes) -> str:
-    """Format bytes into a readable hex dump"""
-    lines = []
-    for i in range(0, len(data), 16):
-        chunk = data[i:i+16]
-        hex_bytes = " ".join(f"{b:02x}" for b in chunk)
-        ascii_bytes = "".join(chr(b) if 32 <= b <= 126 else "." for b in chunk)
-        lines.append(f"{i:08x}  {hex_bytes:<48}  {ascii_bytes}")
-    return "\n".join(lines)
 
 def get_protocol_name(proto_num: int) -> str:
-    """Get protocol name from protocol number"""
+    """Convert protocol number to name."""
     protocols = {
         1: "ICMP",
         6: "TCP",
         17: "UDP",
-        53: "DNS",
-        80: "HTTP",
-        443: "HTTPS",
-        22: "SSH",
-        21: "FTP",
-        25: "SMTP",
-        110: "POP3",
-        143: "IMAP"
+        41: "IPv6",
+        47: "GRE",
+        50: "ESP",
+        51: "AH",
+        89: "OSPF",
+        132: "SCTP"
     }
-    return protocols.get(proto_num, "Unknown")
+    return protocols.get(proto_num, f"Proto-{proto_num}")
 
-def display_packet_table(packets: List[Packet]):
-    """Display modern packet analyzer with beautiful UI"""
-    # Inject CSS
-    inject_modern_css()
+
+def get_protocol_badge_class(protocol: str) -> str:
+    """Get CSS class for protocol badge."""
+    protocol_upper = protocol.upper()
+    if "TCP" in protocol_upper:
+        return "sr-protocol-tcp"
+    elif "UDP" in protocol_upper:
+        return "sr-protocol-udp"
+    elif "ICMP" in protocol_upper:
+        return "sr-protocol-icmp"
+    elif "HTTP" in protocol_upper:
+        return "sr-protocol-http"
+    elif "DNS" in protocol_upper:
+        return "sr-protocol-dns"
+    return "sr-protocol-other"
+
+
+def render_packet_inspector(packet: Packet) -> None:
+    """Render detailed packet inspection view."""
+    eye_icon = icon("eye", "lg")
+    st.markdown(f"""
+        <div class="sr-inspector">
+            <div class="sr-inspector-header">{eye_icon} Packet Details</div>
+        </div>
+    """, unsafe_allow_html=True)
     
-    st.markdown('<div class="section-heading">PACKET SUMMARY TABLE</div>', unsafe_allow_html=True)
+    # Ethernet Layer
+    if Ether in packet:
+        with st.expander("Ethernet Layer", expanded=True):
+            eth = packet[Ether]
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown(f"**Source MAC:** `{eth.src}`")
+            with col2:
+                st.markdown(f"**Destination MAC:** `{eth.dst}`")
+            st.markdown(f"**Type:** `0x{eth.type:04x}`")
     
+    # IP Layer
+    if IP in packet:
+        with st.expander("IP Layer", expanded=True):
+            ip = packet[IP]
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown(f"**Source IP:** `{ip.src}`")
+                st.markdown(f"**Version:** `{ip.version}`")
+                st.markdown(f"**TTL:** `{ip.ttl}`")
+            with col2:
+                st.markdown(f"**Destination IP:** `{ip.dst}`")
+                st.markdown(f"**Protocol:** `{get_protocol_name(ip.proto)}`")
+                st.markdown(f"**Total Length:** `{ip.len}` bytes")
+    
+    # TCP Layer
+    if TCP in packet:
+        with st.expander("TCP Layer", expanded=True):
+            tcp = packet[TCP]
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown(f"**Source Port:** `{tcp.sport}`")
+                st.markdown(f"**Sequence:** `{tcp.seq}`")
+                st.markdown(f"**Window:** `{tcp.window}`")
+            with col2:
+                st.markdown(f"**Destination Port:** `{tcp.dport}`")
+                st.markdown(f"**Acknowledgment:** `{tcp.ack}`")
+                flags = []
+                if tcp.flags.S: flags.append("SYN")
+                if tcp.flags.A: flags.append("ACK")
+                if tcp.flags.F: flags.append("FIN")
+                if tcp.flags.R: flags.append("RST")
+                if tcp.flags.P: flags.append("PSH")
+                st.markdown(f"**Flags:** `{', '.join(flags) if flags else 'None'}`")
+    
+    # UDP Layer
+    if UDP in packet:
+        with st.expander("UDP Layer", expanded=True):
+            udp = packet[UDP]
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown(f"**Source Port:** `{udp.sport}`")
+            with col2:
+                st.markdown(f"**Destination Port:** `{udp.dport}`")
+            st.markdown(f"**Length:** `{udp.len}` bytes")
+    
+    # ICMP Layer
+    if ICMP in packet:
+        with st.expander("ICMP Layer", expanded=True):
+            icmp = packet[ICMP]
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown(f"**Type:** `{icmp.type}`")
+            with col2:
+                st.markdown(f"**Code:** `{icmp.code}`")
+    
+    # Hex Dump
+    with st.expander("Raw Data (Hex)", expanded=False):
+        raw_bytes = bytes(packet)
+        hex_dump = format_hex_dump(raw_bytes)
+        st.code(hex_dump, language=None)
+
+
+def format_hex_dump(data: bytes, bytes_per_line: int = 16) -> str:
+    """Format bytes into a readable hex dump."""
+    lines = []
+    for i in range(0, len(data), bytes_per_line):
+        chunk = data[i:i + bytes_per_line]
+        hex_part = ' '.join(f'{b:02x}' for b in chunk)
+        ascii_part = ''.join(chr(b) if 32 <= b < 127 else '.' for b in chunk)
+        lines.append(f"{i:08x}  {hex_part:<{bytes_per_line * 3}}  |{ascii_part}|")
+    return '\n'.join(lines)
+
+
+def display_packet_table(packets: List[Packet]) -> None:
+    """Display packets in an interactive table with filtering."""
+    if not packets:
+        st.warning("No packets to display.")
+        return
+    
+    # Extract packet data
     df = extract_packet_summary(packets)
     
-    # --- Advanced Filtering & Search Controls ---
-    col1, col2, col3, col4, col5 = st.columns(5)
-    with col1:
-        src_ip_filter = st.text_input("Source IP", "", key="filter_src_ip")
-    with col2:
-        dst_ip_filter = st.text_input("Destination IP", "", key="filter_dst_ip")
-    with col3:
-        protocol_filter = st.selectbox("Protocol", ["Any"] + sorted(df["Protocol"].unique()), key="filter_protocol")
-    with col4:
-        port_filter = st.text_input("Port (src/dst)", "", key="filter_port")
-    with col5:
-        time_range = st.slider("Time Range", 1, len(df), (1, len(df)), key="filter_time")
-
-    search_text = st.text_input("🔍 Search Info", "", key="search_info")
-
-    # --- Filtering Logic ---
-    filtered_df = df.copy()
-    if src_ip_filter:
-        filtered_df = filtered_df[filtered_df["Source IP"].str.contains(src_ip_filter, na=False)]
-    if dst_ip_filter:
-        filtered_df = filtered_df[filtered_df["Destination IP"].str.contains(dst_ip_filter, na=False)]
-    if protocol_filter and protocol_filter != "Any":
-        filtered_df = filtered_df[filtered_df["Protocol"] == protocol_filter]
-    if port_filter:
-        filtered_df = filtered_df[filtered_df["Info"].str.contains(port_filter, na=False)]
-    # Time range filter (by packet number)
-    filtered_df = filtered_df[(filtered_df["No."] >= time_range[0]) & (filtered_df["No."] <= time_range[1])]
-    if search_text:
-        mask = filtered_df.apply(lambda row: search_text.lower() in str(row["Info"]).lower() or search_text.lower() in str(row["Source IP"]).lower() or search_text.lower() in str(row["Destination IP"]).lower(), axis=1)
-        filtered_df = filtered_df[mask]
-
-    # Display the filtered table
-    st.markdown('<div class="packet-table-container">', unsafe_allow_html=True)
-    st.dataframe(
-        filtered_df,
-        width='stretch',
-        height=400,
-        hide_index=True
-    )
-    st.markdown('</div>', unsafe_allow_html=True)
+    bar_icon = icon("bar-chart")
+    # Search and filter bar
+    st.markdown(f"""
+        <div class="sr-table-toolbar">
+            <div style="font-weight: 600; color: var(--accent-cyan);">
+                {bar_icon} {len(df)} Packets
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
     
-    # Packet selection using number input
-    st.markdown('<div class="section-heading">SELECT PACKET FOR ANALYSIS</div>', unsafe_allow_html=True)
-    packet_number = st.number_input(
-        "Enter packet number to analyze:",
+    col1, col2, col3 = st.columns([2, 1, 1])
+    
+    with col1:
+        search_term = st.text_input(
+            "Search",
+            placeholder="Filter by IP, port, or keyword...",
+            key="packet_search",
+            label_visibility="collapsed"
+        )
+    
+    with col2:
+        protocols = ["All"] + df["protocol"].unique().tolist()
+        selected_protocol = st.selectbox(
+            "Protocol",
+            protocols,
+            key="protocol_filter",
+            label_visibility="collapsed"
+        )
+    
+    with col3:
+        sort_options = ["ID", "Time", "Length", "Protocol"]
+        sort_by = st.selectbox(
+            "Sort by",
+            sort_options,
+            key="sort_by",
+            label_visibility="collapsed"
+        )
+    
+    # Apply filters
+    filtered_df = df.copy()
+    
+    if search_term:
+        mask = (
+            filtered_df["src_ip"].str.contains(search_term, case=False, na=False) |
+            filtered_df["dst_ip"].str.contains(search_term, case=False, na=False) |
+            filtered_df["info"].str.contains(search_term, case=False, na=False)
+        )
+        filtered_df = filtered_df[mask]
+    
+    if selected_protocol != "All":
+        filtered_df = filtered_df[filtered_df["protocol"] == selected_protocol]
+    
+    # Sort
+    sort_column_map = {"ID": "id", "Time": "time", "Length": "length", "Protocol": "protocol"}
+    filtered_df = filtered_df.sort_values(by=sort_column_map.get(sort_by, "id"))
+    
+    # Show filtered count
+    if len(filtered_df) != len(df):
+        st.info(f"Showing {len(filtered_df)} of {len(df)} packets")
+    
+    # Display table
+    st.markdown("""
+        <style>
+        .packet-row { 
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            transition: background 0.15s;
+        }
+        .packet-row:hover {
+            background: rgba(0, 212, 255, 0.1);
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    
+    # Paginate
+    page_size = 50
+    total_pages = max(1, (len(filtered_df) + page_size - 1) // page_size)
+    
+    if "packet_page" not in st.session_state:
+        st.session_state["packet_page"] = 0
+    
+    current_page = st.session_state["packet_page"]
+    start_idx = current_page * page_size
+    end_idx = min(start_idx + page_size, len(filtered_df))
+    
+    page_df = filtered_df.iloc[start_idx:end_idx]
+    
+    # Render packets
+    for _, row in page_df.iterrows():
+        protocol_class = get_protocol_badge_class(row["protocol"])
+        
+        with st.container():
+            cols = st.columns([0.5, 1.5, 1.5, 1, 0.8, 2])
+            
+            with cols[0]:
+                st.markdown(f"**#{row['id']}**")
+            with cols[1]:
+                st.markdown(f"`{row['src_ip']}`")
+            with cols[2]:
+                st.markdown(f"`{row['dst_ip']}`")
+            with cols[3]:
+                st.markdown(f"<span class='sr-protocol-badge {protocol_class}'>{row['protocol']}</span>", unsafe_allow_html=True)
+            with cols[4]:
+                st.markdown(f"{row['length']} B")
+            with cols[5]:
+                st.markdown(f"<span style='color: var(--text-secondary);'>{row['info']}</span>", unsafe_allow_html=True)
+    
+    # Pagination controls
+    if total_pages > 1:
+        st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
+        col1, col2, col3 = st.columns([1, 2, 1])
+        
+        with col1:
+            if st.button("◀ Previous", disabled=current_page == 0, key="prev_page"):
+                st.session_state["packet_page"] = max(0, current_page - 1)
+                st.rerun()
+        
+        with col2:
+            st.markdown(f"<div style='text-align: center; padding: 0.5rem;'>Page {current_page + 1} of {total_pages}</div>", unsafe_allow_html=True)
+        
+        with col3:
+            if st.button("Next ▶", disabled=current_page >= total_pages - 1, key="next_page"):
+                st.session_state["packet_page"] = min(total_pages - 1, current_page + 1)
+                st.rerun()
+    
+    # Packet inspector
+    st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
+    eye_icon = icon("eye")
+    st.markdown(f"### {eye_icon} Inspect Packet", unsafe_allow_html=True)
+    
+    packet_id = st.number_input(
+        "Enter packet ID to inspect",
         min_value=1,
         max_value=len(packets),
         value=1,
-        step=1
+        key="inspect_packet_id"
     )
     
-    if packet_number:
-        selected_index = packet_number - 1
-        pkt = packets[selected_index]
-        packet_row = df.iloc[selected_index]
-        
-        # Packet summary section
-        st.markdown('<div class="packet-summary">', unsafe_allow_html=True)
-        st.markdown('<div class="summary-grid">', unsafe_allow_html=True)
-        
-        # Summary items
-        summary_items = [
-            ("Packet Number", str(packet_row["No."])),
-            ("Timestamp", packet_row["Timestamp"]),
-            ("Source IP", packet_row["Source IP"]),
-            ("Destination IP", packet_row["Destination IP"]),
-            ("Protocol", packet_row["Protocol"]),
-            ("Length", f"{packet_row['Length']} bytes")
-        ]
-        
-        for label, value in summary_items:
-            st.markdown(
-                f"""
-                <div class="summary-item">
-                    <div class="summary-label">{label}</div>
-                    <div class="summary-value">{value}</div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-        
-        st.markdown('</div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        # Protocol layers section
-        st.markdown('<div class="section-heading">PROTOCOL LAYER ANALYSIS</div>', unsafe_allow_html=True)
-        
-        # Render protocol layers as responsive grid of cards (2 per row)
-        def render_protocol_layer_cards(packet: Packet):
-            renderers = [
-                render_ethernet_layer,
-                render_ip_layer,
-                render_transport_layer,
-                render_application_layer,
-                render_hex_dump,
-            ]
-            cols_per_row = 2
-            for i in range(0, len(renderers), cols_per_row):
-                row_renderers = renderers[i:i+cols_per_row]
-                cols = st.columns(len(row_renderers))
-                for col, renderer in zip(cols, row_renderers):
-                    with col:
-                        try:
-                            renderer(packet)
-                        except Exception as e:
-                            st.markdown(f'<div class="error-message">Error rendering layer: {str(e)}</div>', unsafe_allow_html=True)
-
-        render_protocol_layer_cards(pkt)
+    if st.button("Inspect Packet", key="inspect_btn"):
+        if 1 <= packet_id <= len(packets):
+            render_packet_inspector(packets[packet_id - 1])
+        else:
+            st.error("Invalid packet ID")
