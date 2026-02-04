@@ -1,3 +1,17 @@
+# =============================================================================
+# Sniff-Recon Docker Compose Configuration
+# =============================================================================
+#
+# For Ollama users (like you on Arch):
+#   1. Run Ollama on host: ollama serve
+#   2. Run container: docker-compose up -d
+#   3. Container connects to host Ollama automatically
+#
+# For Podman users on Linux:
+#   podman-compose up -d
+#
+# =============================================================================
+
 services:
   sniff-recon:
     build: .
@@ -5,12 +19,21 @@ services:
     ports:
       - "8501:8501"
     volumes:
-      # Mount the output directory to persist analysis results
+      # Persist analysis results
       - ./output:/app/output
-      # Mount .env file for API keys
+      # Configuration
       - ./.env:/app/.env:ro
     environment:
       - PYTHONUNBUFFERED=1
+      # Ollama configuration - connects to HOST's Ollama
+      - OLLAMA_ENABLED=true
+      - OLLAMA_MODEL=qwen2.5-coder:7b
+      # For Docker Desktop (Windows/macOS): host.docker.internal
+      # For Linux Docker: Use extra_hosts below
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    # Linux Docker needs this to access host services
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
     networks:
       - sniff-recon-network
