@@ -1,0 +1,1242 @@
+/*
+ * Sniff-Recon Design System
+ * =========================
+ * Professional cyberpunk-themed CSS for desktop application
+ * 
+ * Table of Contents:
+ * 1. CSS Variables (Design Tokens)
+ * 2. Base Styles
+ * 3. Layout Components
+ * 4. Header & Status
+ * 5. File Upload Zone
+ * 6. Stats Cards
+ * 7. AI Query Panel
+ * 8. Packet Table
+ * 9. Packet Inspector
+ * 10. Buttons & Inputs
+ * 11. Alerts & Messages
+ * 12. Footer
+ * 13. Animations
+ */
+
+/* =============================================================================
+   1. CSS Variables (Design Tokens)
+   ============================================================================= */
+
+:root {
+    /* Colors - Primary Backgrounds */
+    --bg-primary: #0a0a0f;
+    --bg-secondary: #12121a;
+    --bg-tertiary: #1a1a25;
+    --bg-elevated: #22222f;
+
+    /* Colors - Accents */
+    --accent-cyan: #00d4ff;
+    --accent-cyan-dim: rgba(0, 212, 255, 0.15);
+    --accent-cyan-glow: rgba(0, 212, 255, 0.4);
+    --accent-green: #00ff88;
+    --accent-green-dim: rgba(0, 255, 136, 0.15);
+    --accent-purple: #9d4edd;
+    --accent-purple-dim: rgba(157, 78, 221, 0.15);
+    --accent-orange: #ff6b35;
+    --accent-red: #ff3366;
+    --accent-red-dim: rgba(255, 51, 102, 0.15);
+
+    /* Colors - Text */
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --text-muted: #666666;
+    --text-inverse: #0a0a0f;
+
+    /* Colors - Borders */
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-medium: rgba(255, 255, 255, 0.15);
+    --border-accent: rgba(0, 212, 255, 0.4);
+
+    /* Typography */
+    --font-primary: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    --font-display: 'Orbitron', 'Inter', sans-serif;
+
+    /* Font Sizes */
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 2rem;
+    --text-4xl: 2.5rem;
+
+    /* Spacing */
+    --space-xs: 0.25rem;
+    --space-sm: 0.5rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+    --space-2xl: 3rem;
+
+    /* Border Radius */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-full: 9999px;
+
+    /* Shadows */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --shadow-glow-cyan: 0 0 20px var(--accent-cyan-glow);
+    --shadow-glow-green: 0 0 20px rgba(0, 255, 136, 0.4);
+    --shadow-glow-purple: 0 0 20px rgba(157, 78, 221, 0.4);
+
+    /* Transitions */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.25s ease;
+    --transition-slow: 0.4s ease;
+}
+
+/* =============================================================================
+   2. Base Styles
+   ============================================================================= */
+
+/* Import Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;600;700&display=swap');
+
+/* Icon System - Using inline SVG icons */
+.sr-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25em;
+    height: 1.25em;
+    vertical-align: middle;
+}
+
+.sr-icon svg {
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.sr-icon-lg {
+    width: 1.5em;
+    height: 1.5em;
+}
+
+.sr-icon-xl {
+    width: 2em;
+    height: 2em;
+}
+
+.sr-icon-2xl {
+    width: 2.5em;
+    height: 2.5em;
+}
+
+/* Streamlit App Container */
+.stApp {
+    background: var(--bg-primary) !important;
+    font-family: var(--font-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Main Content Area */
+.main {
+    background: transparent !important;
+    padding: var(--space-xl) !important;
+}
+
+/* Hide default Streamlit elements */
+#MainMenu,
+footer,
+header[data-testid="stHeader"] {
+    visibility: hidden !important;
+    height: 0 !important;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--accent-cyan-dim);
+    border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-cyan);
+}
+
+/* =============================================================================
+   3. Layout Components
+   ============================================================================= */
+
+/* Card Base */
+.sr-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    transition: all var(--transition-normal);
+}
+
+.sr-card:hover {
+    border-color: var(--border-accent);
+    box-shadow: var(--shadow-glow-cyan);
+}
+
+/* Card with glow border */
+.sr-card-glow {
+    background: var(--bg-secondary);
+    border: 2px solid var(--accent-cyan);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-glow-cyan);
+}
+
+/* Section Container */
+.sr-section {
+    margin-bottom: var(--space-xl);
+}
+
+/* Section Title */
+.sr-section-title {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    color: var(--accent-cyan);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-sm);
+    border-bottom: 2px solid var(--accent-cyan);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+/* =============================================================================
+   4. Header & Status
+   ============================================================================= */
+
+/* App Header */
+.sr-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md) var(--space-lg);
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: var(--space-xl);
+    border-radius: var(--radius-lg);
+}
+
+/* Logo Section */
+.sr-logo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.sr-logo-text {
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--accent-cyan);
+    text-shadow: 0 0 10px var(--accent-cyan-glow);
+    letter-spacing: 2px;
+}
+
+.sr-logo-tagline {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
+
+/* Status Indicators */
+.sr-status-group {
+    display: flex;
+    gap: var(--space-md);
+    align-items: center;
+}
+
+.sr-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    font-weight: 500;
+}
+
+.sr-status-online {
+    background: var(--accent-green-dim);
+    color: var(--accent-green);
+    border: 1px solid var(--accent-green);
+}
+
+.sr-status-offline {
+    background: var(--accent-red-dim);
+    color: var(--accent-red);
+    border: 1px solid var(--accent-red);
+}
+
+.sr-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.sr-status-online .sr-status-dot {
+    background: var(--accent-green);
+    box-shadow: 0 0 8px var(--accent-green);
+}
+
+.sr-status-offline .sr-status-dot {
+    background: var(--accent-red);
+}
+
+/* AI Provider Badge */
+.sr-provider-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    background: var(--accent-purple-dim);
+    color: var(--accent-purple);
+    border: 1px solid var(--accent-purple);
+}
+
+/* =============================================================================
+   5. File Upload Zone
+   ============================================================================= */
+
+/* Upload Container */
+.sr-upload-zone {
+    background: var(--bg-secondary);
+    border: 2px dashed var(--border-accent);
+    border-radius: var(--radius-xl);
+    padding: var(--space-2xl);
+    text-align: center;
+    transition: all var(--transition-normal);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.sr-upload-zone:hover {
+    border-color: var(--accent-cyan);
+    background: var(--bg-tertiary);
+    box-shadow: var(--shadow-glow-cyan);
+}
+
+.sr-upload-zone::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--accent-cyan-dim), transparent);
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+}
+
+.sr-upload-zone:hover::before {
+    opacity: 1;
+}
+
+.sr-upload-icon {
+    font-size: 3rem;
+    margin-bottom: var(--space-md);
+}
+
+.sr-upload-title {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    color: var(--accent-cyan);
+    margin-bottom: var(--space-sm);
+}
+
+.sr-upload-subtitle {
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+}
+
+.sr-upload-formats {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+}
+
+.sr-format-tag {
+    padding: var(--space-xs) var(--space-sm);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+/* Streamlit File Uploader Override */
+.stFileUploader {
+    background: transparent !important;
+    border: none !important;
+}
+
+.stFileUploader>div {
+    background: var(--bg-secondary) !important;
+    border: 2px dashed var(--border-accent) !important;
+    border-radius: var(--radius-xl) !important;
+    padding: var(--space-xl) !important;
+}
+
+.stFileUploader>div:hover {
+    border-color: var(--accent-cyan) !important;
+    box-shadow: var(--shadow-glow-cyan) !important;
+}
+
+.stFileUploader label {
+    color: var(--text-primary) !important;
+}
+
+.stFileUploader small {
+    color: var(--text-secondary) !important;
+}
+
+/* =============================================================================
+   6. Stats Cards
+   ============================================================================= */
+
+.sr-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+}
+
+.sr-stat-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    transition: all var(--transition-normal);
+    cursor: pointer;
+}
+
+.sr-stat-card:hover {
+    border-color: var(--accent-cyan);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow-cyan);
+}
+
+.sr-stat-icon {
+    font-size: var(--text-2xl);
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-cyan-dim);
+    border-radius: var(--radius-md);
+    color: var(--accent-cyan);
+}
+
+.sr-stat-content {
+    flex: 1;
+}
+
+.sr-stat-value {
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.sr-stat-label {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    margin-top: var(--space-xs);
+}
+
+/* =============================================================================
+   7. AI Query Panel
+   ============================================================================= */
+
+.sr-ai-panel {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.sr-ai-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md) var(--space-lg);
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.sr-ai-title {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--accent-purple);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+/* Chat Messages */
+.sr-chat-container {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: var(--space-md);
+}
+
+.sr-chat-message {
+    margin-bottom: var(--space-md);
+    animation: slideIn 0.3s ease;
+}
+
+.sr-chat-user {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.sr-chat-user .sr-chat-bubble {
+    background: var(--accent-cyan-dim);
+    border: 1px solid var(--accent-cyan);
+    border-radius: var(--radius-lg) var(--radius-lg) var(--radius-sm) var(--radius-lg);
+}
+
+.sr-chat-ai {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.sr-chat-ai .sr-chat-bubble {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg) var(--radius-lg) var(--radius-lg) var(--radius-sm);
+}
+
+.sr-chat-bubble {
+    max-width: 80%;
+    padding: var(--space-md);
+    font-size: var(--text-sm);
+    line-height: 1.6;
+}
+
+/* Query Input */
+.sr-query-input {
+    display: flex;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    background: var(--bg-tertiary);
+    border-top: 1px solid var(--border-subtle);
+}
+
+/* Provider Selector */
+.sr-provider-selector {
+    display: flex;
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+}
+
+.sr-provider-option {
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    border: 1px solid var(--border-subtle);
+    background: transparent;
+    color: var(--text-secondary);
+}
+
+.sr-provider-option:hover {
+    border-color: var(--accent-cyan);
+    color: var(--accent-cyan);
+}
+
+.sr-provider-option.active {
+    background: var(--accent-cyan);
+    color: var(--text-inverse);
+    border-color: var(--accent-cyan);
+}
+
+/* =============================================================================
+   8. Packet Table
+   ============================================================================= */
+
+.sr-table-container {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.sr-table-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md);
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.sr-search-box {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm) var(--space-md);
+    flex: 1;
+    max-width: 400px;
+}
+
+.sr-search-box input {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: var(--text-sm);
+    width: 100%;
+    outline: none;
+}
+
+.sr-search-box input::placeholder {
+    color: var(--text-muted);
+}
+
+/* Protocol Badges */
+.sr-protocol-badge {
+    display: inline-block;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.sr-protocol-tcp {
+    background: rgba(0, 212, 255, 0.2);
+    color: #00d4ff;
+}
+
+.sr-protocol-udp {
+    background: rgba(0, 255, 136, 0.2);
+    color: #00ff88;
+}
+
+.sr-protocol-icmp {
+    background: rgba(255, 107, 53, 0.2);
+    color: #ff6b35;
+}
+
+.sr-protocol-http {
+    background: rgba(157, 78, 221, 0.2);
+    color: #9d4edd;
+}
+
+.sr-protocol-dns {
+    background: rgba(255, 215, 0, 0.2);
+    color: #ffd700;
+}
+
+.sr-protocol-other {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+/* Table Rows */
+.sr-table-row {
+    display: grid;
+    grid-template-columns: 60px 1fr 1fr 100px 100px 60px;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--border-subtle);
+    align-items: center;
+    transition: background var(--transition-fast);
+}
+
+.sr-table-row:hover {
+    background: var(--bg-tertiary);
+}
+
+.sr-table-header {
+    background: var(--bg-tertiary);
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* =============================================================================
+   9. Packet Inspector
+   ============================================================================= */
+
+.sr-inspector {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    margin-top: var(--space-md);
+}
+
+.sr-inspector-header {
+    padding: var(--space-md) var(--space-lg);
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-subtle);
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    color: var(--accent-cyan);
+}
+
+.sr-layer-accordion {
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.sr-layer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md) var(--space-lg);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+
+.sr-layer-header:hover {
+    background: var(--bg-tertiary);
+}
+
+.sr-layer-title {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.sr-layer-content {
+    padding: var(--space-md) var(--space-lg);
+    background: var(--bg-primary);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+}
+
+.sr-field-row {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: var(--space-md);
+    padding: var(--space-xs) 0;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.sr-field-label {
+    color: var(--text-secondary);
+}
+
+.sr-field-value {
+    color: var(--accent-cyan);
+    font-family: var(--font-mono);
+}
+
+/* Hex Dump */
+.sr-hex-dump {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: 1.8;
+    overflow-x: auto;
+    white-space: pre;
+}
+
+.sr-hex-offset {
+    color: var(--text-muted);
+}
+
+.sr-hex-bytes {
+    color: var(--accent-cyan);
+}
+
+.sr-hex-ascii {
+    color: var(--accent-green);
+}
+
+/* =============================================================================
+   10. Buttons & Inputs
+   ============================================================================= */
+
+/* Primary Button */
+.sr-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-lg);
+    background: linear-gradient(135deg, var(--accent-cyan), #00a0cc);
+    color: var(--text-inverse);
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.sr-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow-cyan);
+}
+
+/* Secondary Button */
+.sr-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-lg);
+    background: transparent;
+    color: var(--accent-cyan);
+    border: 1px solid var(--accent-cyan);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.sr-btn-secondary:hover {
+    background: var(--accent-cyan-dim);
+}
+
+/* Ghost Button */
+.sr-btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    background: transparent;
+    color: var(--text-secondary);
+    border: none;
+    font-size: var(--text-sm);
+    cursor: pointer;
+    transition: color var(--transition-fast);
+}
+
+.sr-btn-ghost:hover {
+    color: var(--accent-cyan);
+}
+
+/* Streamlit Button Override */
+.stButton>button {
+    background: linear-gradient(135deg, var(--accent-cyan), #00a0cc) !important;
+    color: var(--text-inverse) !important;
+    border: none !important;
+    border-radius: var(--radius-md) !important;
+    font-weight: 600 !important;
+    padding: var(--space-sm) var(--space-lg) !important;
+    transition: all var(--transition-normal) !important;
+}
+
+.stButton>button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: var(--shadow-glow-cyan) !important;
+}
+
+/* Text Input */
+.stTextInput>div>div>input {
+    background: var(--bg-tertiary) !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: var(--radius-md) !important;
+    color: var(--text-primary) !important;
+    padding: var(--space-md) !important;
+}
+
+.stTextInput>div>div>input:focus {
+    border-color: var(--accent-cyan) !important;
+    box-shadow: 0 0 0 2px var(--accent-cyan-dim) !important;
+}
+
+/* Select Box */
+.stSelectbox>div>div {
+    background: var(--bg-tertiary) !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: var(--radius-md) !important;
+}
+
+/* =============================================================================
+   11. Alerts & Messages
+   ============================================================================= */
+
+.sr-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-md);
+    padding: var(--space-md) var(--space-lg);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-md);
+}
+
+.sr-alert-success {
+    background: var(--accent-green-dim);
+    border: 1px solid var(--accent-green);
+    color: var(--accent-green);
+}
+
+.sr-alert-error {
+    background: var(--accent-red-dim);
+    border: 1px solid var(--accent-red);
+    color: var(--accent-red);
+}
+
+.sr-alert-warning {
+    background: rgba(255, 107, 53, 0.15);
+    border: 1px solid var(--accent-orange);
+    color: var(--accent-orange);
+}
+
+.sr-alert-info {
+    background: var(--accent-cyan-dim);
+    border: 1px solid var(--accent-cyan);
+    color: var(--accent-cyan);
+}
+
+/* Streamlit Alert Override */
+.stSuccess,
+.stInfo,
+.stWarning,
+.stError {
+    background: var(--bg-secondary) !important;
+    border-radius: var(--radius-md) !important;
+}
+
+/* =============================================================================
+   12. Footer
+   ============================================================================= */
+
+.sr-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-lg);
+    margin-top: var(--space-2xl);
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+}
+
+.sr-footer-left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+}
+
+.sr-footer-version {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+}
+
+.sr-footer-links {
+    display: flex;
+    gap: var(--space-md);
+}
+
+.sr-footer-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: var(--text-sm);
+    transition: color var(--transition-fast);
+}
+
+.sr-footer-link:hover {
+    color: var(--accent-cyan);
+}
+
+.sr-footer-right {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+/* =============================================================================
+   13. Animations
+   ============================================================================= */
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes glow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 5px var(--accent-cyan-glow);
+    }
+
+    50% {
+        box-shadow: 0 0 20px var(--accent-cyan-glow);
+    }
+}
+
+/* Loading Spinner */
+.sr-spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid var(--border-subtle);
+    border-top-color: var(--accent-cyan);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Skeleton Loading */
+.sr-skeleton {
+    background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-elevated) 50%, var(--bg-tertiary) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: var(--radius-sm);
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* =============================================================================
+   Streamlit Tabs Override
+   ============================================================================= */
+
+.stTabs [data-baseweb="tab-list"] {
+    gap: var(--space-sm) !important;
+    background: var(--bg-secondary) !important;
+    padding: var(--space-sm) !important;
+    border-radius: var(--radius-lg) !important;
+    border: 1px solid var(--border-subtle) !important;
+}
+
+.stTabs [data-baseweb="tab"] {
+    background: transparent !important;
+    border: none !important;
+    border-radius: var(--radius-md) !important;
+    color: var(--text-secondary) !important;
+    padding: var(--space-sm) var(--space-lg) !important;
+    font-weight: 500 !important;
+    transition: all var(--transition-fast) !important;
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+    background: var(--bg-tertiary) !important;
+    color: var(--accent-cyan) !important;
+}
+
+.stTabs [aria-selected="true"] {
+    background: var(--accent-cyan) !important;
+    color: var(--text-inverse) !important;
+}
+
+/* =============================================================================
+   Streamlit Sidebar Override
+   ============================================================================= */
+
+[data-testid="stSidebar"] {
+    background: var(--bg-secondary) !important;
+    border-right: 1px solid var(--border-subtle) !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {
+    color: var(--text-primary) !important;
+}
+
+/* =============================================================================
+   Streamlit Expander Override
+   ============================================================================= */
+
+.streamlit-expanderHeader {
+    background: var(--bg-tertiary) !important;
+    border-radius: var(--radius-md) !important;
+    color: var(--text-primary) !important;
+}
+
+.streamlit-expanderContent {
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: 0 0 var(--radius-md) var(--radius-md) !important;
+}
+
+/* =============================================================================
+   Utility Classes
+   ============================================================================= */
+
+.sr-text-cyan {
+    color: var(--accent-cyan);
+}
+
+.sr-text-green {
+    color: var(--accent-green);
+}
+
+.sr-text-purple {
+    color: var(--accent-purple);
+}
+
+.sr-text-red {
+    color: var(--accent-red);
+}
+
+.sr-text-muted {
+    color: var(--text-muted);
+}
+
+.sr-bg-primary {
+    background: var(--bg-primary);
+}
+
+.sr-bg-secondary {
+    background: var(--bg-secondary);
+}
+
+.sr-bg-tertiary {
+    background: var(--bg-tertiary);
+}
+
+.sr-mono {
+    font-family: var(--font-mono);
+}
+
+.sr-display {
+    font-family: var(--font-display);
+}
+
+.sr-mt-sm {
+    margin-top: var(--space-sm);
+}
+
+.sr-mt-md {
+    margin-top: var(--space-md);
+}
+
+.sr-mt-lg {
+    margin-top: var(--space-lg);
+}
+
+.sr-mb-sm {
+    margin-bottom: var(--space-sm);
+}
+
+.sr-mb-md {
+    margin-bottom: var(--space-md);
+}
+
+.sr-mb-lg {
+    margin-bottom: var(--space-lg);
+}
+
+.sr-p-sm {
+    padding: var(--space-sm);
+}
+
+.sr-p-md {
+    padding: var(--space-md);
+}
+
+.sr-p-lg {
+    padding: var(--space-lg);
+}
+
+.sr-rounded {
+    border-radius: var(--radius-md);
+}
+
+.sr-rounded-lg {
+    border-radius: var(--radius-lg);
+}
+
+.sr-hidden {
+    display: none;
+}
+
+.sr-flex {
+    display: flex;
+}
+
+.sr-flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sr-flex-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}

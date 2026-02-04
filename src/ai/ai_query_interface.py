@@ -1,7 +1,8 @@
 """
-AI Query Interface for Streamlit
-
-This module provides a beautiful Streamlit interface for AI-powered packet analysis queries.
+AI Query Interface Module
+=========================
+Chat-like interface for AI-powered packet analysis.
+Supports multiple AI providers with visual badges and clean UX.
 """
 
 import streamlit as st
@@ -9,522 +10,290 @@ from typing import List, Dict, Any
 from src.ai.ai_module import ai_engine, PacketSummary
 from scapy.packet import Packet
 import time
-import pandas as pd
-from datetime import datetime
 import os
+from datetime import datetime
+from src.ui.icons import icon
 
-def inject_ai_interface_css():
-    """Inject CSS for the AI query interface"""
-    st.markdown(
-        """
-        <style>
-        /* AI Query Interface Styling */
-        .ai-query-container {
-            background: transparent;
-            border: none;
-            border-radius: 0;
-            padding: 0;
-            margin: 1rem 0;
-            box-shadow: none;
-        }
-        
-        .ai-query-header {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #00ffff;
-            margin-bottom: 2rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1.5rem;
-            background: rgba(0, 20, 30, 0.8);
-            border: 2px solid rgba(0, 255, 255, 0.6);
-            border-radius: 12px;
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.2);
-            backdrop-filter: blur(5px);
-        }
-        
-        .ai-query-header::before {
-            content: '🤖';
-            font-size: 1.3rem;
-        }
-        
-        .query-input-container {
-            background: transparent;
-            border-radius: 0;
-            padding: 0;
-            border: none;
-            margin-bottom: 1rem;
-        }
-        
-        .suggested-queries {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-        
-        .query-chip {
-            background: linear-gradient(45deg, rgba(0, 255, 255, 0.1), rgba(0, 179, 179, 0.1));
-            border: 1px solid rgba(0, 255, 255, 0.3);
-            border-radius: 20px;
-            padding: 0.5rem 1rem;
-            color: #00ffff;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
-        }
-        
-        .query-chip:hover {
-            background: linear-gradient(45deg, rgba(0, 255, 255, 0.2), rgba(0, 179, 179, 0.2));
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.3);
-        }
-        
-        .ai-response-container {
-            background: linear-gradient(145deg, rgba(0, 255, 0, 0.05), rgba(0, 200, 0, 0.05));
-            border: 2px solid rgba(0, 255, 0, 0.3);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin: 1rem 0;
-            animation: fadeInUp 0.6s ease forwards;
-        }
-        
-        .ai-response-header {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #00ff00;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .ai-response-header::before {
-            content: '💡';
-            font-size: 1.1rem;
-        }
-        
-        .ai-response-content {
-            color: #e0e0e0;
-            line-height: 1.6;
-            font-size: 1rem;
-        }
-        
-        .ai-error-container {
-            background: linear-gradient(145deg, rgba(255, 0, 0, 0.05), rgba(200, 0, 0, 0.05));
-            border: 2px solid rgba(255, 0, 0, 0.3);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin: 1rem 0;
-        }
-        
-        .ai-error-header {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #ff6666;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .ai-error-header::before {
-            content: '⚠️';
-            font-size: 1.1rem;
-        }
-        
-        .loading-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-            color: #00ffff;
-        }
-        
-        .loading-spinner {
-            border: 3px solid rgba(0, 255, 255, 0.3);
-            border-top: 3px solid #00ffff;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin-right: 1rem;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        /* Responsive design */
-        @media (max-width: 768px) {
-            .ai-query-container {
-                padding: 1rem;
-            }
-            
-            .suggested-queries {
-                flex-direction: column;
-            }
-            
-            .query-chip {
-                text-align: center;
-            }
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
 
-def render_ai_query_interface(packets: List[Packet]):
-    """
-    Render the AI query interface in Streamlit
-    """
-    # Inject CSS
-    inject_ai_interface_css()
+def get_provider_info(provider: str) -> tuple[str, str, str]:
+    """Get badge info for provider: (icon_name, label, color class)."""
+    provider_lower = provider.lower()
     
-    # Initialize session state for AI responses
-    if 'ai_responses' not in st.session_state:
-        st.session_state.ai_responses = []
-    
-    # AI Query Section
-    st.markdown('<div class="ai-query-container">', unsafe_allow_html=True)
-    st.markdown('<div class="ai-query-header">AI-Powered Packet Analysis</div>', unsafe_allow_html=True)
+    if "ollama" in provider_lower:
+        return "shield-check", "OFFLINE", "sr-status-online"
+    elif "auto" in provider_lower or "balanced" in provider_lower:
+        return "zap", "AUTO", "sr-provider-badge"
+    elif "groq" in provider_lower:
+        return "rocket", "GROQ", "sr-provider-badge"
+    elif "openai" in provider_lower or "gpt" in provider_lower:
+        return "sparkles", "OpenAI", "sr-provider-badge"
+    elif "anthropic" in provider_lower or "claude" in provider_lower:
+        return "brain", "Claude", "sr-provider-badge"
+    elif "gemini" in provider_lower or "google" in provider_lower:
+        return "sparkles", "Gemini", "sr-provider-badge"
+    else:
+        return "globe", "CLOUD", "sr-provider-badge"
 
-    # --- AI Provider Selection ---
+
+def render_provider_selector() -> str:
+    """Render AI provider selection with visual badges."""
     from src.ai.multi_agent_ai import get_active_providers
     
-    # Initialize provider selection in session state
+    # Initialize session state
     if 'selected_ai_provider' not in st.session_state:
         st.session_state.selected_ai_provider = "Auto (Load Balanced)"
     
     # Get active providers
     active_providers = get_active_providers()
+    provider_options = ["Auto (Load Balanced)"] + list(active_providers)
     
-    # Build provider options list
-    provider_options = ["Auto (Load Balanced)"]
+    col1, col2 = st.columns([3, 1])
     
-    # Add all active providers
-    for provider_name in active_providers:
-        provider_options.append(provider_name)
-    
-    # Create two columns for provider selection and badge
-    col_select, col_badge = st.columns([3, 1])
-    
-    with col_select:
-        selected_provider = st.selectbox(
-            "🎯 AI Provider",
+    with col1:
+        selected = st.selectbox(
+            "AI Provider",
             options=provider_options,
-            index=provider_options.index(st.session_state.selected_ai_provider) if st.session_state.selected_ai_provider in provider_options else 0,
-            key="provider_selector",
-            help="Select which AI provider to use. 'Auto' distributes queries across all active providers. Selecting a specific provider routes all queries to that provider only."
+            index=provider_options.index(st.session_state.selected_ai_provider) 
+                  if st.session_state.selected_ai_provider in provider_options else 0,
+            key="ai_provider_select",
+            label_visibility="collapsed"
         )
-        
-        # Update session state
-        st.session_state.selected_ai_provider = selected_provider
+        st.session_state.selected_ai_provider = selected
     
-    with col_badge:
-        # Show badge based on selection
-        if "Ollama" in selected_provider:
-            st.markdown(
-                '<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); '
-                'padding: 8px 12px; border-radius: 8px; text-align: center; margin-top: 28px;">' 
-                '<span style="font-size: 12px; font-weight: 600; color: white;">🔒 OFFLINE</span>'
-                '</div>',
-                unsafe_allow_html=True
-            )
-        elif selected_provider == "Auto (Load Balanced)":
-            st.markdown(
-                '<div style="background: linear-gradient(135deg, #3AB795 0%, #26D07C 100%); '
-                'padding: 8px 12px; border-radius: 8px; text-align: center; margin-top: 28px;">' 
-                '<span style="font-size: 12px; font-weight: 600; color: white;">⚡ AUTO</span>'
-                '</div>',
-                unsafe_allow_html=True
-            )
-        else:
-            st.markdown(
-                '<div style="background: linear-gradient(135deg, #F093FB 0%, #F5576C 100%); '
-                'padding: 8px 12px; border-radius: 8px; text-align: center; margin-top: 28px;">' 
-                '<span style="font-size: 12px; font-weight: 600; color: white;">🎯 DIRECT</span>'
-                '</div>',
-                unsafe_allow_html=True
-            )
-    
-    # Show info about selected provider
-    if "Ollama" in selected_provider:
-        st.info(
-            "🔒 **Local LLM Mode**: All AI analysis runs locally on your machine. "
-            "No packet data is sent to external services. Requires Ollama to be installed and running.",
-            icon="ℹ️"
-        )
-    elif selected_provider != "Auto (Load Balanced)":
-        st.info(
-            f"🎯 **Direct Mode**: All AI queries will be sent only to **{selected_provider}**. "
-            "Load balancing and failover are disabled.",
-            icon="ℹ️"
-        )
-
-
-    # Check API key status and show notification
-    if not ai_engine.api_key_valid:
-        st.warning(
-            "⚠️ **API Key Issue Detected**: Your Hugging Face API key is invalid or missing. "
-            "The app will provide local analysis instead. To enable AI-powered analysis, "
-            "please update your `HUGGINGFACE_API_KEY` in the `.env` file. "
-            "Get a free API key from [Hugging Face](https://huggingface.co/settings/tokens)."
-        )
-
-    st.markdown(
-        "Ask questions about your network traffic in natural language. The AI will analyze the packet data and provide insights."
-    )
-
-    # Query input
-    st.markdown('<div class="query-input-container">', unsafe_allow_html=True)
-
-    # Get suggested queries
-    suggested_queries = ai_engine.get_suggested_queries()
-
-    # Display suggested queries as clickable chips
-    st.markdown("**💡 Suggested Questions:**")
-    st.markdown('<div class="suggested-queries">', unsafe_allow_html=True)
-
-    cols = st.columns(2)
-    for i, query in enumerate(suggested_queries):
-        col_idx = i % 2
-        with cols[col_idx]:
-            if st.button(query, key=f"suggested_{i}", help="Click to use this query"):
-                # Auto-submit the query with AI analysis
-                with st.spinner("🤖 AI is analyzing your network traffic..."):
-                    suspicious = ai_engine.filter_suspicious_packets(packets)
-                    provider = st.session_state.selected_ai_provider
-                    if not suspicious or len(suspicious) == 0:
-                        st.info("ℹ️ No suspicious patterns detected. Analyzing all packets...")
-                        ai_result = ai_engine.query_ai_with_packets(query, packets, provider_name=provider)
-                    else:
-                        st.success(f"🔍 Found {len(suspicious)} suspicious packets. Analyzing focused dataset...")
-                        ai_result = ai_engine.query_ai_with_packets(query, suspicious, provider_name=provider)
-                    response_entry = {
-                        "query": query,
-                        "result": ai_result,
-                        "timestamp": time.time(),
-                        "provider": provider
-                    }
-                    st.session_state.ai_responses.append(response_entry)
-                    st.rerun()
-
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # Query input field
-    user_query = st.text_input(
-        "🤖 Ask a question about your network traffic:",
-        value=st.session_state.get('user_query', ''),
-        placeholder="e.g., What are the top 5 source IP addresses?",
-        key="ai_query_input"
-    )
-
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # Query button
-    col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        query_button = st.button(
-            "🚀 Analyze with AI",
-            type="primary",
-            width='stretch',
-            help="Send your question to the AI for analysis"
-        )
-
-    st.markdown('</div>', unsafe_allow_html=True)
+        icon_name, label, _ = get_provider_info(selected)
+        provider_icon = icon(icon_name)
+        if "ollama" in selected.lower():
+            badge_style = "background: var(--accent-green-dim); color: var(--accent-green); border: 1px solid var(--accent-green);"
+        else:
+            badge_style = "background: var(--accent-purple-dim); color: var(--accent-purple); border: 1px solid var(--accent-purple);"
+        
+        st.markdown(f"""
+            <div style="{badge_style} padding: 0.5rem 1rem; border-radius: 999px; text-align: center; font-weight: 600; font-size: 0.875rem;">
+                {provider_icon} {label}
+            </div>
+        """, unsafe_allow_html=True)
     
-    # Handle AI query
-    if query_button and user_query and packets:
-         with st.spinner("🤖 AI is analyzing your network traffic..."):
-            # Layered Filtering: Get suspicious, cluster, summarize
-            suspicious = ai_engine.filter_suspicious_packets(packets)
-            provider = st.session_state.selected_ai_provider
-            # If no suspicious packets found, analyze ALL packets instead
-            if not suspicious or len(suspicious) == 0:
-                st.info("ℹ️ No suspicious patterns detected. Analyzing all packets...")
-                # Pass actual packets to AI (for multi-agent system)
-                ai_result = ai_engine.query_ai_with_packets(user_query, packets, provider_name=provider)
-            else:
-                st.success(f"🔍 Found {len(suspicious)} suspicious packets. Analyzing focused dataset...")
-                # Pass suspicious packets to AI
-                ai_result = ai_engine.query_ai_with_packets(user_query, suspicious, provider_name=provider)
-            # Store response in session state
-            response_entry = {
-                "query": user_query,
-                "result": ai_result,
-                "timestamp": time.time(),
-                "provider": provider
-            }
-            st.session_state.ai_responses.append(response_entry)
-            # Clear the input
-            st.session_state.user_query = ""
+    # Provider-specific info
+    if "ollama" in selected.lower():
+        shield_icon = icon("shield-check")
+        st.info(f"{shield_icon} **Local Mode**: All analysis runs on your machine. No data sent externally.")
+    
+    return selected
+
+
+def render_chat_messages() -> None:
+    """Render the chat message history."""
+    if 'ai_responses' not in st.session_state:
+        st.session_state.ai_responses = []
+    
+    messages = st.session_state.ai_responses
+    
+    if not messages:
+        bot_icon = icon("bot", "2xl")
+        st.markdown(f"""
+            <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                <div style="font-size: 2rem; margin-bottom: 1rem; color: var(--accent-purple);">{bot_icon}</div>
+                <div>Ask a question about your packet data to start the conversation</div>
+            </div>
+        """, unsafe_allow_html=True)
+        return
+    
+    # Chat container
+    for msg in messages:
+        query = msg.get('query', '')
+        response = msg.get('response', {})
+        timestamp = msg.get('timestamp', '')
+        provider = msg.get('provider', 'AI')
+        
+        # User message
+        st.markdown(f"""
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
+                <div style="max-width: 80%; background: var(--accent-cyan-dim); border: 1px solid var(--accent-cyan); 
+                            border-radius: 16px 16px 4px 16px; padding: 1rem;">
+                    <div style="color: var(--text-primary);">{query}</div>
+                    <div style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; text-align: right;">
+                        {timestamp}
+                    </div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        # AI response
+        response_text = response.get('analysis', response) if isinstance(response, dict) else str(response)
+        icon_name, label, _ = get_provider_info(provider)
+        provider_icon = icon(icon_name)
+        
+        st.markdown(f"""
+            <div style="display: flex; justify-content: flex-start; margin-bottom: 1rem;">
+                <div style="max-width: 80%; background: var(--bg-tertiary); border: 1px solid var(--border-subtle); 
+                            border-radius: 16px 16px 16px 4px; padding: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <span style="font-weight: 600; color: var(--accent-purple);">{provider_icon} {label}</span>
+                    </div>
+                    <div style="color: var(--text-primary); line-height: 1.6;">{response_text}</div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+
+def render_suggested_queries() -> str:
+    """Render suggested query buttons and return selected query."""
+    suggestions = [
+        "What protocols are being used?",
+        "Are there any suspicious patterns?",
+        "Show me the top talkers",
+        "Summarize this traffic",
+        "Find any anomalies"
+    ]
+    
+    sparkles_icon = icon("sparkles")
+    st.markdown(f"**{sparkles_icon} Quick Questions:**", unsafe_allow_html=True)
+    
+    cols = st.columns(len(suggestions))
+    selected_query = None
+    
+    for i, suggestion in enumerate(suggestions):
+        with cols[i]:
+            if st.button(suggestion, key=f"suggest_{i}", use_container_width=True):
+                selected_query = suggestion
+    
+    return selected_query
+
+
+def send_query(query: str, packets: List[Packet], provider: str) -> Dict[str, Any]:
+    """Send query to AI and get response."""
+    # Convert packets to summaries
+    summaries = []
+    for pkt in packets[:100]:  # Limit to 100 packets for context
+        summary = PacketSummary(
+            src_ip=str(pkt.src) if hasattr(pkt, 'src') else "",
+            dst_ip=str(pkt.dst) if hasattr(pkt, 'dst') else "",
+            protocol=str(pkt.payload.name) if hasattr(pkt, 'payload') else "Unknown",
+            length=len(pkt),
+            timestamp=float(pkt.time) if hasattr(pkt, 'time') else 0
+        )
+        summaries.append(summary)
+    
+    # Use AI engine
+    try:
+        if provider == "Auto (Load Balanced)":
+            response = ai_engine.query(query, summaries)
+        else:
+            response = ai_engine.query(query, summaries, force_provider=provider)
+        return response
+    except Exception as e:
+        return {"error": str(e), "analysis": f"Error: {str(e)}"}
+
+
+def render_ai_query_interface(packets: List[Packet]) -> None:
+    """Render the main AI query interface."""
+    # Initialize session state
+    if 'ai_responses' not in st.session_state:
+        st.session_state.ai_responses = []
+    
+    # AI Panel Header
+    st.markdown("""
+        <div class="sr-ai-panel">
+            <div class="sr-ai-header">
+                <div class="sr-ai-title">
+                    🤖 AI Assistant
+                </div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Provider selector
+    selected_provider = render_provider_selector()
+    
+    st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
+    
+    # Suggested queries
+    suggested = render_suggested_queries()
+    
+    st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
+    
+    # Chat messages
+    render_chat_messages()
+    
+    st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
+    
+    # Query input
+    col1, col2 = st.columns([5, 1])
+    
+    with col1:
+        # Use suggested query if clicked
+        default_value = suggested if suggested else ""
+        query = st.text_input(
+            "Ask about your packets",
+            value=default_value,
+            placeholder="e.g., What protocols are most common?",
+            key="ai_query_input",
+            label_visibility="collapsed"
+        )
+    
+    with col2:
+        send_clicked = st.button("Send", key="send_query", use_container_width=True)
+    
+    # Handle query submission
+    if (send_clicked or suggested) and query:
+        with st.spinner("Analyzing packets..."):
+            response = send_query(query, packets, selected_provider)
+            
+            # Add to chat history
+            st.session_state.ai_responses.append({
+                'query': query,
+                'response': response,
+                'provider': selected_provider,
+                'timestamp': datetime.now().strftime("%H:%M")
+            })
+            
             st.rerun()
     
-    # Display AI responses
+    # Clear chat button
     if st.session_state.ai_responses:
-        st.markdown('<div class="section-heading">AI ANALYSIS RESULTS</div>', unsafe_allow_html=True)
-        
-        for i, response_entry in enumerate(reversed(st.session_state.ai_responses)):
-            result = response_entry["result"]
-            query = response_entry["query"]
-            
-            if result.get("success"):
-                # Success response
-                header_text = "AI Analysis"
-                header_icon = "🤖"
-                
-                # Check if this is a fallback response
-                if result.get("fallback"):
-                    header_text = "Local Analysis (AI Unavailable)"
-                    header_icon = "📊"
-                
-                st.markdown(
-                    f"""
-                    <div class="ai-response-container">
-                        <div class="ai-response-header">{header_icon} {header_text}</div>
-                        <div style="margin-bottom: 1rem; color: #00b3b3; font-weight: 500;">
-                            <strong>Question:</strong> {query}
-                        </div>
-                        <div class="ai-response-content">
-                            {result["response"]}
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-                
-                # Add PDF Export button for this response
-                col1, col2, col3 = st.columns([1, 2, 1])
-                with col2:
-                    if st.button(f"📄 Export as PDF", key=f"export_pdf_{i}", use_container_width=True, help="Download this analysis as a professional PDF report"):
-                        try:
-                            # Import PDF exporter
-                            from src.utils.pdf_exporter import export_ai_response_to_pdf
-                            
-                            # Generate PDF
-                            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                            filename = f"sniff_recon_analysis_{timestamp}.pdf"
-                            
-                            # Prepare metadata
-                            metadata = {
-                                'ai_provider': result.get('provider', 'Local Analysis' if result.get('fallback') else 'AI'),
-                                'timestamp': datetime.now().strftime("%B %d, %Y at %I:%M %p")
-                            }
-                            
-                            # Generate PDF
-                            pdf_path = export_ai_response_to_pdf(
-                                query=query,
-                                response=result["response"],
-                                filename=filename,
-                                metadata=metadata
-                            )
-                            
-                            # Read PDF and offer download
-                            with open(pdf_path, "rb") as pdf_file:
-                                pdf_bytes = pdf_file.read()
-                                st.download_button(
-                                    label="💾 Download PDF Report",
-                                    data=pdf_bytes,
-                                    file_name=filename,
-                                    mime="application/pdf",
-                                    key=f"download_pdf_{i}",
-                                    use_container_width=True
-                                )
-                            
-                            st.success(f"✅ PDF generated successfully: {filename}")
-                        
-                        except ImportError:
-                            st.error("❌ PDF export requires 'reportlab' package. Install it with: `pip install reportlab`")
-                        except Exception as e:
-                            st.error(f"❌ Error generating PDF: {str(e)}")
-
-            else:
-                # Error response
-                st.markdown(
-                    f"""
-                    <div class="ai-error-container">
-                        <div class="ai-error-header">AI Analysis Error</div>
-                        <div style="margin-bottom: 1rem; color: #00b3b3; font-weight: 500;">
-                            <strong>Question:</strong> {query}
-                        </div>
-                        <div style="color: #ff6666;">
-                            <strong>Error:</strong> {result.get("error", "Unknown error")}
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-            
-            # Add a small separator
-            if i < len(st.session_state.ai_responses) - 1:
-                st.markdown("---")
-        
-        # Clear responses button
-        if st.button("🗑️ Clear All Responses", type="secondary"):
+        if st.button("🗑️ Clear Chat", key="clear_chat"):
             st.session_state.ai_responses = []
             st.rerun()
 
-def render_ai_quick_analysis(packets: List[Packet]):
-    """
-    Render a quick AI analysis summary
-    """
+
+def render_ai_quick_analysis(packets: List[Packet]) -> None:
+    """Render a quick AI analysis summary."""
     if not packets:
         return
     
-    # Extract basic statistics
-    packet_summary = ai_engine.extract_packet_statistics(packets)
+    st.markdown("""
+        <div class="sr-card" style="margin-bottom: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                <span style="font-size: 1.5rem;">⚡</span>
+                <span style="font-weight: 600; color: var(--accent-cyan);">Quick Stats</span>
+            </div>
+    """, unsafe_allow_html=True)
     
-    st.markdown('<div class="section-heading">QUICK AI ANALYSIS</div>', unsafe_allow_html=True)
+    # Calculate quick stats
+    total = len(packets)
+    protocols = {}
+    ips = set()
     
-    # Create columns for statistics
+    for pkt in packets[:1000]:  # Sample first 1000
+        if hasattr(pkt, 'payload') and hasattr(pkt.payload, 'name'):
+            proto = pkt.payload.name
+            protocols[proto] = protocols.get(proto, 0) + 1
+        if hasattr(pkt, 'src'):
+            ips.add(str(pkt.src))
+        if hasattr(pkt, 'dst'):
+            ips.add(str(pkt.dst))
+    
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.metric("Total Packets", packet_summary.total_packets)
-        st.metric("Unique Source IPs", len(packet_summary.unique_src_ips))
+        st.metric("Total Packets", f"{total:,}")
     
     with col2:
-        st.metric("Unique Dest IPs", len(packet_summary.unique_dst_ips))
-        avg_size = sum(packet_summary.packet_sizes) / len(packet_summary.packet_sizes) if packet_summary.packet_sizes else 0
-        st.metric("Avg Packet Size", f"{avg_size:.1f} bytes")
+        st.metric("Unique IPs", len(ips))
     
     with col3:
-        # Most common protocol
-        if packet_summary.protocol_distribution:
-            top_protocol = max(packet_summary.protocol_distribution.items(), key=lambda x: x[1])
-            st.metric("Top Protocol", f"{top_protocol[0]} ({top_protocol[1]})")
-        
-        # Suspicious patterns
-        st.metric("Suspicious Patterns", len(packet_summary.suspicious_patterns))
+        top_proto = max(protocols, key=protocols.get) if protocols else "N/A"
+        st.metric("Top Protocol", top_proto)
     
-    # Protocol distribution chart
-    if packet_summary.protocol_distribution:
-        st.markdown('<div class="subsection-heading">📊 Protocol Distribution</div>', unsafe_allow_html=True)
-        protocol_df = pd.DataFrame(
-            list(packet_summary.protocol_distribution.items()),
-            columns=["Protocol", "Count"]
-        )
-        st.bar_chart(protocol_df.set_index("Protocol"))
-    
-    # Top IPs
-    if packet_summary.top_src_ips:
-        st.markdown('<div class="subsection-heading">🌐 Top Source IPs</div>', unsafe_allow_html=True)
-        top_src_df = pd.DataFrame(
-            list(packet_summary.top_src_ips.items())[:5],
-            columns=["IP Address", "Packet Count"]
-        )
-        st.dataframe(top_src_df, width='stretch')
+    st.markdown("</div>", unsafe_allow_html=True)

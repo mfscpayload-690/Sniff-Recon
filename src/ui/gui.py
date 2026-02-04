@@ -1,1130 +1,561 @@
+"""
+Sniff-Recon GUI Module
+======================
+Main Streamlit interface for the network packet analyzer.
+Clean, modular implementation using external CSS design system.
+"""
+
 import streamlit as st
-import streamlit.components.v1 as components
 import os
 import sys
 import json
 import tempfile
 import pandas as pd
-import base64
+from pathlib import Path
 from dataclasses import asdict, is_dataclass
 from dotenv import load_dotenv
 
-# Add parent directory to path to enable absolute imports
+# Add parent directory to path for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 from src.parsers.pcap_parser import parse_pcap
 from src.parsers.csv_parser import parse_csv
 from src.parsers.txt_parser import parse_txt
+from src.ui.icons import icon, ICONS
 
 # Ensure output directory exists
 os.makedirs("output", exist_ok=True)
 
-# Load environment variables (local and Docker paths)
-try:
-    load_dotenv()  # Local dev
-    load_dotenv('/app/.env')  # Docker path (mounted)
-except Exception:
-    pass
+# Load environment variables
+load_dotenv()
+load_dotenv('/app/.env', override=False)  # Docker path
 
 
 class CustomJSONEncoder(json.JSONEncoder):
+    """Handle special types for JSON serialization."""
     def default(self, o):
-        # Handle EDecimal serialization by converting to float
         if o.__class__.__name__ == "EDecimal":
             return float(o)
-        # Handle dataclasses (like AIResponse)
         if is_dataclass(o) and not isinstance(o, type):
             return asdict(o)
         return super().default(o)
 
 
-def save_summary(summary):
+def save_summary(summary: dict) -> None:
+    """Save analysis summary to JSON file."""
     with open("output/summary.json", "w") as f:
         json.dump(summary, f, indent=4, cls=CustomJSONEncoder)
 
 
+def load_css() -> str:
+    """Load CSS from external file."""
+    css_path = Path(__file__).parent / "styles.css"
+    if css_path.exists():
+        return css_path.read_text()
+    return ""
 
 
-def inject_modern_css():
-    st.markdown(
-        """
-        <style>
-        /* Fonts */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@600;700;800&display=swap');
+def check_ollama_status() -> tuple[bool, str]:
+    """Check if Ollama is available and return status."""
+    import urllib.request
+    import urllib.error
+    
+    ollama_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    try:
+        response = urllib.request.urlopen(f"{ollama_url}/api/tags", timeout=2)
+        if response.status == 200:
+            return True, os.getenv("OLLAMA_MODEL", "qwen2.5-coder:7b")
+    except Exception:
+        pass
+    return False, ""
 
-        /* Pure black background with STARFIELD */
-        .stApp {
-            background-color: #000000 !important;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        /* Floating particles - Layer 1 moving horizontally right */
-        .stApp::before {
-            content: '' !important;
-            position: fixed !important;
-            top: 50% !important;
-            left: 50% !important;
-            width: 3px !important;
-            height: 3px !important;
-            border-radius: 50% !important;
-            background: #00ffff !important;
-            box-shadow: 
-                0 0 6px 2px #00ffff,
-                -350px -200px 0 0 #00ffff,
-                200px 150px 0 0 #00e6ff,
-                -100px 300px 0 0 #4ad3b0,
-                450px -100px 0 0 #00ffff,
-                -500px 50px 0 0 #06b6d4,
-                100px -350px 0 0 #00e6ff,
-                -300px -450px 0 0 #00ffff,
-                600px 200px 0 0 #4ad3b0,
-                -200px 500px 0 0 #00ffff !important;
-            z-index: 1 !important;
-            pointer-events: none !important;
-            animation: moveHorizontal 15s linear infinite !important;
-        }
-        
-        /* Floating particles - Layer 2 moving vertically down */
-        .stApp::after {
-            content: '' !important;
-            position: fixed !important;
-            top: 50% !important;
-            left: 50% !important;
-            width: 3px !important;
-            height: 3px !important;
-            border-radius: 50% !important;
-            background: #00e6ff !important;
-            box-shadow: 
-                0 0 6px 2px #00e6ff,
-                550px -300px 0 0 #06b6d4,
-                -400px 400px 0 0 #00ffff,
-                250px 100px 0 0 #00e6ff,
-                -250px 250px 0 0 #4ad3b0,
-                500px -50px 0 0 #00ffff,
-                -100px -300px 0 0 #06b6d4,
-                300px 300px 0 0 #00e6ff,
-                -600px 100px 0 0 #00ffff,
-                50px -400px 0 0 #4ad3b0 !important;
-            z-index: 1 !important;
-            pointer-events: none !important;
-            animation: moveVertical 12s linear infinite !important;
-        }
-        
-        /* Particle animations - moderate pixel-based flow (restored) */
-        @keyframes moveHorizontal {
-            0% { transform: translate(-100px, 0); }
-            100% { transform: translate(100px, 0); }
-        }
-        
-        @keyframes moveVertical {
-            0% { transform: translate(0, -100px); }
-            100% { transform: translate(0, 100px); }
-        }
 
-        
-        .main {
-            font-family: 'Inter', sans-serif;
-            position: relative;
-            background: transparent !important;
-            color: #e0e0e0;
-            padding: 2rem;
-            z-index: 100 !important;
-        }
-        
-        /* Ensure sidebar is visible */
-        [data-testid="stSidebar"] {
-            z-index: 200 !important;
-            position: relative !important;
-        }
-        
-        /* Make all content above particles */
-        .main > div {
-            position: relative;
-            z-index: 100 !important;
-        }
-        
-        /* Ensure header is visible */
-        header[data-testid="stHeader"] {
-            z-index: 200 !important;
-        }
-        
-        /* All interactive elements above stars */
-        .stApp > div {
-            position: relative;
-            z-index: 50 !important;
-        }
-        
-        @keyframes gridPulse {
-            0%, 100% { opacity: 0.1; }
-            50% { opacity: 0.2; }
-        }
+def render_header() -> None:
+    """Render the application header with status indicators."""
+    ollama_online, model_name = check_ollama_status()
+    
+    search_icon = icon("search", "lg")
+    st.markdown(f"""
+        <div class="sr-header">
+            <div class="sr-logo">
+                <div>
+                    <div class="sr-logo-text">{search_icon} SNIFF-RECON</div>
+                    <div class="sr-logo-tagline">AI-Powered Network Packet Analyzer</div>
+                </div>
+            </div>
+            <div class="sr-status-group">
+    """, unsafe_allow_html=True)
+    
+    bot_icon = icon("bot")
+    if ollama_online:
+        st.markdown(f"""
+                <div class="sr-status-badge sr-status-online">
+                    <span class="sr-status-dot"></span>
+                    Ollama Online
+                </div>
+                <div class="sr-provider-badge">
+                    {bot_icon} {model_name}
+                </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+                <div class="sr-status-badge sr-status-offline">
+                    <span class="sr-status-dot"></span>
+                    Ollama Offline
+                </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("""
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
 
-        /* Animated data flow lines - MANY MORE */
-        @keyframes flowLine1 {
-            0% { transform: translateX(-100%) translateY(0); opacity: 0; }
-            10% { opacity: 0.6; }
-            90% { opacity: 0.6; }
-            100% { transform: translateX(200vw) translateY(20px); opacity: 0; }
-        }
-        @keyframes flowLine2 {
-            0% { transform: translateX(-100%) translateY(0); opacity: 0; }
-            10% { opacity: 0.4; }
-            90% { opacity: 0.4; }
-            100% { transform: translateX(200vw) translateY(-30px); opacity: 0; }
-        }
-        @keyframes flowLine3 {
-            0% { transform: translateX(-100%) translateY(0); opacity: 0; }
-            10% { opacity: 0.5; }
-            90% { opacity: 0.5; }
-            100% { transform: translateX(200vw) translateY(40px); opacity: 0; }
-        }
-        @keyframes flowLine4 {
-            0% { transform: translateX(200vw) translateY(0); opacity: 0; }
-            10% { opacity: 0.5; }
-            90% { opacity: 0.5; }
-            100% { transform: translateX(-100vw) translateY(-20px); opacity: 0; }
-        }
-        @keyframes flowLine5 {
-            0% { transform: translateX(-100%) translateY(0); opacity: 0; }
-            10% { opacity: 0.7; }
-            90% { opacity: 0.7; }
-            100% { transform: translateX(200vw) translateY(-40px); opacity: 0; }
-        }
-        @keyframes flowLine6 {
-            0% { transform: translateX(200vw) translateY(0); opacity: 0; }
-            10% { opacity: 0.4; }
-            90% { opacity: 0.4; }
-            100% { transform: translateX(-100vw) translateY(30px); opacity: 0; }
-        }
 
-        /* ==================== END BACKGROUND ==================== */
-
-        /* Background animation container */
-        .stApp::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        /* Network nodes - 6 floating elements */
-        [data-testid="stSidebar"]::before,
-        [data-testid="stSidebar"]::after,
-        [data-testid="stToolbar"]::before,
-        [data-testid="stToolbar"]::after,
-        [data-testid="stDecoration"]::before,
-        [data-testid="stDecoration"]::after {
-            content: '';
-            position: fixed;
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 0;
-        }
-        
-        [data-testid="stSidebar"]::before {
-            background: radial-gradient(circle, #00ffff, transparent);
-            box-shadow: 0 0 15px rgba(0,255,255,0.8), 0 0 30px rgba(0,255,255,0.4);
-            animation: floatNode1 35s ease-in-out infinite;
-        }
-        [data-testid="stSidebar"]::after {
-            background: radial-gradient(circle, #b084f4, transparent);
-            box-shadow: 0 0 15px rgba(176,132,244,0.8), 0 0 30px rgba(176,132,244,0.4);
-            animation: floatNode2 40s ease-in-out infinite 5s;
-        }
-        [data-testid="stToolbar"]::before {
-            background: radial-gradient(circle, #4ad3b0, transparent);
-            box-shadow: 0 0 15px rgba(74,211,176,0.8), 0 0 30px rgba(74,211,176,0.4);
-            animation: floatNode3 32s ease-in-out infinite 10s;
-        }
-        [data-testid="stToolbar"]::after {
-            background: radial-gradient(circle, #06b6d4, transparent);
-            box-shadow: 0 0 15px rgba(6,182,212,0.8), 0 0 30px rgba(6,182,212,0.4);
-            animation: floatNode4 38s ease-in-out infinite 15s;
-        }
-        [data-testid="stDecoration"]::before {
-            background: radial-gradient(circle, #8b5cf6, transparent);
-            box-shadow: 0 0 15px rgba(139,92,246,0.8), 0 0 30px rgba(139,92,246,0.4);
-            animation: floatNode5 36s ease-in-out infinite 20s;
-        }
-        [data-testid="stDecoration"]::after {
-            background: radial-gradient(circle, #00d4ff, transparent);
-            box-shadow: 0 0 15px rgba(0,212,255,0.8), 0 0 30px rgba(0,212,255,0.4);
-            animation: floatNode6 34s ease-in-out infinite 25s;
-        }
-
-        /* Particle dots - 20 PARTICLES FOR GALAXY EFFECT (GLOBAL ONLY) */
-        .main::before, .main::after,
-        body::before, body::after,
-        html::before, html::after,
-        .stApp::before, .stApp::after,
-        #root::before, #root::after {
-            content: '';
-            position: fixed;
-            width: 2px;
-            height: 2px;
-            border-radius: 50%;
-            background: #00ffff;
-            box-shadow: 0 0 4px rgba(0,255,255,0.8);
-            pointer-events: none;
-            z-index: 0;
-        }
-        .main::before { background: #b084f4; box-shadow: 0 0 4px #b084f4; animation: particleStream1 25s ease-in-out infinite; }
-        .main::after { background: #4ad3b0; box-shadow: 0 0 4px #4ad3b0; animation: particleStream2 30s ease-in-out infinite 5s; }
-        body::before { background: #06b6d4; box-shadow: 0 0 4px #06b6d4; animation: particleStream3 28s ease-in-out infinite 8s; }
-        body::after { background: #8b5cf6; box-shadow: 0 0 4px #8b5cf6; animation: particleStream4 26s ease-in-out infinite 3s; }
-        html::before { background: #00d4ff; box-shadow: 0 0 4px #00d4ff; animation: particleStream5 29s ease-in-out infinite 10s; }
-        html::after { background: #00ffff; box-shadow: 0 0 4px #00ffff; animation: particleStream6 27s ease-in-out infinite 6s; }
-        .stApp::before { background: #b084f4; box-shadow: 0 0 4px #b084f4; animation: particleStream7 31s ease-in-out infinite 12s; }
-        .stApp::after { background: #4ad3b0; box-shadow: 0 0 4px #4ad3b0; animation: particleStream8 24s ease-in-out infinite 15s; }
-        #root::before { background: #06b6d4; box-shadow: 0 0 4px #06b6d4; animation: particleStream9 27s ease-in-out infinite 2s; }
-        #root::after { background: #8b5cf6; box-shadow: 0 0 4px #8b5cf6; animation: particleStream10 29s ease-in-out infinite 9s; }
-
-        /* Ensure content is above animations */
-        .main > div {
-            position: relative;
-            z-index: 10;
-        }
-
-        /* ==================== ORIGINAL STYLES ==================== */
-
-        /* Title styling */
-        .main-title {
-            font-family: 'Orbitron','Inter',sans-serif;
-            letter-spacing: 2px;
-            color: #00e6ff;
-            text-shadow: 0 0 8px rgba(0, 238, 255, 0.7), 0 0 18px rgba(0, 238, 255, 0.4);
-            font-size: 3rem;
-            font-weight: 800;
-            text-align: center;
-            margin-bottom: 0.25rem;
-            animation: neonPulse 2.4s ease-in-out infinite;
-            text-transform: uppercase;
-            position: relative;
-            z-index: 10;
-        }
-        @keyframes neonPulse {
-            0% { text-shadow: 0 0 8px rgba(0, 
-            238, 255, 0.6), 0 0 18px rgba(0, 238, 255, 0.35); }
-            50% { text-shadow: 0 0 14px rgba(0, 255, 255, 0.85), 0 0 28px rgba(0, 255, 255, 0.55); }
-            100% { text-shadow: 0 0 8px rgba(0, 238, 255, 0.6), 0 0 18px rgba(0, 238, 255, 0.35); }
-        }
-
-        .subtitle {
-            color: #66ffff;
-            text-align: center;
-            font-size: 1.15rem;
-            margin-bottom: 2rem;
-            font-weight: 500;
-            text-shadow: 0 0 6px rgba(102, 255, 255, 0.35);
-            position: relative;
-            z-index: 10;
-        }
-
-        /* File uploader */
-        .stFileUploader {
-            background: rgba(40, 40, 50, 0.95) !important;
-            border-radius: 16px;
-            border: 2px dashed rgba(0, 255, 255, 0.4) !important;
-            padding: 2rem;
-            text-align: center;
-            transition: all 0.3s ease;
-            margin: 2rem 0;
-            position: relative;
-            z-index: 10;
-        }
-        .stFileUploader:hover { 
-            border-color: rgba(0, 255, 255, 0.7) !important; 
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3) !important; 
-            background: rgba(50, 50, 60, 0.98) !important;
-        }
-        /* File uploader text visibility fix */
-        .stFileUploader label,
-        .stFileUploader div,
-        .stFileUploader span,
-        .stFileUploader p,
-        .stFileUploader small {
-            color: #e0e0e0 !important;
-        }
-        .stFileUploader [data-testid="stMarkdownContainer"] p {
-            color: #c0c0c0 !important;
-            font-weight: 500 !important;
-        }
-        /* File uploader button */
-        .stFileUploader button {
-            background: linear-gradient(135deg, rgba(0, 255, 255, 0.15), rgba(0, 200, 200, 0.15)) !important;
-            border: 2px solid rgba(0, 255, 255, 0.4) !important;
-            color: #00ffff !important;
-            font-weight: 600 !important;
-            padding: 0.6rem 1.5rem !important;
-            border-radius: 8px !important;
-        }
-        .stFileUploader button:hover {
-            background: linear-gradient(135deg, rgba(0, 255, 255, 0.25), rgba(0, 220, 220, 0.25)) !important;
-            border-color: rgba(0, 255, 255, 0.6) !important;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4) !important;
-        }
-
-        /* File info */
-        .file-info { 
-            background: linear-gradient(145deg, rgba(30, 30, 30, 0.9), rgba(20, 20, 20, 0.9)); 
-            border: 2px solid rgba(0, 255, 255, 0.3); 
-            border-radius: 16px; 
-            padding: 1.5rem; 
-            margin: 1rem 0; 
-            box-shadow: 0 4px 20px rgba(0, 255, 255, 0.1); 
-            text-align: center;
-            position: relative;
-            z-index: 10;
-        }
-        .file-info h3 { color: #00ffff; margin-bottom: 0.5rem; }
-        .file-info p { color: #e0e0e0; margin: 0.25rem 0; }
-
-        /* Messages */
-        .success-message { background: linear-gradient(145deg, rgba(0,255,0,0.1), rgba(0,200,0,0.1)); border: 2px solid rgba(0,255,0,0.3); border-radius: 12px; padding: 1rem; margin: 1rem 0; text-align: center; color: #00ff00; position: relative; z-index: 10; }
-        .error-message { background: linear-gradient(145deg, rgba(255,0,0,0.1), rgba(200,0,0,0.1)); border: 2px solid rgba(255,0,0,0.3); border-radius: 12px; padding: 1rem; margin: 1rem 0; text-align: center; color: #ff6666; position: relative; z-index: 10; }
-        .warning-message { background: linear-gradient(145deg, rgba(255,255,0,0.1), rgba(200,200,0,0.1)); border: 2px solid rgba(255,255,0,0.3); border-radius: 12px; padding: 1rem; margin: 1rem 0; text-align: center; color: #ffff66; position: relative; z-index: 10; }
-
-        /* Pill-style tab buttons */
-        .stTabs [data-baseweb="tab-list"] {
-            gap: 1.2rem !important;
-            background: transparent !important;
-            justify-content: center !important;
-            padding: 1rem 0 !important;
-            border-bottom: none !important;
-        }
-        .stTabs [data-baseweb="tab"] {
-            height: auto !important;
-            white-space: pre-wrap !important;
-            background: rgba(0,255,255,0.06) !important;
-            border: 2.5px solid rgba(0,255,255,0.6) !important;
-            border-radius: 999px !important;
-            color: #00ffff !important;
-            padding: 0.65rem 1.8rem !important;
-            font-size: 1.1rem !important;
-            font-weight: 600 !important;
-            font-family: Orbitron, Inter, sans-serif !important;
-            transition: all 0.22s cubic-bezier(0.4, 2, 0.6, 1) !important;
-            box-shadow: 0 0 0px rgba(0,255,255,0) !important;
-        }
-        .stTabs [data-baseweb="tab"]:hover {
-            background: linear-gradient(90deg, rgba(0,255,255,0.2) 60%, rgba(176,132,244,0.2) 100%) !important;
-            color: #fff !important;
-            border-color: #8b5cf6 !important;
-            box-shadow: 0 0 10px rgba(0,255,255,0.35) !important;
-        }
-        .stTabs [aria-selected="true"] {
-            background: linear-gradient(90deg, #00ffff 60%, #b084f4 100%) !important;
-            color: #0f1419 !important;
-            border-color: #fff !important;
-            box-shadow: 0 0 18px rgba(0,255,255,0.6), 0 0 32px rgba(176,132,244,0.6) !important;
-            transform: scale(1.05) !important;
-        }
-        .stTabs [data-baseweb="tab"]:active {
-            animation: tabPulse 0.3s !important;
-        }
-        @keyframes tabPulse {
-            0% { box-shadow: 0 0 0 0 rgba(0,255,255,0.35); }
-            70% { box-shadow: 0 0 0 10px rgba(0,255,255,0.2); }
-            100% { box-shadow: 0 0 0 0 rgba(0,255,255,0); }
-        }
-
-        /* Animations */
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px);} to { opacity: 1; transform: translateY(0);} }
-        .fade-in-up { animation: fadeInUp 0.8s ease forwards; }
-
-        /* Section Headings */
-        .section-heading {
-            font-family: 'Orbitron', 'Inter', sans-serif;
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #00ffff;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin: 2rem 0 1.5rem 0;
-            padding-bottom: 0.8rem;
-            border-bottom: 3px solid #00ffff;
-            box-shadow: 0 3px 15px rgba(0,255,255,0.3);
-            position: relative;
-            display: inline-block;
-            width: 100%;
-        }
-        .section-heading::before {
-            content: '▶';
-            margin-right: 0.8rem;
-            color: #00ffff;
-            text-shadow: 0 0 10px rgba(0,255,255,0.8);
-        }
-        .section-heading::after {
-            content: '';
-            position: absolute;
-            bottom: -3px;
-            left: 0;
-            width: 30%;
-            height: 3px;
-            background: linear-gradient(90deg, #b084f4, transparent);
-            animation: underlinePulse 2s ease-in-out infinite;
-        }
-        @keyframes underlinePulse {
-            0%, 100% { opacity: 0.6; width: 30%; }
-            50% { opacity: 1; width: 50%; }
-        }
-
-        /* Subsection Headings */
-        .subsection-heading {
-            font-family: 'Orbitron', 'Inter', sans-serif;
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #b084f4;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            margin: 1.5rem 0 1rem 0;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid rgba(176,132,244,0.4);
-            display: inline-block;
-            width: 100%;
-        }
-        .subsection-heading::before {
-            content: '▸';
-            margin-right: 0.6rem;
-            color: #b084f4;
-        }
-
-        /* Start Again Button */
-        .start-again-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 3rem 0 2rem 0;
-            padding: 2rem 0;
-        }
-        .start-again-btn {
-            font-family: 'Orbitron', 'Inter', sans-serif;
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #0f1419;
-            background: linear-gradient(135deg, #00ffff 0%, #00cccc 100%);
-            border: none;
-            border-radius: 12px;
-            padding: 1rem 3rem;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(0,255,255,0.4), 0 4px 15px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            position: relative;
-            overflow: hidden;
-        }
-        .start-again-btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-        .start-again-btn:hover {
-            background: linear-gradient(135deg, #00ffff 0%, #4dffff 100%);
-            box-shadow: 0 0 30px rgba(0,255,255,0.6), 0 6px 20px rgba(0,0,0,0.4);
-            transform: translateY(-2px);
-            animation: gentlePulse 1.5s ease-in-out infinite;
-        }
-        .start-again-btn:hover::before {
-            width: 300px;
-            height: 300px;
-        }
-        .start-again-btn:active {
-            transform: translateY(0px);
-            box-shadow: 0 0 15px rgba(0,255,255,0.5), 0 2px 10px rgba(0,0,0,0.3);
-        }
-        @keyframes gentlePulse {
-            0%, 100% { box-shadow: 0 0 20px rgba(0,255,255,0.4), 0 4px 15px rgba(0,0,0,0.3); }
-            50% { box-shadow: 0 0 35px rgba(0,255,255,0.7), 0 6px 20px rgba(0,0,0,0.4); }
-        }
-        
-        /* Style Streamlit button for Start Again */
-        .start-again-container button[kind="primary"] {
-            font-family: 'Orbitron', 'Inter', sans-serif !important;
-            font-size: 1.2rem !important;
-            font-weight: 600 !important;
-            color: #0f1419 !important;
-            background: linear-gradient(135deg, #00ffff 0%, #00cccc 100%) !important;
-            border: none !important;
-            border-radius: 12px !important;
-            padding: 1rem 3rem !important;
-            box-shadow: 0 0 20px rgba(0,255,255,0.4), 0 4px 15px rgba(0,0,0,0.3) !important;
-            transition: all 0.3s ease !important;
-            text-transform: uppercase !important;
-            letter-spacing: 2px !important;
-            height: auto !important;
-        }
-        .start-again-container button[kind="primary"]:hover {
-            background: linear-gradient(135deg, #00ffff 0%, #4dffff 100%) !important;
-            box-shadow: 0 0 30px rgba(0,255,255,0.6), 0 6px 20px rgba(0,0,0,0.4) !important;
-            transform: translateY(-2px) !important;
-            animation: gentlePulse 1.5s ease-in-out infinite !important;
-        }
-        .start-again-container button[kind="primary"]:active {
-            transform: translateY(0px) !important;
-            box-shadow: 0 0 15px rgba(0,255,255,0.5), 0 2px 10px rgba(0,0,0,0.3) !important;
-        }
-
-        /* Hide default Streamlit elements */
-        #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
-        </style>
-        """,
-        unsafe_allow_html=True,
+def render_upload_zone() -> object:
+    """Render the file upload zone with styling."""
+    upload_icon = icon("upload", "lg")
+    st.markdown(f"""
+        <div class="sr-section">
+            <div class="sr-section-title">
+                {upload_icon} Upload Packet Capture
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    uploaded_file = st.file_uploader(
+        label="Drop your file here or click to browse",
+        type=["pcap", "pcapng", "csv", "txt"],
+        help="Supported: PCAP, PCAPNG, CSV, TXT (max 200MB)",
+        key="main_file_uploader"
     )
+    
+    if uploaded_file is None:
+        st.markdown("""
+            <div style="text-align: center; padding: 1rem; color: var(--text-muted);">
+                <div style="margin-bottom: 0.5rem;">Supported formats:</div>
+                <div style="display: flex; justify-content: center; gap: 0.5rem;">
+                    <span class="sr-format-tag">PCAP</span>
+                    <span class="sr-format-tag">PCAPNG</span>
+                    <span class="sr-format-tag">CSV</span>
+                    <span class="sr-format-tag">TXT</span>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    return uploaded_file
+
+
+def render_file_info(uploaded_file) -> None:
+    """Display information about the uploaded file."""
+    file_size_mb = uploaded_file.size / (1024 * 1024)
+    
+    file_icon = icon("file-text", "2xl")
+    st.markdown(f"""
+        <div class="sr-card-glow" style="margin: 1rem 0;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="font-size: 2rem; color: var(--accent-cyan);">{file_icon}</div>
+                <div>
+                    <div style="font-weight: 600; color: var(--accent-cyan);">{uploaded_file.name}</div>
+                    <div style="color: var(--text-secondary); font-size: 0.875rem;">
+                        {file_size_mb:.2f} MB • {uploaded_file.type or 'Unknown type'}
+                    </div>
+                </div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+
+def render_stats_cards(df: pd.DataFrame) -> None:
+    """Render statistics cards from parsed data."""
+    total_packets = len(df)
+    
+    # Count protocols
+    protocols = df.get('protocol', pd.Series()).value_counts()
+    top_protocol = protocols.index[0] if len(protocols) > 0 else "N/A"
+    
+    # Count unique IPs
+    src_ips = df.get('src_ip', pd.Series()).nunique()
+    dst_ips = df.get('dst_ip', pd.Series()).nunique()
+    unique_ips = src_ips + dst_ips
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    bar_icon = icon("bar-chart", "xl")
+    layers_icon = icon("layers", "xl")
+    globe_icon = icon("globe", "xl")
+    zap_icon = icon("zap", "xl")
+    
+    with col1:
+        st.markdown(f"""
+            <div class="sr-stat-card">
+                <div class="sr-stat-icon">{bar_icon}</div>
+                <div class="sr-stat-content">
+                    <div class="sr-stat-value">{total_packets:,}</div>
+                    <div class="sr-stat-label">Total Packets</div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+            <div class="sr-stat-card">
+                <div class="sr-stat-icon">{layers_icon}</div>
+                <div class="sr-stat-content">
+                    <div class="sr-stat-value">{len(protocols)}</div>
+                    <div class="sr-stat-label">Protocols</div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown(f"""
+            <div class="sr-stat-card">
+                <div class="sr-stat-icon">{globe_icon}</div>
+                <div class="sr-stat-content">
+                    <div class="sr-stat-value">{unique_ips}</div>
+                    <div class="sr-stat-label">Unique IPs</div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown(f"""
+            <div class="sr-stat-card">
+                <div class="sr-stat-icon">{zap_icon}</div>
+                <div class="sr-stat-content">
+                    <div class="sr-stat-value">{top_protocol}</div>
+                    <div class="sr-stat-label">Top Protocol</div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+
+def render_landing_page() -> None:
+    """Render the landing page content when no file is uploaded."""
+    st.markdown("""
+        <div style="text-align: center; padding: 2rem 0;">
+            <div style="font-size: 1.25rem; color: var(--text-secondary); margin-bottom: 2rem;">
+                Upload a packet capture file to begin analysis
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Feature icons
+    activity_icon = icon("activity", "2xl")
+    brain_icon = icon("brain", "2xl")
+    shield_icon = icon("shield-check", "2xl")
+    
+    # Quick features overview
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown(f"""
+            <div class="sr-card" style="text-align: center; padding: 2rem;">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem; color: var(--accent-cyan);">{activity_icon}</div>
+                <div style="font-weight: 600; color: var(--accent-cyan); margin-bottom: 0.5rem;">
+                    Packet Analysis
+                </div>
+                <div style="color: var(--text-secondary); font-size: 0.875rem;">
+                    Deep inspection of network packets with protocol dissection
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+            <div class="sr-card" style="text-align: center; padding: 2rem;">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem; color: var(--accent-purple);">{brain_icon}</div>
+                <div style="font-weight: 600; color: var(--accent-purple); margin-bottom: 0.5rem;">
+                    AI-Powered Insights
+                </div>
+                <div style="color: var(--text-secondary); font-size: 0.875rem;">
+                    Ask questions about your traffic in natural language
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown(f"""
+            <div class="sr-card" style="text-align: center; padding: 2rem;">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem; color: var(--accent-green);">{shield_icon}</div>
+                <div style="font-weight: 600; color: var(--accent-green); margin-bottom: 0.5rem;">
+                    Privacy-First
+                </div>
+                <div style="color: var(--text-secondary); font-size: 0.875rem;">
+                    100% local analysis with offline AI (Ollama)
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    # Help section
+    rocket_icon = icon("rocket", "lg")
+    st.markdown(f"""
+        <div style="margin-top: 3rem;">
+            <div class="sr-section-title">{rocket_icon} Quick Start</div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    with st.expander("How to use Sniff-Recon", expanded=False):
+        st.markdown("""
+            **Step 1:** Upload a packet capture file (PCAP, PCAPNG, CSV, or TXT)
+            
+            **Step 2:** Explore the **Packet Analysis** tab to view detailed packet information
+            
+            **Step 3:** Use the **AI Analysis** tab to ask questions about your traffic
+            
+            **Step 4:** Export your findings using the **Export** tab
+        """)
+    
+    with st.expander("Supported File Formats", expanded=False):
+        st.markdown("""
+            - **PCAP/PCAPNG**: Standard packet capture format from Wireshark, tcpdump, etc.
+            - **CSV**: Comma-separated values with packet data
+            - **TXT**: Text-based packet exports
+            
+            *Maximum file size: 200MB*
+        """)
+
+
+def render_footer() -> None:
+    """Render the application footer."""
+    github_icon = icon("github")
+    st.markdown(f"""
+        <div class="sr-footer">
+            <div class="sr-footer-left">
+                <span class="sr-footer-version">Sniff-Recon v1.2.0</span>
+                <div class="sr-footer-links">
+                    <a href="https://github.com/mfscpayload-690/Sniff-Recon" target="_blank" class="sr-footer-link">
+                        {github_icon} GitHub
+                    </a>
+                    <a href="https://github.com/mfscpayload-690/Sniff-Recon/issues" target="_blank" class="sr-footer-link">
+                        Report Issue
+                    </a>
+                </div>
+            </div>
+            <div class="sr-footer-right">
+                <span style="color: var(--text-muted); font-size: 0.875rem;">
+                    Made for the security community
+                </span>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+
+def process_file(uploaded_file, tmp_file_path: str, file_ext: str):
+    """Process the uploaded file and return parsed data."""
+    if file_ext in ["pcap", "pcapng"]:
+        return parse_pcap(tmp_file_path)
+    elif file_ext == "csv":
+        parsed = parse_csv(tmp_file_path)
+        return [{
+            "src_ip": row.get("src_ip") or row.get("Source IP") or row.get("src"),
+            "dst_ip": row.get("dst_ip") or row.get("Destination IP") or row.get("dst"),
+            "protocol": row.get("protocol") or row.get("Protocol"),
+            "packet_size": row.get("packet_size") or row.get("Packet Size") or row.get("size"),
+        } for row in parsed]
+    elif file_ext == "txt":
+        return parse_txt(tmp_file_path)
+    return None
 
 
 def main():
-    # Set page config - sidebar auto-collapses when file uploaded
+    """Main application entry point."""
+    # Page configuration
     st.set_page_config(
-        page_title="Sniff Recon - Network Packet Analyzer",
+        page_title="Sniff-Recon - Network Packet Analyzer",
         page_icon="🔍",
         layout="wide",
-        initial_sidebar_state="auto",
-    )
-
-    inject_modern_css()
-
-    # Additional styles for sidebar with smooth transitions
-    st.markdown('''
-        <style>
-        /* Hide collapse button - sidebar disappears on file upload instead */
-        [data-testid="stSidebarCollapseButton"] {
-            display: none !important;
-        }
-        
-        /* Sidebar with smooth slide-in animation */
-        [data-testid="stSidebar"] {
-            background: linear-gradient(180deg, rgba(15,15,30,0.98) 0%, rgba(10,10,20,0.98) 100%);
-            border-right: 2px solid rgba(0,255,255,0.2);
-            min-width: 280px !important;
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease !important;
-        }
-        
-        /* Sidebar slide-in animation on load */
-        [data-testid="stSidebar"] {
-            animation: slideInFromLeft 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
-        
-        @keyframes slideInFromLeft {
-            from {
-                transform: translateX(-100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        
-        /* Sidebar buttons */
-        [data-testid="stSidebar"] button {
-            background: linear-gradient(135deg, rgba(0,180,180,0.4), rgba(0,120,120,0.4)) !important;
-            border: 2px solid rgba(0,255,255,0.5) !important;
-            color: #00ffff !important;
-            border-radius: 10px !important;
-            padding: 0.7rem 1rem !important;
-            margin: 0.4rem 0 !important;
-            font-weight: 600 !important;
-            font-size: 1rem !important;
-            transition: all 0.3s ease !important;
-        }
-        [data-testid="stSidebar"] button:hover {
-            background: linear-gradient(135deg, rgba(0,220,220,0.6), rgba(0,180,180,0.6)) !important;
-            border-color: rgba(0,255,255,0.9) !important;
-            box-shadow: 0 0 20px rgba(0,255,255,0.5) !important;
-            transform: translateY(-2px);
-        }
-        /* Bright answer box */
-        .answer-box {
-            background: linear-gradient(145deg, rgba(10,50,60,0.98), rgba(10,40,50,0.98)) !important;
-            border: 2px solid rgba(0,255,255,0.7) !important;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin: 1rem 0;
-            color: #f0f8ff !important;
-            box-shadow: 0 0 30px rgba(0,255,255,0.4), inset 0 0 20px rgba(0,255,255,0.15) !important;
-            font-size: 1.1rem;
-            line-height: 1.8;
-        }
-        .answer-box h4 {
-            color: #00ffff !important;
-            margin-bottom: 0.8rem;
-            font-size: 1.4rem;
-            font-weight: 700 !important;
-            text-shadow: 0 0 12px rgba(0,255,255,0.7) !important;
-        }
-        .answer-box p {
-            color: #e8f8ff !important;
-            font-weight: 500 !important;
-            margin-bottom: 0.7rem !important;
-        }
-        /* Sidebar question items */
-        .help-question {
-            background: rgba(0,100,100,0.3);
-            border-left: 3px solid #00ffff;
-            padding: 0.6rem 0.8rem;
-            margin: 0.4rem 0;
-            cursor: pointer;
-            border-radius: 5px;
-            color: #99ffff;
-            font-size: 0.95rem;
-            transition: all 0.2s;
-        }
-        .help-question:hover {
-            background: rgba(0,150,150,0.5);
-            border-left-color: #00ffff;
-            box-shadow: 0 0 10px rgba(0,255,255,0.3);
-            transform: translateX(5px);
-        }
-        </style>
-    ''', unsafe_allow_html=True)
-
-    # Main content
-    # Title
-    st.markdown('<h1 class="main-title fade-in-up">🔍 Sniff Recon</h1>', unsafe_allow_html=True)
-
-    # Tagline
-    tagline_text = "Advanced Network Packet Analyzer & AI-Powered Protocol Dissector"
-    st.markdown(
-        f'<p class="subtitle fade-in-up" style="margin-bottom: 2rem;">{tagline_text}</p>',
-        unsafe_allow_html=True
+        initial_sidebar_state="collapsed",
     )
     
-    # Initialize show_section in session state if not exists
-    if "show_section" not in st.session_state:
-        st.session_state["show_section"] = None
+    # Load and inject CSS
+    css = load_css()
+    st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
     
-    # Initialize button click tracker
-    if "button_clicked" not in st.session_state:
-        st.session_state["button_clicked"] = False
+    # Render header
+    render_header()
     
-    # Hide developer-only settings in hosted/web deployments by default.
-    # Toggle by setting environment variable SHOW_DEV_SETTINGS=true
-    show_dev_settings = str(os.getenv("SHOW_DEV_SETTINGS", "false")).lower() in ("1", "true", "yes", "on")
+    # File upload section
+    uploaded_file = render_upload_zone()
     
-    # Define callback function for button clicks
-    def set_section(section_name):
-        """Callback to set the active section"""
-        current = st.session_state.get("show_section")
-        if current == section_name:
-            st.session_state["show_section"] = None  # Toggle off
-        else:
-            st.session_state["show_section"] = section_name
-
-    # Show contextual content FIRST so it appears above and pushes the uploader down
-    # NOW display the selected section content (AFTER buttons have been processed by sidebar)
-    show_section = st.session_state.get("show_section")
-
-    # Display help content if a topic is selected
-    if show_section == "about":
-        st.markdown('''
-            <div class="answer-box fade-in-up">
-                <h4>📖 About Sniff Recon</h4>
-                <p>Sniff Recon is a powerful Streamlit-based network packet analyzer that supports PCAP, PCAPNG, CSV, and TXT file formats.</p>
-                <p>It provides comprehensive packet analysis with optional multi-provider AI assistance, memory-aware parsing, and clear visualizations to help you investigate network traffic quickly and safely.</p>
-                <p>Built with modern cybersecurity professionals in mind, it combines ease of use with powerful analysis capabilities.</p>
-            </div>
-        ''', unsafe_allow_html=True)
-    elif show_section == "quick_start":
-        st.markdown('<div class="answer-box fade-in-up">', unsafe_allow_html=True)
-        st.markdown('<h4>🚀 Quick Start Guide</h4>', unsafe_allow_html=True)
-        
-        st.markdown("**Step 1: Upload Your File**")
-        st.write('Click "Browse files" or drag & drop a packet capture file (PCAP, PCAPNG, CSV, or TXT format, max 200MB).')
-        
-        st.markdown("**Step 2: Analyze Packets**")
-        st.write('Navigate to the "📊 Packet Analysis" tab to view detailed packet information with advanced filtering options (IP, protocol, port, time range).')
-        
-        st.markdown("**Step 3: Use AI Analysis**")
-        st.write('Go to the "🧠 AI Analysis" tab, select your preferred AI provider (Groq, OpenAI, Anthropic, or Gemini), and ask natural language questions about your traffic.')
-        
-        st.markdown("**Step 4: Export Results**")
-        st.write('Visit the "📤 Export Results" tab to download your analysis as JSON or PDF. You can also export your entire session for later review.')
-        
-        st.markdown("**💡 Pro Tip:** Use the suggested queries in AI Analysis for instant insights, or import a previous session to continue where you left off!")
-        st.markdown('</div>', unsafe_allow_html=True)
-    elif show_section == "documentation":
-        st.markdown('<div class="answer-box fade-in-up">', unsafe_allow_html=True)
-        st.markdown('<h4>📚 Documentation & Resources</h4>', unsafe_allow_html=True)
-        
-        st.markdown("**🔰 GitHub Repository:** [https://github.com/mfscpayload-690/Sniff-Recon](https://github.com/mfscpayload-690/Sniff-Recon)")
-
-        st.markdown("**🔰 Documentation:**")
-        st.write("• **Setup Guide:** Installation and configuration instructions")
-        st.write("• **Docker Deployment:** Containerized deployment options")
-        st.write("• **API Integration:** Configure AI providers (Groq, OpenAI, Anthropic, Gemini)")
-        st.write("• **Troubleshooting:** Common issues and solutions")
-        
-        st.markdown("**🔰 Contributing:**")
-        st.write("Contributions are welcome! Check out CONTRIBUTING.md in the repository for guidelines on submitting issues, feature requests, or pull requests.")
-        
-        st.markdown("**🔰 License:** Open source under the MIT License")
-        st.markdown('</div>', unsafe_allow_html=True)
-    elif show_section == "settings" and show_dev_settings:
-        st.markdown('<div class="answer-box fade-in-up">', unsafe_allow_html=True)
-        st.markdown('<h4>🔧 Settings & Preferences</h4>', unsafe_allow_html=True)
-        
-        st.markdown("**🔰 AI Provider Configuration:**")
-        st.write("Configure your API keys in the `.env` file in the project root:")
-        st.write("• `GROQ_API_KEY` - Groq API key")
-        st.write("• `OPENAI_API_KEY` - OpenAI API key")
-        st.write("• `ANTHROPIC_API_KEY` - Anthropic API key")
-        st.write("• `GOOGLE_API_KEY` - Google Gemini API key")
-        
-        st.markdown("**🔰 Weighted Load Balancing:**")
-        st.write("Adjust provider weights in `.env`:")
-        st.write("• `GROQ_WEIGHT=30`")
-        st.write("• `OPENAI_WEIGHT=30`")
-        st.write("• `ANTHROPIC_WEIGHT=30`")
-        st.write("• `GEMINI_WEIGHT=35`")
-        
-        st.markdown("**🔰 Clear Cache:**")
-        st.write("To clear analysis cache, delete the `output/summary.json` file or restart the application.")
-        
-        st.markdown("**🔰 Memory Settings:**")
-        st.write("Current file size limit: 200MB (adjustable in gui.py)")
-        st.markdown('</div>', unsafe_allow_html=True)
-    elif show_section and show_section.startswith("help_"):
-        help_answers = {
-            "help_why": ("🔹 Why use Sniff Recon?", "Quickly parse network captures and highlight patterns, anomalies, and potential security threats with AI-assisted summaries. Get instant insights without complex command-line tools."),
-            "help_files": ("🔹 Supported File Formats", "PCAP, PCAPNG, CSV, and TXT files are supported. CSV column names are automatically mapped when possible to ensure compatibility with various export formats."),
-            "help_ai": ("🔹 AI Requirement", "No, AI is NOT required! The tool provides local statistical analysis that works perfectly without any API keys. AI features are optional enhancements."),
-            "help_size": ("🔹 File Size Limits", "Maximum file size is 200MB to protect system memory. For larger captures, prefer trimming or filtering the capture file before analysis."),
-            "help_data": ("🔹 Data Handling", "Summaries are saved to output/summary.json. All packet data is processed via temporary files and automatically cleaned up after analysis. Your data stays local and secure.")
-        }
-        if show_section in help_answers:
-            title, answer = help_answers[show_section]
-            st.markdown(f'''
-                <div class="answer-box fade-in-up">
-                    <h4>{title}</h4>
-                    <p>{answer}</p>
-                </div>
-            ''', unsafe_allow_html=True)
-
-    # File uploader BELOW the contextual content; add adaptive spacing when content is visible
-    top_margin = "1.25rem" if st.session_state.get("show_section") else "0rem"
-    st.markdown(f'<div class="fade-in-up uploader-wrapper" style="margin-top:{top_margin};">', unsafe_allow_html=True)
-    st.markdown('<div class="section-heading" style="margin-bottom:1.2rem;">\U0001F4C1 Upload Packet Capture File</div>', unsafe_allow_html=True)
-    st.caption("Quickly start your analysis by uploading a packet capture file. Supported formats: PCAP, PCAPNG, CSV, TXT (max 200MB).")
-    uploaded_file = st.file_uploader(
-        label="",
-        type=["pcap", "pcapng", "csv", "txt"],
-        help="Limit 200MB per file • PCAP, PCAPNG, CSV, TXT",
-        key="fileUploader",
-    )
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # Landing page content - only show if no file is uploaded
+    # Landing page or analysis
     if uploaded_file is None:
-        # Sidebar - ONLY VISIBLE ON LANDING PAGE (with smooth slide-in animation)
-        with st.sidebar:
-            st.markdown('<h3 style="color:#00ffff; margin-bottom:1.2rem; font-family: Orbitron,sans-serif; text-align: center; text-shadow: 0 0 12px rgba(0,255,255,0.6); font-size: 1.4rem;">Quick Access</h3>', unsafe_allow_html=True)
-            
-            # About button
-            if st.button("📖 About Sniff Recon", key="aboutBtn", use_container_width=True):
-                current = st.session_state.get("show_section")
-                st.session_state["show_section"] = None if current == "about" else "about"
-                st.rerun()
-            
-            # Quick Start Guide button
-            if st.button("🚀 Quick Start Guide", key="quick_start_btn", use_container_width=True):
-                current = st.session_state.get("show_section")
-                st.session_state["show_section"] = None if current == "quick_start" else "quick_start"
-                st.rerun()
-            
-            # Documentation button
-            if st.button("📚 Documentation & GitHub", key="documentation_btn", use_container_width=True):
-                current = st.session_state.get("show_section")
-                st.session_state["show_section"] = None if current == "documentation" else "documentation"
-                st.rerun()
-            
-            # Settings button (hidden by default in hosted/web deployments)
-            if show_dev_settings:
-                if st.button("🔧 Settings & Preferences", key="settings_btn", use_container_width=True):
-                    current = st.session_state.get("show_section")
-                    st.session_state["show_section"] = None if current == "settings" else "settings"
-                    st.rerun()
-            
-            # Help section with questions
-            st.markdown('<div style="margin-top: 1.5rem; padding-top: 1rem;"></div>', unsafe_allow_html=True)
-            st.markdown('<h4 style="color:#00ffff; margin-bottom:0.8rem; font-family: Orbitron,sans-serif; font-size: 1.1rem;">❓ Help Topics</h4>', unsafe_allow_html=True)
-            
-            if st.button("🔹 Why use Sniff Recon?", key="help_why", use_container_width=True):
-                current = st.session_state.get("show_section")
-                section_key = "help_why"
-                st.session_state["show_section"] = None if current == section_key else section_key
-                st.rerun()
-            
-            if st.button("🔹 What files are supported?", key="help_files", use_container_width=True):
-                current = st.session_state.get("show_section")
-                section_key = "help_files"
-                st.session_state["show_section"] = None if current == section_key else section_key
-                st.rerun()
-            
-            if st.button("🔹 Is AI required?", key="help_ai", use_container_width=True):
-                current = st.session_state.get("show_section")
-                section_key = "help_ai"
-                st.session_state["show_section"] = None if current == section_key else section_key
-                st.rerun()
-            
-            if st.button("🔹 File size limits?", key="help_size", use_container_width=True):
-                current = st.session_state.get("show_section")
-                section_key = "help_size"
-                st.session_state["show_section"] = None if current == section_key else section_key
-                st.rerun()
-            
-            if st.button("🔹 How is data handled?", key="help_data", use_container_width=True):
-                current = st.session_state.get("show_section")
-                section_key = "help_data"
-                st.session_state["show_section"] = None if current == section_key else section_key
-                st.rerun()
-            
-            # Support / Buy Me a Coffee button at bottom of sidebar
-            st.markdown('<div style="margin-top: 2rem; padding-top: 1.5rem;"></div>', unsafe_allow_html=True)
-            st.markdown('<hr style="border: 1px solid rgba(0,255,255,0.2); margin: 1rem 0;">', unsafe_allow_html=True)
-            
-            try:
-                support_url = "https://buymeacoffee.com/mfscpayload690"
-                support_url = os.getenv("BUYMEACOFFEE_URL") or os.getenv("BMAC_URL") or support_url
-                
-                if support_url:
-                    st.markdown(
-                        '<div style="text-align:center; font-family: Inter, sans-serif; color:#cce6ff; font-size: 0.95rem; margin-bottom: 0.8rem;">Support Development</div>', 
-                        unsafe_allow_html=True
-                    )
-                    st.markdown(
-                        f'<div style="text-align:center;"><a href="{support_url}" target="_blank">'
-                        f'<img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" '
-                        f'style="height:42px;width:152px;border-radius:8px;box-shadow:0 0 10px rgba(255,255,0,0.3);display:inline-block;"/></a></div>',
-                        unsafe_allow_html=True,
-                    )
-                    st.markdown(
-                        '<div style="text-align:center; color:#99ccff; font-size: 0.85rem; margin-top: 0.6rem;">Thanks for your support ✨</div>',
-                        unsafe_allow_html=True
-                    )
-            except Exception:
-                pass
-        
-        # --- Import Session Shortcut (Intro Page) ---
-        st.markdown('<div class="section-heading" style="margin-top:2.5rem;">RESUME PREVIOUS SESSION</div>', unsafe_allow_html=True)
-        # Removed soft-edged box for import session shortcut
-        st.caption("Quickly resume a previous analysis session. Upload a session JSON file exported from Sniff Recon.")
-        uploaded_session_intro = st.file_uploader("", type=["json"], key="importSessionIntro")
-        if uploaded_session_intro is not None:
-            try:
-                imported_data = json.load(uploaded_session_intro)
-                st.session_state["ai_responses"] = imported_data.get("ai_responses", [])
-                st.session_state["user_query"] = imported_data.get("user_query", "")
-                st.session_state["selected_packets"] = imported_data.get("selected_packets", [])
-                st.success("✅ Session imported successfully! UI will refresh to show restored session.")
-                st.rerun()
-            except Exception as e:
-                st.error(f"❌ Error importing session: {str(e)}")
-
-    # (Content moved above uploader; removed duplicate rendering here)
-
-    # Process uploaded file
-    if uploaded_file is not None:
-        # Size guard
+        render_landing_page()
+    else:
+        # File size check
         if uploaded_file.size > 200 * 1024 * 1024:
-            st.markdown('<div class="error-message">❌ File size exceeds 200MB limit. Please upload a smaller file.</div>', unsafe_allow_html=True)
+            st.markdown("""
+                <div class="sr-alert sr-alert-error">
+                    ❌ File size exceeds 200MB limit. Please upload a smaller file.
+                </div>
+            """, unsafe_allow_html=True)
             return
-
-        # File info
-        file_size_mb = uploaded_file.size / (1024 * 1024)
-        st.markdown(
-            f"""
-            <div class=\"file-info\">
-                <h3>📄 File Uploaded Successfully</h3>
-                <p><strong>Name:</strong> {uploaded_file.name}</p>
-                <p><strong>Size:</strong> {file_size_mb:.2f} MB</p>
-                <p><strong>Type:</strong> {uploaded_file.type or 'Unknown'}</p>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
+        
+        # Show file info
+        render_file_info(uploaded_file)
+        
         # Save temp file
-        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=f".{uploaded_file.name.split('.')[-1]}") as tmp_file:
             tmp_file.write(uploaded_file.read())
             tmp_file_path = tmp_file.name
-
+        
         file_ext = uploaded_file.name.split(".")[-1].lower()
-
+        
         try:
-            # Parse by type
-            if file_ext in ["pcap", "pcapng"]:
-                summary = parse_pcap(tmp_file_path)
-            elif file_ext == "csv":
-                parsed = parse_csv(tmp_file_path)
-                mapped = []
-                for row in parsed:
-                    mapped.append({
-                        "src_ip": row.get("src_ip") or row.get("Source IP") or row.get("source_ip") or row.get("src"),
-                        "dst_ip": row.get("dst_ip") or row.get("Destination IP") or row.get("destination_ip") or row.get("dst"),
-                        "protocol": row.get("protocol") or row.get("Protocol"),
-                        "packet_size": row.get("packet_size") or row.get("Packet Size") or row.get("packet_size_bytes") or row.get("size"),
-                    })
-                summary = mapped
-            elif file_ext == "txt":
-                summary = parse_txt(tmp_file_path)
-            else:
-                st.markdown('<div class="error-message">❌ Unsupported file type.</div>', unsafe_allow_html=True)
+            # Parse file
+            with st.spinner("Processing file..."):
+                summary = process_file(uploaded_file, tmp_file_path, file_ext)
+            
+            if summary is None:
+                st.markdown("""
+                    <div class="sr-alert sr-alert-error">
+                        ❌ Unsupported file type.
+                    </div>
+                """, unsafe_allow_html=True)
                 return
-
-            # Normalize to DataFrame
-            summary = pd.DataFrame(summary)
-            if summary is None or len(summary) == 0:
-                st.markdown('<div class="warning-message">⚠️ Summary is empty or could not be generated.</div>', unsafe_allow_html=True)
+            
+            # Convert to DataFrame
+            df = pd.DataFrame(summary)
+            if df.empty:
+                st.markdown("""
+                    <div class="sr-alert sr-alert-warning">
+                        ⚠️ No packets found in file.
+                    </div>
+                """, unsafe_allow_html=True)
                 return
-
-            # Use Streamlit tabs with enhanced pill CSS (already in inject_modern_css)
-            tab1, tab2, tab3, tab4 = st.tabs(["📊 Packet Analysis", "🧠 AI Analysis", "📤 Export Results", "⚙️ Advanced Settings"])
-
-            # Tab 1: Packet analysis  
+            
+            # Render stats
+            render_stats_cards(df)
+            
+            # Main tabs
+            tab1, tab2, tab3 = st.tabs(["📊 Packet Analysis", "🤖 AI Analysis", "📤 Export"])
+            
             with tab1:
+                st.markdown("""
+                    <div class="sr-section-title">Packet Details</div>
+                """, unsafe_allow_html=True)
+                
                 from src.ui.display_packet_table import display_packet_table
                 import scapy.all as scapy
+                
                 try:
                     packets = scapy.PcapReader(tmp_file_path)
-                    packets_list = []
-                    total_bytes = os.path.getsize(tmp_file_path)
-                    progress_text = "Loading and parsing packets..."
-                    progress_bar = st.progress(0, text=progress_text)
-                    last_fraction = 0
-                    for pkt in packets:
-                        packets_list.append(pkt)
-                        if hasattr(packets, '_file'):
-                            fraction = min(1.0, packets._file.tell() / max(total_bytes, 1))
-                        else:
-                            fraction = min(1.0, len(packets_list) / 10000)
-                        if fraction - last_fraction > 0.01 or fraction >= 1.0:
-                            progress_bar.progress(fraction, text=progress_text)
-                            last_fraction = fraction
-                    progress_bar.empty()
+                    packets_list = list(packets)
                     packets.close()
                     display_packet_table(packets_list)
                 except Exception as e:
-                    st.markdown(f'<div class=\"error-message\">❌ Error reading packet file: {str(e)}</div>', unsafe_allow_html=True)
+                    st.error(f"Error reading packets: {e}")
             
-            # Tab 2: AI analysis
             with tab2:
+                st.markdown("""
+                    <div class="sr-section-title">AI-Powered Analysis</div>
+                """, unsafe_allow_html=True)
+                
                 try:
                     from src.ai.ai_query_interface import render_ai_query_interface, render_ai_quick_analysis
                     import scapy.all as scapy
+                    
                     packets = scapy.rdpcap(tmp_file_path)
                     packets_list = list(packets)
+                    
                     render_ai_quick_analysis(packets_list)
                     render_ai_query_interface(packets_list)
                 except Exception as e:
-                    st.markdown(f'<div class=\"error-message\">❌ Error initializing AI analysis: {str(e)}</div>', unsafe_allow_html=True)
+                    st.error(f"Error initializing AI: {e}")
             
-            # Tab 3: Export
             with tab3:
-                st.markdown('<div class="section-heading">EXPORT ANALYSIS RESULTS</div>', unsafe_allow_html=True)
-                save_summary(summary.to_dict(orient="records"))
-                st.markdown('<div class="success-message">✅ Analysis complete! Summary saved to output/summary.json</div>', unsafe_allow_html=True)
-                col1, col2, col3 = st.columns(3)
-                with open("output/summary.json", "r") as f:
-                    json_data = f.read()
+                st.markdown("""
+                    <div class="sr-section-title">Export Results</div>
+                """, unsafe_allow_html=True)
+                
+                # Save summary
+                save_summary(df.to_dict(orient="records"))
+                
+                st.markdown("""
+                    <div class="sr-alert sr-alert-success">
+                        ✅ Analysis complete! Ready to export.
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                col1, col2 = st.columns(2)
+                
                 with col1:
-                    st.download_button(
-                        label="📥 Download Summary JSON",
-                        data=json_data,
-                        file_name="sniff_recon_summary.json",
-                        mime="application/json",
-                        key="downloadJson",
-                        help="Download the complete analysis summary",
-                    )
-                with col2:
-                    if st.button("👁️ View Raw JSON"):
-                        st.json(json.loads(json_data))
-
-                # --- Session Export/Import ---
-                st.markdown('<div class="section-heading">SESSION EXPORT / IMPORT</div>', unsafe_allow_html=True)
-                try:
-                    # Convert ai_responses to serializable format
-                    ai_responses_serializable = []
-                    for response_entry in st.session_state.get("ai_responses", []):
-                        serializable_entry = {}
-                        for key, value in response_entry.items():
-                            # Convert AIResponse dataclass to dict if needed
-                            if is_dataclass(value) and not isinstance(value, type):
-                                serializable_entry[key] = asdict(value)
-                            else:
-                                serializable_entry[key] = value
-                        ai_responses_serializable.append(serializable_entry)
+                    with open("output/summary.json", "r") as f:
+                        json_data = f.read()
                     
-                    session_data = {
-                        "ai_responses": ai_responses_serializable,
-                        "user_query": st.session_state.get("user_query", ""),
-                        # Selected packets are not stored in session state, so this is a placeholder
-                        "selected_packets": st.session_state.get("selected_packets", [])
-                    }
-                    session_json = json.dumps(session_data, indent=4, cls=CustomJSONEncoder)
                     st.download_button(
-                        label="💾 Export Session (JSON)",
-                        data=session_json,
-                        file_name="sniff_recon_session.json",
+                        label="📥 Download JSON",
+                        data=json_data,
+                        file_name="sniff_recon_analysis.json",
                         mime="application/json",
-                        key="downloadSessionJson",
-                        help="Download your entire analysis session for sharing or later review",
+                        use_container_width=True
                     )
-                except Exception as e:
-                    st.error(f"❌ Error creating session export: {str(e)}")
-                    st.caption("This may happen if the session contains non-serializable data. Try clearing the session and starting fresh.")
-
-                uploaded_session = st.file_uploader("📤 Import Session (JSON)", type=["json"], key="importSessionJson")
-                if uploaded_session is not None:
+                
+                with col2:
+                    if st.button("👁️ View JSON", use_container_width=True):
+                        st.json(json.loads(json_data))
+                
+                # Session export
+                st.markdown("---")
+                st.markdown("**Session Management**")
+                
+                col1, col2 = st.columns(2)
+                
+                with col1:
                     try:
-                        imported_data = json.load(uploaded_session)
-                        st.session_state["ai_responses"] = imported_data.get("ai_responses", [])
-                        st.session_state["user_query"] = imported_data.get("user_query", "")
-                        st.session_state["selected_packets"] = imported_data.get("selected_packets", [])
-                        st.success("✅ Session imported successfully! UI will refresh to show restored session.")
-                        st.rerun()
+                        session_data = {
+                            "ai_responses": st.session_state.get("ai_responses", []),
+                            "user_query": st.session_state.get("user_query", ""),
+                        }
+                        session_json = json.dumps(session_data, indent=4, cls=CustomJSONEncoder)
+                        
+                        st.download_button(
+                            label="💾 Export Session",
+                            data=session_json,
+                            file_name="sniff_recon_session.json",
+                            mime="application/json",
+                            use_container_width=True
+                        )
                     except Exception as e:
-                        st.error(f"❌ Error importing session: {str(e)}")
+                        st.error(f"Error exporting session: {e}")
+                
+                with col2:
+                    uploaded_session = st.file_uploader("Import Session", type=["json"], key="import_session")
+                    if uploaded_session:
+                        try:
+                            imported = json.load(uploaded_session)
+                            st.session_state["ai_responses"] = imported.get("ai_responses", [])
+                            st.session_state["user_query"] = imported.get("user_query", "")
+                            st.success("Session imported!")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Import error: {e}")
             
-            # Tab 4: Advanced Settings
-            with tab4:
-                st.markdown("## ⚙️ Advanced Settings")
-                st.info("Advanced settings coming soon! Let us know what options you'd like to see.")
-            
-            # Start Again Button (Footer)
-            st.markdown('<div class="start-again-container">', unsafe_allow_html=True)
+            # Start again button
+            st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
             col1, col2, col3 = st.columns([1, 2, 1])
             with col2:
-                if st.button("🔄 START AGAIN", key="start_again_btn", use_container_width=True):
-                    # Clear all session state
+                if st.button("🔄 Start New Analysis", use_container_width=True):
                     for key in list(st.session_state.keys()):
                         del st.session_state[key]
                     st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
-            
+        
         except Exception as e:
-            st.markdown(f'<div class=\"error-message\">❌ Error processing file: {str(e)}</div>', unsafe_allow_html=True)
+            st.markdown(f"""
+                <div class="sr-alert sr-alert-error">
+                    ❌ Error processing file: {str(e)}
+                </div>
+            """, unsafe_allow_html=True)
+        
         finally:
             try:
                 os.remove(tmp_file_path)
             except Exception:
                 pass
+    
+    # Footer
+    render_footer()
 
 
 if __name__ == "__main__":
     main()
-
