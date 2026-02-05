@@ -357,6 +357,8 @@ def render_landing_page() -> None:
 def render_footer() -> None:
     """Render the application footer."""
     github_icon = icon("github")
+    coffee_icon = icon("coffee")
+    heart_icon = icon("heart")
     st.markdown(f"""
         <div class="sr-footer">
             <div class="sr-footer-left">
@@ -368,11 +370,14 @@ def render_footer() -> None:
                     <a href="https://github.com/mfscpayload-690/Sniff-Recon/issues" target="_blank" class="sr-footer-link">
                         Report Issue
                     </a>
+                    <a href="https://buymeacoffee.com/mfscpayload690" target="_blank" class="sr-footer-link sr-coffee-link">
+                        {coffee_icon} Buy Me a Coffee
+                    </a>
                 </div>
             </div>
             <div class="sr-footer-right">
                 <span style="color: var(--text-muted); font-size: 0.875rem;">
-                    Made for the security community
+                    Made with {heart_icon} for the security community
                 </span>
             </div>
         </div>
