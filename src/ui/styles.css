@@ -264,6 +264,14 @@ header[data-testid="stHeader"] {
     color: var(--text-secondary);
 }
 
+.sr-logo-img {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    object-fit: cover;
+    box-shadow: 0 0 15px var(--accent-cyan-glow);
+}
+
 /* Status Indicators */
 .sr-status-group {
     display: flex;
@@ -986,6 +994,22 @@ header[data-testid="stHeader"] {
 .sr-footer-right {
     display: flex;
     gap: var(--space-sm);
+}
+
+/* Buy Me a Coffee Link */
+.sr-coffee-link {
+    color: #ffdd00 !important;
+    background: rgba(255, 221, 0, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-full);
+    border: 1px solid rgba(255, 221, 0, 0.3);
+    transition: all var(--transition-fast);
+}
+
+.sr-coffee-link:hover {
+    color: #0a0a0f !important;
+    background: #ffdd00;
+    border-color: #ffdd00;
 }
 
 /* =============================================================================
