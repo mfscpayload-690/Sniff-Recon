@@ -275,18 +275,22 @@ header[data-testid="stHeader"] {
 /* Status Indicators */
 .sr-status-group {
     display: flex;
-    gap: var(--space-md);
+    gap: var(--space-sm);
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .sr-status-badge {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: var(--space-xs);
     padding: var(--space-xs) var(--space-sm);
     border-radius: var(--radius-full);
     font-size: var(--text-sm);
     font-weight: 500;
+    height: 28px;
+    white-space: nowrap;
 }
 
 .sr-status-online {
@@ -1280,8 +1284,27 @@ header[data-testid="stHeader"] {
    15. Streamlit Component Overrides
    ============================================================================= */
 
-/* Hide Streamlit's native file upload preview - shows duplicate */
+/* Hide Streamlit's native file upload preview and dropzone duplicate */
 [data-testid="stFileUploaderFile"] {
+    display: none !important;
+}
+
+/* Hide the extra dotted dropzone that appears after file selection */
+[data-testid="stFileUploader"] section>div:nth-child(2) {
+    display: none !important;
+}
+
+/* Hide any empty dropzone boxes */
+[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"]+div {
+    display: none !important;
+}
+
+/* More aggressive: hide all inner divs after the main dropzone */
+[data-testid="stFileUploader"] section {
+    overflow: hidden;
+}
+
+[data-testid="stFileUploader"] section>div:empty {
     display: none !important;
 }
 
