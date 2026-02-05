@@ -264,6 +264,14 @@ header[data-testid="stHeader"] {
     color: var(--text-secondary);
 }
 
+.sr-logo-img {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    object-fit: cover;
+    box-shadow: 0 0 15px var(--accent-cyan-glow);
+}
+
 /* Status Indicators */
 .sr-status-group {
     display: flex;

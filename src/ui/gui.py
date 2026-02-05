@@ -55,6 +55,33 @@ def load_css() -> str:
     return ""
 
 
+def get_favicon_path() -> str:
+    """Get the path to the favicon file."""
+    # Try different possible paths
+    possible_paths = [
+        Path(__file__).parent.parent.parent / "assets" / "favicon" / "favicon.ico",
+        Path("/app/assets/favicon/favicon.ico"),  # Docker path
+        Path("assets/favicon/favicon.ico"),
+    ]
+    for path in possible_paths:
+        if path.exists():
+            return str(path)
+    return "🔍"  # Fallback to emoji
+
+
+def get_logo_path() -> str:
+    """Get the path to the logo file."""
+    possible_paths = [
+        Path(__file__).parent.parent.parent / "assets" / "favicon" / "sniff-recon-logo.png",
+        Path("/app/assets/favicon/sniff-recon-logo.png"),  # Docker path
+        Path("assets/favicon/sniff-recon-logo.png"),
+    ]
+    for path in possible_paths:
+        if path.exists():
+            return str(path)
+    return None
+
+
 def check_ollama_status() -> tuple[bool, str]:
     """Check if Ollama is available and return status."""
     import urllib.request
@@ -71,15 +98,26 @@ def check_ollama_status() -> tuple[bool, str]:
 
 
 def render_header() -> None:
-    """Render the application header with status indicators."""
+    """Render the application header with logo and status indicators."""
     ollama_online, model_name = check_ollama_status()
+    logo_path = get_logo_path()
     
-    search_icon = icon("search", "lg")
+    # Build logo HTML
+    if logo_path:
+        import base64
+        with open(logo_path, "rb") as f:
+            logo_b64 = base64.b64encode(f.read()).decode()
+        logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="sr-logo-img" alt="Sniff-Recon">'
+    else:
+        search_icon = icon("search", "lg")
+        logo_html = search_icon
+    
     st.markdown(f"""
         <div class="sr-header">
             <div class="sr-logo">
+                {logo_html}
                 <div>
-                    <div class="sr-logo-text">{search_icon} SNIFF-RECON</div>
+                    <div class="sr-logo-text">SNIFF-RECON</div>
                     <div class="sr-logo-tagline">AI-Powered Network Packet Analyzer</div>
                 </div>
             </div>
@@ -360,10 +398,13 @@ def process_file(uploaded_file, tmp_file_path: str, file_ext: str):
 
 def main():
     """Main application entry point."""
+    # Get favicon path
+    favicon = get_favicon_path()
+    
     # Page configuration
     st.set_page_config(
         page_title="Sniff-Recon - Network Packet Analyzer",
-        page_icon="🔍",
+        page_icon=favicon,
         layout="wide",
         initial_sidebar_state="collapsed",
     )
