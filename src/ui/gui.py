@@ -473,8 +473,17 @@ def main():
             # Render stats
             render_stats_cards(df)
             
-            # Main tabs
-            tab1, tab2, tab3 = st.tabs(["📊 Packet Analysis", "🤖 AI Analysis", "📤 Export"])
+            # Main tabs with improved navigation
+            tab1, tab2, tab3, tab4 = st.tabs([
+                "📊 Packet Analysis", 
+                "🤖 AI Analysis", 
+                "📤 Export",
+                "⚙️ Settings"
+            ])
+            
+            with tab4:
+                from src.ui.settings import render_settings_page
+                render_settings_page()
             
             with tab1:
                 st.markdown("""

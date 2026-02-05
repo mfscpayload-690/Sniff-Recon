@@ -7,7 +7,7 @@ Supports multiple AI providers with visual badges and clean UX.
 
 import streamlit as st
 from typing import List, Dict, Any
-from src.ai.ai_module import ai_engine, PacketSummary
+from src.ai.ai_module import ai_engine
 from scapy.packet import Packet
 import time
 import os
@@ -163,27 +163,16 @@ def render_suggested_queries() -> str:
 
 def send_query(query: str, packets: List[Packet], provider: str) -> Dict[str, Any]:
     """Send query to AI and get response."""
-    # Convert packets to summaries
-    summaries = []
-    for pkt in packets[:100]:  # Limit to 100 packets for context
-        summary = PacketSummary(
-            src_ip=str(pkt.src) if hasattr(pkt, 'src') else "",
-            dst_ip=str(pkt.dst) if hasattr(pkt, 'dst') else "",
-            protocol=str(pkt.payload.name) if hasattr(pkt, 'payload') else "Unknown",
-            length=len(pkt),
-            timestamp=float(pkt.time) if hasattr(pkt, 'time') else 0
-        )
-        summaries.append(summary)
-    
-    # Use AI engine
     try:
-        if provider == "Auto (Load Balanced)":
-            response = ai_engine.query(query, summaries)
+        # Use AI engine's query_ai_with_packets which handles packet processing correctly
+        # This method creates a proper PacketSummary internally with all required fields
+        if provider == "Auto (Load Balanced)" or not provider:
+            response = ai_engine.query_ai_with_packets(query, packets)
         else:
-            response = ai_engine.query(query, summaries, force_provider=provider)
+            response = ai_engine.query_ai_with_packets(query, packets, provider_name=provider)
         return response
     except Exception as e:
-        return {"error": str(e), "analysis": f"Error: {str(e)}"}
+        return {"success": False, "error": str(e), "response": f"Error: {str(e)}"}
 
 
 def render_ai_query_interface(packets: List[Packet]) -> None:

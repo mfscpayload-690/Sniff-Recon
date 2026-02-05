@@ -957,7 +957,9 @@ header[data-testid="stHeader"] {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--space-lg);
+    flex-wrap: wrap;
+    gap: var(--space-md);
+    padding: var(--space-lg) var(--space-xl);
     margin-top: var(--space-2xl);
     background: var(--bg-secondary);
     border-top: 1px solid var(--border-subtle);
@@ -968,23 +970,31 @@ header[data-testid="stHeader"] {
     display: flex;
     align-items: center;
     gap: var(--space-lg);
+    flex-wrap: wrap;
 }
 
 .sr-footer-version {
     font-size: var(--text-sm);
     color: var(--text-muted);
+    white-space: nowrap;
 }
 
 .sr-footer-links {
     display: flex;
+    align-items: center;
     gap: var(--space-md);
+    flex-wrap: wrap;
 }
 
 .sr-footer-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
     color: var(--text-secondary);
     text-decoration: none;
     font-size: var(--text-sm);
     transition: color var(--transition-fast);
+    white-space: nowrap;
 }
 
 .sr-footer-link:hover {
@@ -993,6 +1003,7 @@ header[data-testid="stHeader"] {
 
 .sr-footer-right {
     display: flex;
+    align-items: center;
     gap: var(--space-sm);
 }
 
@@ -1263,4 +1274,116 @@ header[data-testid="stHeader"] {
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+/* =============================================================================
+   15. Streamlit Component Overrides
+   ============================================================================= */
+
+/* Hide Streamlit's native file upload preview - shows duplicate */
+[data-testid="stFileUploaderFile"] {
+    display: none !important;
+}
+
+/* Improve file uploader dropzone appearance */
+[data-testid="stFileUploader"]>div:first-child {
+    border-color: var(--border-subtle) !important;
+}
+
+/* =============================================================================
+   16. Loading Spinner
+   ============================================================================= */
+
+.sr-loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(10, 10, 15, 0.85);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    gap: var(--space-md);
+}
+
+.sr-spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid var(--border-subtle);
+    border-top-color: var(--accent-cyan);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.sr-loading-text {
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Style Streamlit's spinner to match our theme */
+.stSpinner>div {
+    border-top-color: var(--accent-cyan) !important;
+}
+
+.stSpinner>div>div {
+    color: var(--text-secondary) !important;
+}
+
+/* =============================================================================
+   17. Settings Page
+   ============================================================================= */
+
+.sr-settings-section {
+    margin-bottom: var(--space-lg);
+}
+
+.sr-settings-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.sr-section-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--accent-cyan);
+    margin-bottom: var(--space-xl);
+}
+
+/* Improve Streamlit tabs styling */
+.stTabs [data-baseweb="tab-list"] {
+    gap: var(--space-md);
+    background: var(--bg-secondary);
+    padding: var(--space-sm);
+    border-radius: var(--radius-lg);
+}
+
+.stTabs [data-baseweb="tab"] {
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-md);
+    font-weight: 500;
+}
+
+.stTabs [aria-selected="true"] {
+    background: var(--accent-cyan-dim) !important;
+    color: var(--accent-cyan) !important;
 }
